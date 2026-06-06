@@ -41,7 +41,17 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   don't fit a solo AI build, e.g. "≥5 live playtesters" → the user is the playtester).
 - **Game feel:** squash/stretch on jump/double-jump/land + a pivot squish on hard turns (feet-
   anchored scale, no new art; `PlayerTune.*Squash`), atop dash afterimages + attack body-lean/slash.
-- **Player art:** AI (PixelLab "Hollow Revenant"), 48×44, 9 anims. `art_src/player/` → `tools/pack_player.py`.
+- **Player art:** AI (PixelLab "Hollow Revenant HD", 64px source → packed **78×70**, drawn at
+  `PlayerTune.scale` ≈0.66). 10 full clips incl **3 distinct attack swings** (light / wide heavy /
+  big overhead cleave → mapped to the 3-hit combo). Pulled via `tools/fetch_enemy_art.py`, packed
+  by `tools/pack_player.py` (union-bbox, feet-anchored). Squash/stretch via `PlayerTune.*Squash`.
+- **Boss arena:** the gate room is the Warden's arena — entering **seals the exits** (barrier +
+  edge-lock via `bossActive`) and plays a **Mega-Man-style intro** (camera to boss, rear-back
+  taunt + `Sfx.roar()` + shake, then the **boss health bar** draws in; `UIScene` listens to
+  `boss-spawn/intro/health/defeated` from `Enemy` elites). Defeat lifts the lock + opens the gate.
+  An ability reward (earmarked "Grace Burst" air-dash) is deferred until the hub/next biome.
+- **HUD health:** neon **rune-block** glyphs (≈1 per 20 HP) that color-shift blood→molten→grace
+  with current life (`UIScene.drawHealth`), replacing the old bar.
 - **Enemy art:** ALL now real PixelLab art — runner (`art_src/enemy/`) + crawler/spark/striker/
   warden (`art_src/<kind>/`, varied native frame sizes). Pulled via `tools/fetch_enemy_art.py`
   (NOTE: the `api.pixellab.ai` per-character **download zip endpoint IS reachable** from this

@@ -61,6 +61,11 @@ export class GameScene extends Phaser.Scene {
   private interactReadyAt = 0;
   private won = false;
   private bound = false; // scene.restart reuses this instance + its event emitter
+  // boss arena
+  private bossActive = false;
+  private bossIntroPlayed = false;
+  private guardianRef?: Enemy;
+  private bossBarrier?: Phaser.GameObjects.Rectangle;
   // key pickup
   private keyObj?: Phaser.GameObjects.Container;
   private keyPos = new Phaser.Math.Vector2();
@@ -137,6 +142,9 @@ export class GameScene extends Phaser.Scene {
     cam.setRoundPixels(true);
     cam.startFollow(this.player, true, 0.12, 0.12);
     cam.setDeadzone(64, 44);
+
+    // The gate room is the Warden's arena — lock in + intro on arrival.
+    if (this.room.id === 'gate' && !this.run.guardianDefeated) this.armBoss(true);
 
     // Death/transition fade overlay (screen-fixed, above world, below HUD)
     this.fadeRect = this.add
@@ -414,7 +422,8 @@ export class GameScene extends Phaser.Scene {
     if (px > 24 && px < roomW - 24) this.interactArmed = true; // clear of the edge zones
 
     // Edges: just walk into them — the world keeps going. Quick fade.
-    if (this.interactArmed) {
+    // (Sealed while the Warden lives — you can't leave the arena.)
+    if (this.interactArmed && !this.bossActive) {
       if (L.east && px > roomW - 24 && ax > 0) return void this.transitionTo(L.east, { entrySide: 'west' });
       if (L.west && px < 24 && ax < 0) return void this.transitionTo(L.west, { entrySide: 'east' });
     }
@@ -468,8 +477,65 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /** Seal the arena and (first time) play the Mega-Man-style intro. */
+  private armBoss(cinematic: boolean): void {
+    const guardian = this.enemies.getChildren().find((e) => (e as Enemy).cfg?.elite) as Enemy | undefined;
+    if (!guardian) return;
+    this.bossActive = true;
+    this.guardianRef = guardian;
+    if (!this.bossBarrier) {
+      const roomH = this.room.h * World.tile;
+      this.bossBarrier = this.add
+        .rectangle(World.tile * 2, 0, 4, roomH, Palette.blood, 0.0)
+        .setOrigin(0.5, 0)
+        .setDepth(60)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: this.bossBarrier, fillAlpha: 0.5, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    if (cinematic && !this.bossIntroPlayed) {
+      this.bossIntroPlayed = true;
+      this.bossIntro(guardian);
+    } else {
+      this.events.emit('boss-intro', guardian.cfg.displayName);
+    }
+  }
+
+  private bossIntro(guardian: Enemy): void {
+    const cam = this.cameras.main;
+    this.player.controllable = false;
+    this.player.body.setVelocity(0, 0);
+    guardian.introHold = true;
+    cam.stopFollow();
+    cam.pan(guardian.x, guardian.y - 24, 600, 'Sine.easeInOut');
+    this.time.delayedCall(680, () => {
+      guardian.play(guardian.cfg.anims.windup, true); // rear back — the taunt
+      this.sfx.roar();
+      this.juice.shake(380, 0.012);
+      this.events.emit('boss-intro', guardian.cfg.displayName); // bar draws in
+    });
+    this.time.delayedCall(2300, () => {
+      cam.startFollow(this.player, true, 0.12, 0.12);
+      this.player.controllable = true;
+      guardian.introHold = false;
+      guardian.play(guardian.cfg.anims.run, true);
+    });
+  }
+
   private onGuardianDefeated(): void {
     this.run.guardianDefeated = true;
+    this.bossActive = false;
+    if (this.bossBarrier) {
+      this.tweens.killTweensOf(this.bossBarrier);
+      this.tweens.add({
+        targets: this.bossBarrier,
+        fillAlpha: 0,
+        duration: 400,
+        onComplete: () => {
+          this.bossBarrier?.destroy();
+          this.bossBarrier = undefined;
+        },
+      });
+    }
     this.juice.flash(Palette.grace, 140);
     if (this.gate) {
       this.drawGate();
@@ -616,6 +682,8 @@ export class GameScene extends Phaser.Scene {
     }
     this.physics.add.collider(this.enemies, this.layer);
     new CombatSystem(this, this.player, this.enemies, this.sfx, this.juice, this.particles);
+    // Re-seal the arena after a grace-respawn in the gate room (quick, no taunt).
+    if (this.room.id === 'gate' && !this.run.guardianDefeated) this.armBoss(false);
   }
 
   // ----------------------------------------------------------------------

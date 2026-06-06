@@ -9,13 +9,15 @@ export const World = {
 };
 
 export const PlayerTune = {
-  // Frame / body  (48x44 PixelLab art; figure ~36px tall, feet at frame bottom)
-  frameW: 48,
-  frameH: 44,
-  bodyW: 12, // collision width (~feet/torso) — narrower than art (forgiving)
-  bodyH: 28, // collision height (feet to shoulders)
-  bodyOffsetX: 18, // (frameW - bodyW)/2 -> body centred at x=24
-  bodyOffsetY: 16, // body spans rows 16..44 (feet at frame bottom; head above)
+  // Frame / body  (78x70 PixelLab HD art, drawn at `scale` so it's ~46px tall on
+  // screen but far more detailed). Body is texture-space and scales with the sprite.
+  frameW: 78,
+  frameH: 70,
+  scale: 0.66, // detailed model scaled down
+  bodyW: 18, // collision width (texture px; *scale on screen ≈ 12)
+  bodyH: 40, // collision height (texture px; *scale on screen ≈ 26)
+  bodyOffsetX: 30, // (frameW - bodyW)/2 -> centred
+  bodyOffsetY: 30, // body spans rows 30..70 (feet at frame bottom)
 
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
@@ -74,7 +76,7 @@ export const PlayerTune = {
 export const PlayerCombo = [
   { dmg: 20, reach: 22, height: 26, windupMs: 30, activeMs: 80, recoveryMs: 110, lunge: 90, anim: 'player-attack1', arc: 1.0, lean: 0.16 },
   { dmg: 30, reach: 27, height: 30, windupMs: 45, activeMs: 95, recoveryMs: 150, lunge: 120, anim: 'player-attack2', arc: 1.3, lean: 0.22 },
-  { dmg: 52, reach: 34, height: 34, windupMs: 70, activeMs: 115, recoveryMs: 240, lunge: 240, anim: 'player-attack1', arc: 1.7, lean: 0.32 },
+  { dmg: 52, reach: 34, height: 34, windupMs: 70, activeMs: 115, recoveryMs: 240, lunge: 240, anim: 'player-attack3', arc: 1.7, lean: 0.32 },
 ] as const;
 
 export const EnemyTune = {

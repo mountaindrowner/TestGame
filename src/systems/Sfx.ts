@@ -127,6 +127,12 @@ export class Sfx {
     this.tone(900, 0.12, 'sawtooth', 0.12, 1500);
     this.noise(0.06, 0.1, 2000);
   }
+  /** The Warden's intro roar — deep, dread. */
+  roar(): void {
+    this.tone(70, 0.75, 'sawtooth', 0.34, 38);
+    this.tone(46, 0.95, 'square', 0.18, 28);
+    this.noise(0.5, 0.18, 180);
+  }
 
   // --- ambient music ----------------------------------------------------
   /** A sparse, low procedural drone — somber but not hopeless. Idempotent. */

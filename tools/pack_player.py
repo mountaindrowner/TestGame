@@ -1,19 +1,13 @@
-"""Pack the player sprite sheet from PixelLab-generated frames.
+"""Pack the player sprite sheet from PixelLab frames in art_src/player/<role>/.
 
-The player ("Hollow Revenant") is AI-authored pixel art (PixelLab character
-d6e11e94), unlike the procedural enemy/tileset/decor. Source frames live in
-`art_src/player/<anim>/frame_*.png` (committed, so the build needs no API).
-
-Each source frame is 48x48 with the figure horizontally centred and the feet
-resting at row ~44 (≈4px of empty padding below). We crop that bottom padding
-so the feet sit on the frame's bottom edge — preserving the engine's
-bottom-centre feet-anchor convention (origin 0.5,1).
-
-Strip layout (48x44 each), order MUST match src/data/Animations.ts:
-  idle 0-3 | run 4-9 | jump 10-18 | fall 19-23 | attack 24-30 |
-  hurt 31-36 | death 37-43 | dash 44-45 | attack2 46-52      (53 frames)
+The player ("Hollow Revenant HD", 64px source) is AI-authored pixel art. Frames
+come on a big varied canvas, so — like the enemy family — we crop every frame to
+the union non-transparent bounding box across all the player's frames: a tight,
+feet-anchored (origin 0.5,1) sheet. Prints frame size + strip layout; keep those
+in lockstep with src/data/Animations.ts PlayerAnims. Run via `npm run assets`.
 """
 from __future__ import annotations
+import glob
 import os
 from PIL import Image
 
@@ -21,53 +15,43 @@ HERE = os.path.dirname(__file__)
 SRC = os.path.join(HERE, "..", "art_src", "player")
 OUT = os.path.join(HERE, "..", "public", "assets", "sprites", "player.png")
 
-FW, FH = 48, 44          # packed frame size (source 48x48, bottom 4px cropped)
-CROP_BOTTOM = 4          # rows of empty padding removed beneath the feet
-
-# (anim, expected_frame_count) in strip order — the frame-order contract.
-ORDER = [
-    ("idle", 4),
-    ("run", 6),
-    ("jump", 9),
-    ("fall", 5),
-    ("attack", 7),
-    ("hurt", 6),
-    ("death", 7),
-    ("dash", 2),
-    ("attack2", 7),
-]
+ORDER = ["idle", "run", "jump", "fall", "dash", "hurt", "attack1", "attack2", "attack3", "death"]
 
 
-def _frames(anim: str) -> list[Image.Image]:
-    d = os.path.join(SRC, anim)
-    files = sorted(f for f in os.listdir(d) if f.endswith(".png"))
-    out = []
-    for f in files:
-        im = Image.open(os.path.join(d, f)).convert("RGBA")
-        if im.size != (48, 48):
-            raise SystemExit(f"{anim}/{f}: expected 48x48, got {im.size}")
-        out.append(im.crop((0, 0, FW, 48 - CROP_BOTTOM)))  # -> 48x44
-    return out
+def _frames(role: str) -> list[Image.Image]:
+    return [Image.open(f).convert("RGBA") for f in sorted(glob.glob(os.path.join(SRC, role, "*.png")))]
 
 
 def build() -> None:
+    by = {r: _frames(r) for r in ORDER}
+    missing = [r for r in ORDER if not by[r]]
+    if missing:
+        raise SystemExit(f"player: missing frames for {missing} (run tools/fetch_enemy_art.py)")
+    box = None
+    for im in (im for r in ORDER for im in by[r]):
+        b = im.getchannel("A").getbbox()
+        if b is None:
+            continue
+        box = list(b) if box is None else [
+            min(box[0], b[0]), min(box[1], b[1]), max(box[2], b[2]), max(box[3], b[3])
+        ]
+    x0, y0, x1, y1 = box  # type: ignore[misc]
+    fw, fh = x1 - x0, y1 - y0
     strips: list[Image.Image] = []
+    layout: list[tuple[str, int, int]] = []
     idx = 0
-    for anim, expected in ORDER:
-        fr = _frames(anim)
-        if len(fr) != expected:
-            raise SystemExit(f"{anim}: expected {expected} frames, found {len(fr)}")
-        print(f"  {anim:7s} {idx:2d}-{idx + len(fr) - 1:<2d} ({len(fr)} frames)")
-        strips.extend(fr)
-        idx += len(fr)
-
-    sheet = Image.new("RGBA", (FW * len(strips), FH), (0, 0, 0, 0))
+    for r in ORDER:
+        for im in by[r]:
+            strips.append(im.crop((x0, y0, x1, y1)))
+        n = len(by[r])
+        layout.append((r, idx, idx + n - 1))
+        idx += n
+    sheet = Image.new("RGBA", (fw * len(strips), fh), (0, 0, 0, 0))
     for i, im in enumerate(strips):
-        sheet.paste(im, (i * FW, 0))
+        sheet.paste(im, (i * fw, 0))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     sheet.save(OUT)
-    print(f"  -> {os.path.relpath(OUT, os.path.join(HERE, '..'))}  "
-          f"({sheet.width}x{sheet.height}, {len(strips)} frames @ {FW}x{FH})")
+    print(f"  player   {fw}x{fh}, {len(strips)} frames  [" + " | ".join(f"{r} {a}-{b}" for r, a, b in layout) + "]")
 
 
 if __name__ == "__main__":

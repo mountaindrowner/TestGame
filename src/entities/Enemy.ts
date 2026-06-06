@@ -40,6 +40,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private nextFireAt = 0;
   private latched = false; // pursuer aggro, once on never off
   private coreGlow?: Phaser.GameObjects.Image; // burning ember weak point (runner only)
+  public introHold = false; // frozen during the boss intro cinematic
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: EnemyDeps, cfg: EnemyConfig) {
     super(scene, x, y, cfg.spriteKey, 0);
@@ -71,6 +72,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         .setScale(2.4);
     }
     if (cfg.behavior === 'flyer_ranged') this.nextFireAt = scene.time.now + (this.t.fireEveryMs ?? 1500);
+    if (cfg.elite) scene.events.emit('boss-spawn', cfg.displayName, this.health, cfg.tune.maxHealth);
   }
 
   isAlive(): boolean {
@@ -100,6 +102,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (this.mode === 'dead') return;
     if (this.coreGlow) this.updateCoreGlow(time);
     if (this.deps.juice.frozen) return;
+    if (this.introHold) {
+      this.body.setVelocityX(0);
+      this.setFlipX(this.facing < 0);
+      return;
+    }
 
     const stunned = time < this.stunUntil;
     if (!stunned && this.mode === 'hurt') this.mode = 'patrol';
@@ -322,6 +329,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   takeDamage(amount: number, fromX: number, core = false): void {
     if (this.mode === 'dead') return;
     this.health -= amount * (1 - (this.t.damageReduction ?? 0));
+    if (this.cfg.elite) this.scene.events.emit('boss-health', Math.max(0, this.health), this.cfg.tune.maxHealth);
     const dir = this.x < fromX ? -1 : 1;
     this.body.setVelocity(dir * this.t.knockbackTaken, this.cfg.flying ? 0 : -80);
     this.stunUntil = this.scene.time.now + (core ? this.t.coreStunMs : 140); // core hit interrupts + staggers
@@ -347,7 +355,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.deps.particles.debris(this.x, this.y - 8, this.cfg.elite ? 30 : 16);
     this.deps.juice.flash(Palette.molten, this.cfg.elite ? 120 : 60);
     this.body.enable = false;
-    if (this.cfg.elite) this.scene.events.emit('guardian-defeated');
+    if (this.cfg.elite) {
+      this.scene.events.emit('guardian-defeated');
+      this.scene.events.emit('boss-defeated');
+    }
     const sx = this.scaleX;
     const sy = this.scaleY;
     this.scene.tweens.add({

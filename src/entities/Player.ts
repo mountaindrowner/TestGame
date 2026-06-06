@@ -69,6 +69,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
     this.setOrigin(0.5, 1); // feet anchor (bottom-center)
     this.setDepth(50);
+    this.setScale(P.scale); // detailed HD sprite scaled down
     this.body.setSize(P.bodyW, P.bodyH);
     this.body.setOffset(P.bodyOffsetX, P.bodyOffsetY);
     this.body.setMaxVelocityY(P.maxFall);
@@ -237,7 +238,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (!this.attacking) return;
     const c = this.curAttack;
     const cx = this.x + this.facing * (c.reach * 0.5);
-    const cy = this.y - P.bodyH * 0.55;
+    const cy = this.y - P.bodyH * P.scale * 0.55;
     this.hitbox.fire(cx, cy, c.reach, c.height);
     this.attackStartedActive = true;
     this.spawnSlash(cx, cy, c.arc);
@@ -285,7 +286,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.hitbox.live) {
       // keep hitbox glued in front of the player during the active window
       const cx = this.x + this.facing * (c.reach * 0.5);
-      const cy = this.y - P.bodyH * 0.55;
+      const cy = this.y - P.bodyH * P.scale * 0.55;
       this.hitbox.setPosition(cx - c.reach / 2, cy - c.height / 2);
       this.hitbox.body.reset(cx - c.reach / 2, cy - c.height / 2);
       if (time >= this.attackActiveEndAt) this.hitbox.disable();
@@ -301,6 +302,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const img = this.scene.add
       .image(this.x, this.y, Assets.player.key, this.frame.name)
       .setOrigin(0.5, 1)
+      .setScale(this.scaleX, this.scaleY)
       .setFlipX(this.flipX)
       .setTint(Palette.grace)
       .setAlpha(0.5)
@@ -335,13 +337,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // ease squash/stretch back toward neutral (feet stay planted: origin 0.5,1)
     this.sqX += (1 - this.sqX) * P.squashDecay;
     this.sqY += (1 - this.sqY) * P.squashDecay;
-    this.setScale(this.sqX, this.sqY);
+    this.setScale(P.scale * this.sqX, P.scale * this.sqY);
   }
 
   private resetSquash(): void {
     this.sqX = 1;
     this.sqY = 1;
-    this.setScale(1, 1);
+    this.setScale(P.scale, P.scale);
   }
 
   // ----------------------------------------------------------------------

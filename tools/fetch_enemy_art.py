@@ -14,6 +14,11 @@ URL = "https://api.pixellab.ai/mcp/characters/{}/download"
 
 # kind -> (character_id, { engine_anim_role: keyword-in-action-slug })
 ENEMIES = {
+    "player": ("92846d32-1b1b-4c5b-846f-b55481e3d644", {
+        "idle": "idle", "run": "running", "jump": "leaping", "fall": "falling",
+        "dash": "dashing", "hurt": "recoiling", "attack1": "quick", "attack2": "wide",
+        "attack3": "overhead", "death": "collapsing",
+    }),
     "crawler": ("e69cc50e-451e-4e02-ae1d-8111c2931e02", {"run": "crawling", "hurt": "recoiling"}),
     "spark": ("7d0aa99c-c02c-400e-b494-03146403a4a1", {"run": "floating", "windup": "flaring", "hurt": "flickering"}),
     "striker": ("074b1852-528c-4722-b217-2c52ede76b9a", {"run": "walking", "windup": "rearing", "strike": "swinging", "hurt": "staggering"}),
