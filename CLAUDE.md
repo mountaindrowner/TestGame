@@ -12,18 +12,38 @@ religious. The world says "you failed"; the game says "get back up."
 Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs/DESIGN.md`.
 
 ## Where we are
-- **Milestone 1:** "The First Fall" (BIO-01), ONE room, full game-feel + full grace-burst
-  respawn + one enemy (Impulse Runner). Web-first playable. (In progress.)
-- **Player art:** now AI (PixelLab "Hollow Revenant", white skeleton/cyan glow/cape/broken
-  sword), 48×44, 9 anims (idle/run/jump/fall/attack1/attack2/dash/hurt/death). Source in
-  `art_src/player/`, packed by `tools/pack_player.py`. See DECISIONS.md "Player art".
-- **Enemy art:** now AI (PixelLab "Impulse Runner", shadow-imp/red eyes/molten core), 48×44,
-  run/windup/hurt. Source in `art_src/enemy/`, packed by `tools/pack_enemy.py`. (Tiles/decor
-  still procedural.)
-- **Combat — core-break:** the Runner's molten core is a visible weak point (engine glow in
-  `Enemy`). Striking it during its crouch-coil windup, or from behind, deals 2× damage,
-  interrupts the lunge, and flares the core. Rewards reading the tell + dash-through.
-- **Next biome (BIO-02):** planned to use PixelLab's sidescroller tileset generator (DECISIONS.md).
+- **Milestone 1 — BIO-01 "The First Fall": now a COMPLETE 5-room level**, beatable end-to-end.
+  Hosted live on GitHub Pages (`https://mountaindrowner.github.io/TestGame/`; `?edit` reserved
+  for the future editor). Web-first + on-screen touch controls (`TouchControls`).
+- **Rooms & flow:** one reusable `GameScene` loads a room by id and re-inits on transition
+  (`scene.restart`); per-run state (health, key, guardian) lives in `RunState` (Phaser registry)
+  so it survives transitions. Rooms in `src/data/rooms/*` + `src/data/levelGraph.ts`, linked by
+  door spawns (`door.to`/`toEntry`). Path: first-fall → descent → crossroads → {memory, gate}.
+  Press **↑** at a door; hard-fade transition; you arrive at the matching entry door.
+- **Finale:** the sealed **gate** opens only with the **Broken Memory** key (pickup in `memory`)
+  AND the **Guardian** elite down (in `gate`). Completing it → DOM win overlay ("THE FIRST FALL
+  — COMPLETE / TO BE CONTINUED" + restart via `RunState.reset`).
+- **Enemy family (config-driven):** `src/data/enemyRegistry.ts` is the single source — runner
+  (lunger, molten core-break), crawler (relentless pursuer), spark (flying ranged; `Projectile`),
+  striker (heavy telegraph→strike→punishable recovery), guardian (elite striker). `Enemy` is
+  decoupled from globals; per-type tune in `Tunables.ts`; CombatSystem reads `enemy.coreBonusMult`.
+  **This registry is the seam the planned level editor reuses.**
+- **Player art:** AI (PixelLab "Hollow Revenant"), 48×44, 9 anims. `art_src/player/` → `tools/pack_player.py`.
+- **Enemy art:** ONLY the Impulse Runner has real PixelLab art (`art_src/enemy/`, `tools/pack_enemy.py`).
+  Crawler/spark/striker/guardian currently **reuse the runner sheet with a tint+scale** as interim
+  identity (see `enemyRegistry` `tint`). ⚠️ Real PixelLab sheets are pending: this remote sandbox's
+  egress is **GitHub-only**, so generated frames on PixelLab's CDN can't be downloaded here —
+  generate them in a session/locally with open network, drop into `art_src/<kind>/`, generalize
+  `pack_enemy.py` (multi-enemy), add `*Anims` in `Animations.ts`, swap `spriteKey`/`anims` + drop
+  the tint in `enemyRegistry`.
+- **Polish:** tutorial legend (keyboard/touch, opener only, `Tutorial`); sparse procedural music +
+  enemy SFX (`Sfx` is now a `getSfx()` singleton — one AudioContext across reloads); HUD shows
+  area name + Broken Memory pip + contextual gate hints. Tileset/decor enriched with moss
+  overgrowth + hanging moss/fern (`gen_tileset.py`/`gen_decor.py`), within the 21-tile Vis contract.
+- **Dev hooks:** `window.__gotoRoom(id)` jumps rooms; `__poseScene`, `__GAME_READY` as before.
+- **Next milestone:** the in-engine **level-editor / dev-kit** (plan already designed: biome/content
+  registry + data-driven levels + editor scene; the enemy registry + per-room data are its
+  foundation). Then **BIO-02** (PixelLab sidescroller tileset, DECISIONS.md).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
