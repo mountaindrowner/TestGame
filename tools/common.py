@@ -41,6 +41,14 @@ def lerp(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
+def vhash(x, y, salt=0):
+    """Parity with src/data/variation.ts vhash → float in [0,1). Position-seeded
+    determinism is the prime art-variation rule (see docs/ART_VARIATION.md)."""
+    n = (int(x) * 374761393 + int(y) * 668265263 + int(salt) * 2246822519) & 0xFFFFFFFF
+    n = ((n ^ (n >> 13)) * 1274126177) & 0xFFFFFFFF
+    return ((n ^ (n >> 16)) & 0xFFFFFFFF) / 4294967296
+
+
 def add_rim_light(img: Image.Image, color=RIM, sides=("left", "top"), strength=255):
     """Tint the outer edge pixels (on the chosen sides) of an opaque silhouette.
 

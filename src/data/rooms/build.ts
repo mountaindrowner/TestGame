@@ -1,5 +1,6 @@
 import { Sem } from '../assetManifest';
 import { RoomData, Spawn, SpawnType } from '../roomData';
+import { vhash, wave } from '../variation';
 
 export type Dir = 'east' | 'west' | 'up' | 'down';
 
@@ -45,20 +46,14 @@ export class Room {
   /** An irregular, ancient-cave roof: depth varies per column + occasional
    *  hanging stalactite nubs, so the underside reads jagged, never boxed. */
   private caveCeiling(): void {
-    const rnd = (x: number, s: number): number => {
-      let n = (x * 374761393 + s * 668265263) >>> 0;
-      n = Math.imul(n ^ (n >>> 13), 1274126177) >>> 0;
-      return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
-    };
-    const phase = this.w * 0.37 + this.h * 0.13;
+    const phase = this.w * 0.37 + this.h * 0.13; // each room flows a little differently
     for (let x = 0; x < this.w; x++) {
-      const wav = 0.5 + 0.5 * Math.sin(x * 0.55 + phase);
-      const wav2 = 0.5 + 0.5 * Math.sin(x * 0.21 + phase * 1.7);
-      // Kept shallow (≤4) so hanging geometry never clips a head on a high ledge;
-      // long dripstones come from the non-colliding stalactite decor instead.
-      const d = Math.min(4, 2 + Math.floor(wav * 1.5 + wav2 + rnd(x, 7) * 1.5));
+      // Smooth flow (wave) + fine grain (vhash). Kept shallow (≤4) so hanging
+      // geometry never clips a head on a high ledge; long dripstones come from the
+      // non-colliding stalactite decor instead. (ART_VARIATION §3, §5)
+      const d = Math.min(4, 2 + Math.floor(wave(x, phase) * 2.5 + vhash(x, 0, 7) * 1.5));
       this.solid(x, 0, 1, d);
-      if (rnd(x, 13) > 0.9) this.solid(x, d, 1, 1, Sem.CRACKED); // small stalactite nub
+      if (vhash(x, 0, 13) > 0.9) this.solid(x, d, 1, 1, Sem.CRACKED); // small stalactite nub
     }
   }
   /** Fully closed room (a dead-end branch). */

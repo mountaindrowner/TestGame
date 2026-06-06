@@ -50,6 +50,14 @@ See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt
 tiles 16×16; player 48×44 feet-anchor; all feel constants in `src/data/Tunables.ts`;
 parallax baked + scrolled (never repainted); procedural assets via `tools/*.py` → `public/assets/`.
 
+## Organic variation (asset look)
+`docs/ART_VARIATION.md` is the grammar for keeping level assets organic = **logical**
+placement (gravity/water/light/structure) + **deterministically unique** (a pure
+function of position, never `Math.random`). Executable: `src/data/variation.ts`
+(`vhash`/`chance`/`pick`/`range`/`wave`/`dampness`) with a parity `vhash` in
+`tools/common.py`. Autotiler, the cave-roof builder, and (incrementally) the Python
+generators draw their variation from it.
+
 ## Commands
 - `npm run dev` — Vite dev server (http://localhost:5173)
 - `npm run assets` — regenerate all PNG assets (Python/Pillow)

@@ -1,16 +1,11 @@
 import { Sem, Vis } from '../data/assetManifest';
 import { RoomData } from '../data/roomData';
+import { vhash } from '../data/variation';
 
 // Treat these as "solid" for edge-masking (molten sits on stone, so stone under
 // it shouldn't grow a lit lip). Platforms are thin & separate — not mask-solid.
 function maskSolid(code: number): boolean {
   return code === Sem.SOLID || code === Sem.CRACKED || code === Sem.MOLTEN;
-}
-
-function hash(x: number, y: number): number {
-  let n = (x * 374761393 + y * 668265263) & 0xffffffff;
-  n = Math.imul(n ^ (n >>> 13), 1274126177) & 0xffffffff;
-  return ((n ^ (n >>> 16)) >>> 0) % 1000;
 }
 
 /** Convert the room's semantic grid into VISUAL tile indices: each solid cell
@@ -43,8 +38,8 @@ export function autotile(room: RoomData): number[][] {
         if (mask === 0) {
           if (c === Sem.CRACKED) row.push(Vis.CRACK);
           else {
-            const r = hash(x, y) % 10;
-            row.push(r < 2 ? Vis.INT_A : r < 4 ? Vis.INT_B : 0); // mostly base, some variants
+            const r = vhash(x, y, 1); // interior variant scatter (§4): subtle, same-family
+            row.push(r < 0.2 ? Vis.INT_A : r < 0.4 ? Vis.INT_B : 0); // mostly base, some variants
           }
         } else {
           row.push(mask); // 1..15 -> edge/corner tiles
