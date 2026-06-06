@@ -4,6 +4,7 @@ import { Assets, Vis, VIS_SOLID_MAX } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace } from '../data/Tunables';
 import { InputManager } from '../systems/InputManager';
+import { TouchControls } from '../systems/TouchControls';
 import { Sfx } from '../systems/Sfx';
 import { JuiceSystem } from '../systems/JuiceSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
@@ -46,6 +47,7 @@ export class GameScene extends Phaser.Scene {
     this.particles = new ParticleSystem(this);
     this.particles.startAmbient(roomW, roomH);
     this.actions = new InputManager(this);
+    new TouchControls(this, this.actions); // on-screen controls on touch devices
 
     this.buildTilemap();
     this.decorations = new Decorations(this, this.room);
