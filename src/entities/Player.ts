@@ -304,6 +304,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocity(0, 0);
     this.body.setAllowGravity(false);
     this.hitbox.disable();
+    this.play('player-death', true);
     this.sfx.death();
     this.scene.events.emit('player-died', this.x, this.y);
   }

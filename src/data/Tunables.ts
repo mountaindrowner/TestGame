@@ -9,13 +9,13 @@ export const World = {
 };
 
 export const PlayerTune = {
-  // Frame / body
-  frameW: 24,
-  frameH: 32,
-  bodyW: 10, // collision width (~feet/torso) — narrower than art (forgiving)
-  bodyH: 24, // collision height (feet to shoulders)
-  bodyOffsetX: 7, // (frameW - bodyW)/2
-  bodyOffsetY: 8, // art has ~8px of headroom above the body
+  // Frame / body  (48x44 PixelLab art; figure ~36px tall, feet at frame bottom)
+  frameW: 48,
+  frameH: 44,
+  bodyW: 12, // collision width (~feet/torso) — narrower than art (forgiving)
+  bodyH: 28, // collision height (feet to shoulders)
+  bodyOffsetX: 18, // (frameW - bodyW)/2 -> body centred at x=24
+  bodyOffsetY: 16, // body spans rows 16..44 (feet at frame bottom; head above)
 
   // Horizontal movement
   runSpeed: 132,

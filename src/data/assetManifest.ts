@@ -2,7 +2,7 @@
 // The Python packers (tools/*.py) MUST produce sheets matching these.
 
 export const Assets = {
-  player: { key: 'player', path: 'assets/sprites/player.png', frameW: 24, frameH: 32 },
+  player: { key: 'player', path: 'assets/sprites/player.png', frameW: 48, frameH: 44 },
   runner: { key: 'runner', path: 'assets/sprites/runner.png', frameW: 24, frameH: 24 },
   tileset: { key: 'tileset', path: 'assets/tilesets/depths.png', frameW: 16, frameH: 16 },
   bgFar: { key: 'bg-far', path: 'assets/backgrounds/far.png' },

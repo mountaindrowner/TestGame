@@ -1,7 +1,7 @@
 # REPENTANCE — Session Handover
 
 > **New session: read this first.** Only what's pushed to git survives. Update this file as
-> major work lands. Branch: `claude/html5-phaser-comparison-xzqQ3`. Verify reality against
+> major work lands. Branch: `claude/repentance-roguevania-dev-Zq3QP`. Verify reality against
 > files — don't trust memory.
 
 ## What this is
@@ -14,10 +14,14 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
 ## Where we are
 - **Milestone 1:** "The First Fall" (BIO-01), ONE room, full game-feel + full grace-burst
   respawn + one enemy (Impulse Runner). Web-first playable. (In progress.)
+- **Player art:** now AI (PixelLab "Hollow Revenant", white skeleton/cyan glow/cape/broken
+  sword), 48×44, 7 anims incl. death. Source in `art_src/player/`, packed by
+  `tools/pack_player.py`. See DECISIONS.md "Player art". (Procedural enemy/tiles/decor unchanged.)
+- **Next biome (BIO-02):** planned to use PixelLab's sidescroller tileset generator (DECISIONS.md).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
-tiles 16×16; player 24×32 feet-anchor; all feel constants in `src/data/Tunables.ts`;
+tiles 16×16; player 48×44 feet-anchor; all feel constants in `src/data/Tunables.ts`;
 parallax baked + scrolled (never repainted); procedural assets via `tools/*.py` → `public/assets/`.
 
 ## Commands
