@@ -142,10 +142,14 @@ export class GameScene extends Phaser.Scene {
       .setAlpha(fadeIn ? 1 : 0);
     if (fadeIn) this.tweens.add({ targets: this.fadeRect, alpha: 0, duration: 260 });
 
-    // Parallel HUD
-    this.scene.launch('UIScene');
-    this.events.emit('room-name', this.room.name);
-    this.events.emit('key-state', this.run.hasBrokenMemory);
+    // Parallel HUD — launch once; it persists across room reloads.
+    if (!this.scene.isActive('UIScene')) this.scene.launch('UIScene');
+    const syncHud = () => {
+      this.events.emit('room-name', this.room.name);
+      this.events.emit('key-state', this.run.hasBrokenMemory);
+    };
+    syncHud();
+    this.time.delayedCall(30, syncHud); // also reach UIScene on its very first create
 
     this.interactReadyAt = this.time.now + 300; // avoid re-triggering the door we just used
 
@@ -580,6 +584,7 @@ export class GameScene extends Phaser.Scene {
   // ----------------------------------------------------------------------
   private installDebugHooks(): void {
     window.__poseScene = (opts) => this.poseScene(opts?.pose ?? 'default');
+    window.__gotoRoom = (id) => this.scene.restart({ roomId: id });
   }
 
   private poseScene(pose: string): void {
