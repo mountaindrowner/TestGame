@@ -9,15 +9,15 @@ export const World = {
 };
 
 export const PlayerTune = {
-  // Frame / body  (78x70 PixelLab HD art, drawn at `scale` so it's ~46px tall on
+  // Frame / body  (75x76 PixelLab HD robot, drawn at `scale` so it's ~46px tall on
   // screen but far more detailed). Body is texture-space and scales with the sprite.
-  frameW: 78,
-  frameH: 70,
-  scale: 0.66, // detailed model scaled down
-  bodyW: 18, // collision width (texture px; *scale on screen ≈ 12)
-  bodyH: 40, // collision height (texture px; *scale on screen ≈ 26)
-  bodyOffsetX: 30, // (frameW - bodyW)/2 -> centred
-  bodyOffsetY: 30, // body spans rows 30..70 (feet at frame bottom)
+  frameW: 75,
+  frameH: 76,
+  scale: 0.6, // detailed model scaled down
+  bodyW: 20, // collision width (texture px; *scale on screen ≈ 12)
+  bodyH: 43, // collision height (texture px; *scale on screen ≈ 26)
+  bodyOffsetX: 28, // (frameW - bodyW)/2 -> centred
+  bodyOffsetY: 33, // body spans rows 33..76 (feet at frame bottom)
 
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
