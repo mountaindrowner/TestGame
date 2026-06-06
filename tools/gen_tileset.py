@@ -24,6 +24,9 @@ R = 5  # rounded corner radius
 
 TOP, RIGHT, BOTTOM, LEFT = 1, 2, 4, 8
 
+LEAF = (46, 92, 78)
+LEAF_HI = (108, 184, 150)
+
 
 def hsh(x, y, s=0):
     n = (x * 374761393 + y * 668265263 + s * 2246822519) & 0xFFFFFFFF
@@ -91,6 +94,18 @@ def corner_rim(d, corner, lit, r=R):
         d.arc([0, T - 2 * r, 2 * r - 1, T - 1], 90, 180, fill=rgba(lit), width=1)
 
 
+def add_moss(d, seed, length_bias=1.0):
+    """Cool overgrowth clinging just under a lit top edge — organic ledge feel."""
+    for x in range(1, T - 1):
+        if hsh(x, seed, 23) > 0.6:
+            ln = 1 + int(hsh(x, seed, 29) * 2 * length_bias)
+            for k in range(ln):
+                col = lerp(LEAF, LEAF_HI, hsh(x, k, 31))
+                d.point((x, 2 + k), fill=rgba(col))
+            if hsh(x, seed, 37) > 0.82:
+                d.point((x, 2), fill=rgba(LEAF_HI))
+
+
 def wall(mask, variant=0):
     img = new(T, T)
     stone_fill(img, seed=1 + variant)
@@ -129,6 +144,9 @@ def wall(mask, variant=0):
         corner_rim(d, 'SE', lit_bot)
     if bottom and left:
         corner_rim(d, 'SW', lit_bot)
+
+    if top:
+        add_moss(d, mask)  # overgrowth on any exposed-top ledge
 
     # interior masonry only where not exposed (suggests deeper blocks)
     if not top and not bottom:
@@ -176,6 +194,7 @@ def platform():
     d.line([(0, 5), (T - 1, 5)], fill=rgba(STONE_LO))
     for x in (3, 8, 12):
         d.line([(x, 6), (x, 7 + int(hsh(x, 0, 9) * 2))], fill=rgba(STONE_LO))
+    add_moss(d, 4, length_bias=0.6)  # a little overgrowth on platforms too
     return img
 
 

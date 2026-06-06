@@ -11,10 +11,12 @@ interface Deco {
 }
 
 const KINDS = [
-  { key: Assets.chain.key, weight: 38, amp: 0.10, depth: 12 },
-  { key: Assets.vine.key, weight: 34, amp: 0.08, depth: 13 },
-  { key: Assets.root.key, weight: 16, amp: 0.05, depth: 12 },
-  { key: Assets.banner.key, weight: 12, amp: 0.06, depth: 9 },
+  { key: Assets.chain.key, weight: 28, amp: 0.10, depth: 12 },
+  { key: Assets.vine.key, weight: 30, amp: 0.08, depth: 13 },
+  { key: Assets.moss.key, weight: 24, amp: 0.05, depth: 13 },
+  { key: Assets.fern.key, weight: 18, amp: 0.06, depth: 13 },
+  { key: Assets.root.key, weight: 14, amp: 0.05, depth: 12 },
+  { key: Assets.banner.key, weight: 10, amp: 0.06, depth: 9 },
 ];
 
 /** Purely-aesthetic props that hang from ledge undersides and sway. Deterministic

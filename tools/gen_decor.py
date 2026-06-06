@@ -101,11 +101,49 @@ def banner():
     return img
 
 
+def moss():
+    """A dangling clump of moss strands (attach at top-center)."""
+    w, h = 12, 15
+    img = new(w, h)
+    d = ImageDraw.Draw(img)
+    for sx in range(2, w - 1, 2):
+        strands = 5 + (sx * 7 % 5)
+        for y in range(strands):
+            col = lerp(LEAF, LEAF_HI, y / strands)
+            d.point((sx + (1 if y % 3 == 0 else 0), y + 1), fill=rgba(col))
+    for sx in (3, 7, 9):
+        d.point((sx, 1), fill=rgba(LEAF_HI))
+    return img
+
+
+def fern():
+    """A drooping fern frond hanging from a ledge underside."""
+    w, h = 14, 26
+    img = new(w, h)
+    d = ImageDraw.Draw(img)
+    cx = w / 2
+    pts = [(cx, 0)]
+    x = cx
+    for y in range(1, h - 1):
+        x += math.sin(y * 0.25) * 0.8
+        pts.append((x, y))
+    d.line(pts, fill=rgba(lerp(LEAF, STONE_LO, 0.2)), width=1)
+    for i in range(2, h - 3, 3):
+        sx = cx + math.sin(i * 0.25) * 0.8
+        for side in (-1, 1):
+            d.line([(sx, i), (sx + side * 4, i + 2)], fill=rgba(LEAF), width=1)
+            d.point((sx + side * 4, i + 2), fill=rgba(LEAF_HI))
+    d.ellipse([cx - 1, h - 3, cx + 1, h - 1], fill=rgba(GRACE))  # a small hopeful bud
+    return apply_bloom(img, threshold=170, radius=1.2, gain=0.7)
+
+
 def build():
     save(chain(), "sprites", "decor", "chain.png")
     save(vine(), "sprites", "decor", "vine.png")
     save(root(), "sprites", "decor", "root.png")
     save(banner(), "sprites", "decor", "banner.png")
+    save(moss(), "sprites", "decor", "moss.png")
+    save(fern(), "sprites", "decor", "fern.png")
 
 
 if __name__ == "__main__":

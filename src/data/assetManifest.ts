@@ -15,6 +15,8 @@ export const Assets = {
   vine: { key: 'decor-vine', path: 'assets/sprites/decor/vine.png' },
   root: { key: 'decor-root', path: 'assets/sprites/decor/root.png' },
   banner: { key: 'decor-banner', path: 'assets/sprites/decor/banner.png' },
+  moss: { key: 'decor-moss', path: 'assets/sprites/decor/moss.png' },
+  fern: { key: 'decor-fern', path: 'assets/sprites/decor/fern.png' },
 } as const;
 
 // SEMANTIC tile codes — what a room cell *means* (used by roomData).
