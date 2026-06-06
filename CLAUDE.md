@@ -38,13 +38,13 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   the-depths gradients (why assets go where). `docs/ENEMY_ART_SPEC.md` is the PixelLab spec for
   real enemy/boss sprites (still placeholder-tinted; sandbox egress blocks downloading frames).
 - **Player art:** AI (PixelLab "Hollow Revenant"), 48×44, 9 anims. `art_src/player/` → `tools/pack_player.py`.
-- **Enemy art:** ONLY the Impulse Runner has real PixelLab art (`art_src/enemy/`, `tools/pack_enemy.py`).
-  Crawler/spark/striker/guardian currently **reuse the runner sheet with a tint+scale** as interim
-  identity (see `enemyRegistry` `tint`). ⚠️ Real PixelLab sheets are pending: this remote sandbox's
-  egress is **GitHub-only**, so generated frames on PixelLab's CDN can't be downloaded here —
-  generate them in a session/locally with open network, drop into `art_src/<kind>/`, generalize
-  `pack_enemy.py` (multi-enemy), add `*Anims` in `Animations.ts`, swap `spriteKey`/`anims` + drop
-  the tint in `enemyRegistry`.
+- **Enemy art:** ALL now real PixelLab art — runner (`art_src/enemy/`) + crawler/spark/striker/
+  warden (`art_src/<kind>/`, varied native frame sizes). Pulled via `tools/fetch_enemy_art.py`
+  (NOTE: the `api.pixellab.ai` per-character **download zip endpoint IS reachable** from this
+  GitHub-only sandbox even though the raw CDN isn't — that's how). Packed by the generalized
+  `tools/pack_enemy.py` (union-alpha-bbox crop → feet-anchored sheet; runner keeps its 48×44
+  path). Frame sizes in `assetManifest`, ranges in `Animations.ts`, per-kind `anims`/`body`/
+  `scale` in `enemyRegistry` (tints dropped). IDs/spec in `docs/ENEMY_ART_SPEC.md`.
 - **Polish:** tutorial legend (keyboard/touch, opener only, `Tutorial`); sparse procedural music +
   enemy SFX (`Sfx` is now a `getSfx()` singleton — one AudioContext across reloads); HUD shows
   area name + Broken Memory pip + contextual gate hints. Tileset/decor enriched with moss

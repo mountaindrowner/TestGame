@@ -218,7 +218,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
           this.mode = 'recover';
           this.recoverEndAt = time + (this.t.recoveryMs ?? 500);
           this.body.setVelocityX(0);
-          this.play(this.cfg.anims.run, true);
+          this.play(this.cfg.anims.recovery ?? this.cfg.anims.run, true);
         }
         break;
       case 'recover':

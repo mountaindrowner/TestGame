@@ -37,7 +37,7 @@ export interface EnemyConfig {
   displayName: string;
   behavior: BehaviorTag;
   spriteKey: string;
-  anims: { run: string; windup: string; hurt: string; strike?: string; fire?: string };
+  anims: { run: string; windup: string; hurt: string; strike?: string; fire?: string; recovery?: string };
   tune: EnemyTuneBase;
   body: { w: number; h: number; offX: number; offY: number };
   hasCore: boolean; // shows the molten core glow + a windup weak point
@@ -75,54 +75,57 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     kind: 'crawler',
     displayName: 'Regret Crawler',
     behavior: 'pursuer',
-    spriteKey: Assets.runner.key, // placeholder until P2 art
-    anims: RUNNER_ANIMS,
+    spriteKey: Assets.crawler.key,
+    anims: { run: 'crawler-run', windup: 'crawler-run', hurt: 'crawler-hurt' },
     tune: CrawlerTune,
-    body: { w: 16, h: 16, offX: 16, offY: 28 },
+    body: { w: 24, h: 24, offX: 10, offY: 25 }, // frame 43x49
     hasCore: false,
     coreBonusMult: 2.0,
-    tint: 0x7bae5a, // sickly green
+    scale: 0.62,
   },
   spark: {
     kind: 'spark',
     displayName: 'Shame Spark',
     behavior: 'flyer_ranged',
-    spriteKey: Assets.runner.key, // placeholder until P2 art
-    anims: RUNNER_ANIMS,
+    spriteKey: Assets.spark.key,
+    anims: { run: 'spark-run', windup: 'spark-windup', hurt: 'spark-hurt', fire: 'spark-windup' },
     tune: SparkTune,
-    body: { w: 12, h: 12, offX: 18, offY: 18 },
+    body: { w: 16, h: 16, offX: 8, offY: 14 }, // frame 31x45
     hasCore: false,
     coreBonusMult: 1.0,
     flying: true,
-    tint: 0xffd76a, // shame-yellow flare
-    scale: 0.7,
+    scale: 0.55,
   },
   striker: {
     kind: 'striker',
     displayName: 'Hollow Striker',
     behavior: 'heavy_telegraph',
-    spriteKey: Assets.runner.key, // placeholder until P2 art
-    anims: RUNNER_ANIMS,
+    spriteKey: Assets.striker.key,
+    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', strike: 'striker-strike' },
     tune: StrikerTune,
-    body: { w: 18, h: 28, offX: 15, offY: 16 },
+    body: { w: 22, h: 40, offX: 16, offY: 13 }, // frame 54x53
     hasCore: false,
     coreBonusMult: 1.6, // big reward for striking in its recovery window
-    tint: 0x9aa0c8, // hollow steel
-    scale: 1.2,
+    scale: 0.9,
   },
   guardian: {
     kind: 'guardian',
     displayName: 'THE WARDEN OF THE FALL', // armored kin of the Impulse Runner
     behavior: 'heavy_telegraph',
-    spriteKey: Assets.runner.key, // placeholder until real art (see docs/ENEMY_ART_SPEC.md)
-    anims: RUNNER_ANIMS,
+    spriteKey: Assets.warden.key,
+    anims: {
+      run: 'warden-run',
+      windup: 'warden-windup',
+      hurt: 'warden-hurt',
+      strike: 'warden-strike',
+      recovery: 'warden-recovery',
+    },
     tune: GuardianTune,
-    body: { w: 26, h: 36, offX: 11, offY: 8 },
+    body: { w: 28, h: 52, offX: 8, offY: 16 }, // frame 44x68
     hasCore: false,
     coreBonusMult: 2.0, // weaving in during its recovery is the whole fight
     elite: true,
-    scale: 1.9,
+    scale: 1.2,
     depth: 46,
-    tint: 0xc85a7a, // ominous rose
   },
 };

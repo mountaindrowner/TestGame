@@ -1,9 +1,10 @@
 # Enemy & Boss Art Spec (BIO-01)
 
-> **Status:** the four new sheets have been **GENERATED in PixelLab** (base + east
-> animations) and are waiting to be pulled in. They still render as tinted Runner
-> **placeholders** in-game because this remote sandbox's network is **GitHub-only**
-> and can't download PixelLab frames — do the pull on an open network (below).
+> **Status: DONE — all four are generated AND integrated in-game** (real art, not
+> placeholders). The `api.pixellab.ai` download-zip endpoint turned out to be
+> reachable from the sandbox, so `tools/fetch_enemy_art.py` pulled the east frames
+> into `art_src/<kind>/` and `tools/pack_enemy.py` packed them. Re-run those two
+> (then `npm run assets`) to refresh after re-rolling any clip in PixelLab.
 
 ## Generated PixelLab characters (account 076c964e…) — pull these in
 | Kind | character_id | canvas | east animations (frames) |

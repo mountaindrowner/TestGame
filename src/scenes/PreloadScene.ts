@@ -1,7 +1,15 @@
 import Phaser from 'phaser';
 import { Assets } from '../data/assetManifest';
 import { Palette } from '../data/palette';
-import { PlayerAnims, RunnerAnims, registerAnims } from '../data/Animations';
+import {
+  PlayerAnims,
+  RunnerAnims,
+  CrawlerAnims,
+  SparkAnims,
+  StrikerAnims,
+  WardenAnims,
+  registerAnims,
+} from '../data/Animations';
 import { FONT } from '../data/ui';
 
 export class PreloadScene extends Phaser.Scene {
@@ -20,6 +28,9 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: Assets.runner.frameW,
       frameHeight: Assets.runner.frameH,
     });
+    for (const a of [Assets.crawler, Assets.spark, Assets.striker, Assets.warden]) {
+      this.load.spritesheet(a.key, a.path, { frameWidth: a.frameW, frameHeight: a.frameH });
+    }
     this.load.spritesheet(Assets.tileset.key, Assets.tileset.path, {
       frameWidth: Assets.tileset.frameW,
       frameHeight: Assets.tileset.frameH,
@@ -41,6 +52,10 @@ export class PreloadScene extends Phaser.Scene {
   create(): void {
     registerAnims(this, PlayerAnims);
     registerAnims(this, RunnerAnims);
+    registerAnims(this, CrawlerAnims);
+    registerAnims(this, SparkAnims);
+    registerAnims(this, StrikerAnims);
+    registerAnims(this, WardenAnims);
     // Make sure the display font is ready before any text is drawn (canvas text
     // bakes the font at creation; loading it late would show a fallback flash).
     const start = () => this.scene.start('GameScene');
