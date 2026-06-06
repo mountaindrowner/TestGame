@@ -46,6 +46,7 @@ export interface EnemyConfig {
   elite?: boolean; // the Guardian — defeat sets RunState.guardianDefeated
   scale?: number;
   depth?: number;
+  tint?: number; // interim visual identity while sharing placeholder art (P2 swaps real sheets)
 }
 
 export const ENEMY_KINDS: EnemyKind[] = ['runner', 'crawler', 'spark', 'striker', 'guardian'];
@@ -80,6 +81,7 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     body: { w: 16, h: 16, offX: 16, offY: 28 },
     hasCore: false,
     coreBonusMult: 2.0,
+    tint: 0x7bae5a, // sickly green
   },
   spark: {
     kind: 'spark',
@@ -92,6 +94,8 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     hasCore: false,
     coreBonusMult: 1.0,
     flying: true,
+    tint: 0xffd76a, // shame-yellow flare
+    scale: 0.7,
   },
   striker: {
     kind: 'striker',
@@ -103,6 +107,8 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     body: { w: 18, h: 28, offX: 15, offY: 16 },
     hasCore: false,
     coreBonusMult: 1.0,
+    tint: 0x9aa0c8, // hollow steel
+    scale: 1.2,
   },
   guardian: {
     kind: 'guardian',
@@ -117,5 +123,6 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     elite: true,
     scale: 1.8,
     depth: 46,
+    tint: 0xc85a7a, // ominous rose
   },
 };

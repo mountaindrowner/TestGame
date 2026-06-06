@@ -5,14 +5,30 @@
 // edge-aware visual tiles.
 import { Sem } from './assetManifest';
 
+export type SpawnType =
+  | 'player'
+  | 'door'
+  | 'torch'
+  | 'key' // the Broken Memory pickup
+  | 'gate' // the locked exit gate (needs key + guardian down)
+  | 'runner'
+  | 'crawler'
+  | 'spark'
+  | 'striker'
+  | 'guardian';
+
 export interface Spawn {
-  type: 'player' | 'runner' | 'door' | 'torch';
+  type: SpawnType;
   tx: number;
   ty: number;
+  id?: string; // door/gate identity within this room
+  to?: string; // door: destination room id
+  toEntry?: string; // door: id of the door to arrive at in the destination room
 }
 
 export interface RoomData {
   name: string;
+  id?: string; // room id (set by the level graph)
   w: number; // tiles
   h: number; // tiles
   tiles: number[][]; // [y][x] of Sem codes, -1 empty
@@ -77,7 +93,7 @@ export function buildFirstFall(): RoomData {
     { type: 'runner', tx: 26, ty: 13 },
     { type: 'runner', tx: 45, ty: 15 },
     { type: 'runner', tx: 23, ty: 23 },
-    { type: 'door', tx: 49, ty: H - 7 }, // on the right exit shelf
+    { type: 'door', tx: 49, ty: H - 7, id: 'exit', to: 'descent', toEntry: 'from-fall' }, // exit shelf → the descent
     { type: 'torch', tx: 4, ty: 7 },
     { type: 'torch', tx: 48, ty: 15 },
     { type: 'torch', tx: 6, ty: 29 },

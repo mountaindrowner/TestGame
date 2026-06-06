@@ -59,6 +59,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.body.setOffset(cfg.body.offX, cfg.body.offY);
     this.setCollideWorldBounds(true);
     if (cfg.flying) this.body.setAllowGravity(false);
+    if (cfg.tint !== undefined) this.setTint(cfg.tint); // interim identity (placeholder art)
     this.play(cfg.anims.run);
 
     if (cfg.hasCore) {
@@ -304,7 +305,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.mode = 'hurt'; // cancels any windup/lunge in progress
     this.play(this.cfg.anims.hurt, true);
     this.setTintFill(core ? Palette.moltenHi : Palette.bloom);
-    this.scene.time.delayedCall(60, () => this.clearTint());
+    this.scene.time.delayedCall(60, () => {
+      this.clearTint();
+      if (this.cfg.tint !== undefined) this.setTint(this.cfg.tint);
+    });
     if (core) this.coreFlare();
     this.deps.particles.sparks(this.x, this.y - 8, 6);
     if (this.health <= 0) this.die();
