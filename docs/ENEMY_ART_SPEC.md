@@ -1,10 +1,42 @@
 # Enemy & Boss Art Spec (BIO-01)
 
-> **Status:** only the **Impulse Runner** has real PixelLab art today. The Crawler,
-> Spark, Striker and Warden currently **reuse the Runner sheet with a tint+scale**
-> placeholder (see `enemyRegistry.ts` `tint`), because this remote sandbox's network
-> is **GitHub-only** and can't download PixelLab frames. This spec is what to
-> generate when on an open network (or locally), so the look is intentional.
+> **Status:** the four new sheets have been **GENERATED in PixelLab** (base + east
+> animations) and are waiting to be pulled in. They still render as tinted Runner
+> **placeholders** in-game because this remote sandbox's network is **GitHub-only**
+> and can't download PixelLab frames — do the pull on an open network (below).
+
+## Generated PixelLab characters (account 076c964e…) — pull these in
+| Kind | character_id | canvas | east animations (frames) |
+|---|---|---|---|
+| `crawler` Regret Crawler | `e69cc50e-451e-4e02-ae1d-8111c2931e02` | 68×68 | run(8), hurt(6) |
+| `spark` Shame Spark | `7d0aa99c-c02c-400e-b494-03146403a4a1` | 56×56 | run(6), windup/flare(6), hurt(4) |
+| `striker` Hollow Striker | `074b1852-528c-4722-b217-2c52ede76b9a` | 68×68 | run(8), windup(6), strike(8), hurt(6) |
+| `guardian` Warden of the Fall (BOSS) | `1b45195b-92f1-45f7-a2de-75da99e081a9` | 92×92 | run(8), windup(8), strike/charge(8), recovery(6), hurt(6) |
+
+*(Ignore the failed first Warden `f85b3d4b…` — PixelLab heavy-load failure.)*
+
+### How to pull them in (open-network machine)
+1. For each id, fetch the frames — either the zip
+   `https://api.pixellab.ai/mcp/characters/<id>/download`, or via the PixelLab MCP
+   `get_character(id)` which lists each frame URL
+   (`…/animations/<animId>/east/<n>.png`). Take the **east** frames.
+2. Drop them into `art_src/<kind>/<anim>/frame_*.png` (anim dirs: run, windup, hurt,
+   strike, recovery, flare as applicable).
+3. **Generalize `tools/pack_enemy.py`**: loop over an ENEMIES table, each with its
+   own `src` dir, source frame size (68/56/92 — they differ!), and an ORDER table
+   `(anim → count)`. Crop/scale each to our **48×44 feet-anchored** frame.
+4. Add a `<Kind>Anims` table in `src/data/Animations.ts` (ranges must match the
+   packer's printed strip layout), load each sheet in `PreloadScene` +
+   `assetManifest.ts`, then in `enemyRegistry.ts` set `spriteKey`/`anims` for that
+   kind and **delete its `tint`** (and adjust `scale`/`body` for the new sizes).
+
+> Engine anim keys the registry expects: `run`, `windup`, `hurt`, plus `strike`
+> (heavy/boss) and `fire` (spark → map to the flare/`windup` clip or a `fire` dir).
+> Each id above is one character; mirroring east→west is automatic (setFlipX).
+
+---
+
+## Original spec (look + animation intent)
 
 ## Shared contract (match the Runner so packing/anchoring "just works")
 - **PixelLab**: humanoid/creature, **side view**, author the **east** rotation (engine
