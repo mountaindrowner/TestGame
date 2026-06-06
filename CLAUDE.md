@@ -41,12 +41,14 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   don't fit a solo AI build, e.g. "≥5 live playtesters" → the user is the playtester).
 - **Game feel:** squash/stretch on jump/double-jump/land + a pivot squish on hard turns (feet-
   anchored scale, no new art; `PlayerTune.*Squash`), atop dash afterimages + attack body-lean/slash.
-- **Player art:** a slender **white robot/android** (no hood/skull), cyan visor + core, tattered
-  half-cloak, broken cyan blade — PixelLab id `50d599c3`, 64px source → packed **75×76**, drawn at
-  `PlayerTune.scale` 0.6. 10 full clips incl **3 distinct attack swings** (light / wide heavy / big
-  overhead cleave → mapped to the 3-hit combo). Pulled via `tools/fetch_enemy_art.py` (player id
-  lives there), packed by `tools/pack_player.py` (union-bbox, feet-anchored). Run cadence is
-  speed-coupled; squash/stretch via `PlayerTune.*Squash`.
+- **Player art:** the **original "Hollow Revenant"** (PixelLab id `d6e11e94`, 48px source → packed
+  **41×40**, `PlayerTune.scale` 1) — the robot/HD re-rolls were rejected. Its stiff template clips
+  were **re-animated emotively** (v3, 7–13 frames each, real wind-up/extension/follow-through):
+  idle/run/jump/fall/dash/hurt + **3 distinct attack swings** + death. Pulled via
+  `tools/fetch_enemy_art.py` (player id + per-clip keywords there; note PixelLab keys animations by
+  name, so emotive re-rolls of same-named clips need `delete_animation` first), packed by
+  `tools/pack_player.py` (union-bbox, feet-anchored). Run cadence speed-coupled; squash/stretch via
+  `PlayerTune.*Squash`.
 - **Boss arena:** the gate room is the Warden's arena — entering **seals the exits** (barrier +
   edge-lock via `bossActive`) and plays a **Mega-Man-style intro** (camera to boss, rear-back
   taunt + `Sfx.roar()` + shake, then the **boss health bar** draws in; `UIScene` listens to
