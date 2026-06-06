@@ -27,6 +27,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private mode: State = 'patrol';
   private windupEndAt = 0;
   private stunUntil = 0;
+  private coreGlow!: Phaser.GameObjects.Image; // burning ember weak point
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: EnemyDeps) {
     super(scene, x, y, Assets.runner.key, 0);
@@ -39,15 +40,33 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.body.setOffset(E.bodyOffsetX, E.bodyOffsetY);
     this.setCollideWorldBounds(true);
     this.play('runner-run');
+
+    // The molten impulse-core: a burning ember in the shadow, and its weak point.
+    this.coreGlow = scene.add
+      .image(x, y, Assets.dot.key)
+      .setTint(Palette.moltenHi)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(47)
+      .setScale(2.4);
   }
 
   isAlive(): boolean {
     return this.mode !== 'dead';
   }
 
+  /** The core is exposed while the Runner is committed to a lunge (windup) or
+   *  struck from behind (e.g. right after a dash-through). A core hit is the
+   *  high-reward punish — see CombatSystem. */
+  isCoreHit(attackerX: number): boolean {
+    const fromBehind =
+      (this.facing === 1 && attackerX < this.x) || (this.facing === -1 && attackerX > this.x);
+    return this.mode === 'windup' || fromBehind;
+  }
+
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
     if (this.mode === 'dead') return;
+    this.updateCoreGlow(time);
     if (this.deps.juice.frozen) return;
 
     const onGround = this.body.blocked.down;
@@ -91,6 +110,25 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(this.facing < 0); // art faces right by default (snout points +x)
   }
 
+  private updateCoreGlow(time: number): void {
+    const committed = this.mode === 'windup'; // about to lunge -> core flares open
+    const pulse = 0.85 + 0.15 * Math.sin(time * 0.008);
+    this.coreGlow.setPosition(this.x + this.facing, this.y - 17);
+    this.coreGlow.setScale((committed ? 3.2 : 2.2) * pulse);
+    this.coreGlow.setAlpha((committed ? 0.95 : 0.7) * pulse);
+  }
+
+  private coreFlare(): void {
+    this.deps.particles.debris(this.x + this.facing, this.y - 17, 12);
+    this.scene.tweens.add({
+      targets: this.coreGlow,
+      scale: 6,
+      duration: 90,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    });
+  }
+
   private patrol(onGround: boolean): void {
     this.body.setVelocityX(this.facing * E.patrolSpeed);
     if (this.body.blocked.left) this.facing = 1;
@@ -104,22 +142,25 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     return this.deps.groundCheck(ax, ay);
   }
 
-  takeDamage(amount: number, fromX: number): void {
+  takeDamage(amount: number, fromX: number, core = false): void {
     if (this.mode === 'dead') return;
     this.health -= amount;
     const dir = this.x < fromX ? -1 : 1;
     this.body.setVelocity(dir * E.knockbackTaken, -80);
-    this.stunUntil = this.scene.time.now + 140;
-    this.mode = 'hurt';
+    this.stunUntil = this.scene.time.now + (core ? E.coreStunMs : 140); // core hit interrupts + staggers
+    this.mode = 'hurt'; // cancels any windup/lunge in progress
     this.play('runner-hurt', true);
-    this.setTintFill(Palette.bloom);
+    this.setTintFill(core ? Palette.moltenHi : Palette.bloom);
     this.scene.time.delayedCall(60, () => this.clearTint());
+    if (core) this.coreFlare();
     this.deps.particles.sparks(this.x, this.y - 8, 6);
     if (this.health <= 0) this.die();
   }
 
   private die(): void {
     this.mode = 'dead';
+    this.scene.tweens.killTweensOf(this.coreGlow);
+    this.coreGlow.destroy();
     this.deps.sfx.enemyDie();
     this.deps.particles.debris(this.x, this.y - 8, 16);
     this.deps.juice.flash(Palette.molten, 60);

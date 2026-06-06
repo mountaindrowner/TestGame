@@ -15,8 +15,14 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
 - **Milestone 1:** "The First Fall" (BIO-01), ONE room, full game-feel + full grace-burst
   respawn + one enemy (Impulse Runner). Web-first playable. (In progress.)
 - **Player art:** now AI (PixelLab "Hollow Revenant", white skeleton/cyan glow/cape/broken
-  sword), 48×44, 7 anims incl. death. Source in `art_src/player/`, packed by
-  `tools/pack_player.py`. See DECISIONS.md "Player art". (Procedural enemy/tiles/decor unchanged.)
+  sword), 48×44, 9 anims (idle/run/jump/fall/attack1/attack2/dash/hurt/death). Source in
+  `art_src/player/`, packed by `tools/pack_player.py`. See DECISIONS.md "Player art".
+- **Enemy art:** now AI (PixelLab "Impulse Runner", shadow-imp/red eyes/molten core), 48×44,
+  run/windup/hurt. Source in `art_src/enemy/`, packed by `tools/pack_enemy.py`. (Tiles/decor
+  still procedural.)
+- **Combat — core-break:** the Runner's molten core is a visible weak point (engine glow in
+  `Enemy`). Striking it during its crouch-coil windup, or from behind, deals 2× damage,
+  interrupts the lunge, and flares the core. Rewards reading the tell + dash-through.
 - **Next biome (BIO-02):** planned to use PixelLab's sidescroller tileset generator (DECISIONS.md).
 
 ## Stack & conventions

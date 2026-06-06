@@ -76,6 +76,8 @@ export const EnemyTune = {
   windupMs: 230, // crouch-coil telegraph before it lunges (matches the 5-frame windup anim)
   contactDamage: 18,
   knockbackTaken: 180,
+  coreBonusMult: 2.0, // blade-damage multiplier when striking the exposed molten core
+  coreStunMs: 320, // longer stagger when the core is struck (vs 140 normal)
   edgeCheck: true, // turn at ledges/walls while patrolling
 };
 

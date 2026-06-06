@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PlayerTune, Juice } from '../data/Tunables';
+import { PlayerTune, EnemyTune, Juice } from '../data/Tunables';
 import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { Sfx } from '../systems/Sfx';
@@ -27,11 +27,18 @@ export class CombatSystem {
     if (this.player.hitbox.hitSet.has(enemy)) return;
     this.player.hitbox.hitSet.add(enemy);
 
-    enemy.takeDamage(PlayerTune.attackDamage, this.player.x);
+    // Striking the exposed molten core (during its windup, or from behind) is the
+    // high-reward punish: bonus damage, the lunge is interrupted, the core flares.
+    const core = enemy.isCoreHit(this.player.x);
+    const dmg = core ? PlayerTune.attackDamage * EnemyTune.coreBonusMult : PlayerTune.attackDamage;
+    enemy.takeDamage(dmg, this.player.x, core);
+
     this.sfx.hit();
-    this.juice.hitstop(enemy.isAlive() ? Juice.hitstopMs : Juice.hitstopHeavyMs);
-    this.juice.shakeHit();
-    this.particles.sparks(enemy.x, enemy.y - 8, 9);
+    this.juice.hitstop(core || !enemy.isAlive() ? Juice.hitstopHeavyMs : Juice.hitstopMs);
+    if (core) this.juice.shake(Juice.shakeHurt.duration, Juice.shakeHurt.intensity);
+    else this.juice.shakeHit();
+    if (core) this.particles.debris(enemy.x, enemy.y - 14, 12);
+    else this.particles.sparks(enemy.x, enemy.y - 8, 9);
   };
 
   private onContact: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_p, enemyObj) => {
