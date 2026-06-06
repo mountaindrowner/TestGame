@@ -11,7 +11,7 @@ bottom-centre feet-anchor convention (origin 0.5,1).
 
 Strip layout (48x44 each), order MUST match src/data/Animations.ts:
   idle 0-3 | run 4-9 | jump 10-18 | fall 19-23 | attack 24-30 |
-  hurt 31-36 | death 37-43      (44 frames)
+  hurt 31-36 | death 37-43 | dash 44-45 | attack2 46-52      (53 frames)
 """
 from __future__ import annotations
 import os
@@ -33,6 +33,8 @@ ORDER = [
     ("attack", 7),
     ("hurt", 6),
     ("death", 7),
+    ("dash", 2),
+    ("attack2", 7),
 ]
 
 
