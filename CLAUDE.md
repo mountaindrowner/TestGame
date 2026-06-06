@@ -25,9 +25,18 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   — COMPLETE / TO BE CONTINUED" + restart via `RunState.reset`).
 - **Enemy family (config-driven):** `src/data/enemyRegistry.ts` is the single source — runner
   (lunger, molten core-break), crawler (relentless pursuer), spark (flying ranged; `Projectile`),
-  striker (heavy telegraph→strike→punishable recovery), guardian (elite striker). `Enemy` is
-  decoupled from globals; per-type tune in `Tunables.ts`; CombatSystem reads `enemy.coreBonusMult`.
+  striker (heavy telegraph→strike→punishable recovery), guardian = **The Warden of the Fall**,
+  an armored telegraphing charger (Elden-Ring/Dead-Cells-ish; weave its windup→charge→recovery).
+  `Enemy` is decoupled from globals; per-type tune in `Tunables.ts`; CombatSystem reads
+  `enemy.coreBonusMult`. Enemy anim speed is coupled to movement (no more "wild" run); heavy
+  foes flush red on windup/charge + glow cyan (vulnerable) in recovery.
   **This registry is the seam the planned level editor reuses.**
+- **Player combat:** a **3-hit escalating combo** (`PlayerCombo` in `Tunables.ts`: light → heavy
+  → big forward cleave, ~1:1.5:2.6 dmg; chain within `comboWindowMs`). `CombatSystem` reads the
+  live `player.attackDamage`; swings lean the body + sweep a scaled slash arc.
+- **Design direction:** `docs/WORLD_PLAN.md` gives every room a name/role/mood + the ascent-from-
+  the-depths gradients (why assets go where). `docs/ENEMY_ART_SPEC.md` is the PixelLab spec for
+  real enemy/boss sprites (still placeholder-tinted; sandbox egress blocks downloading frames).
 - **Player art:** AI (PixelLab "Hollow Revenant"), 48×44, 9 anims. `art_src/player/` → `tools/pack_player.py`.
 - **Enemy art:** ONLY the Impulse Runner has real PixelLab art (`art_src/enemy/`, `tools/pack_enemy.py`).
   Crawler/spark/striker/guardian currently **reuse the runner sheet with a tint+scale** as interim

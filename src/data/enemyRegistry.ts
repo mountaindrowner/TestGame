@@ -106,22 +106,22 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     tune: StrikerTune,
     body: { w: 18, h: 28, offX: 15, offY: 16 },
     hasCore: false,
-    coreBonusMult: 1.0,
+    coreBonusMult: 1.6, // big reward for striking in its recovery window
     tint: 0x9aa0c8, // hollow steel
     scale: 1.2,
   },
   guardian: {
     kind: 'guardian',
-    displayName: 'The Guardian',
+    displayName: 'THE WARDEN OF THE FALL', // armored kin of the Impulse Runner
     behavior: 'heavy_telegraph',
-    spriteKey: Assets.runner.key, // placeholder until P2 art
+    spriteKey: Assets.runner.key, // placeholder until real art (see docs/ENEMY_ART_SPEC.md)
     anims: RUNNER_ANIMS,
     tune: GuardianTune,
     body: { w: 26, h: 36, offX: 11, offY: 8 },
     hasCore: false,
-    coreBonusMult: 1.0,
+    coreBonusMult: 2.0, // weaving in during its recovery is the whole fight
     elite: true,
-    scale: 1.8,
+    scale: 1.9,
     depth: 46,
     tint: 0xc85a7a, // ominous rose
   },

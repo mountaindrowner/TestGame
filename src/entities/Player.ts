@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PlayerTune as P } from '../data/Tunables';
+import { PlayerTune as P, PlayerCombo } from '../data/Tunables';
 import { Palette } from '../data/palette';
 import { Assets } from '../data/assetManifest';
 import { InputManager } from '../systems/InputManager';
@@ -22,6 +22,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public health = P.maxHealth;
   public readonly hitbox: AttackHitbox;
   public controllable = true;
+  public attackDamage: number = PlayerCombo[0].dmg; // damage of the current combo hit (read by CombatSystem)
 
   private controls: InputManager;
   private sfx: Sfx;
@@ -49,6 +50,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private comboStep = 0;
   private comboWindowEnd = 0;
   private attackStartAt = 0;
+  private curAttack: (typeof PlayerCombo)[number] = PlayerCombo[0];
   // hurt/stun
   private stunUntil = 0;
 
@@ -196,42 +198,45 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private handleAttack(time: number): void {
     if (!this.controls.justPressed('attack')) return;
     if (this.attacking && time > this.comboWindowEnd) return;
-    // start or chain
-    this.comboStep = this.attacking ? (this.comboStep + 1) % 2 : 0;
+    // start, or chain to the next of the 3 hits (light → heavy → big forward cleave)
+    this.comboStep = this.attacking ? (this.comboStep + 1) % PlayerCombo.length : 0;
+    const c = PlayerCombo[this.comboStep];
+    this.curAttack = c;
+    this.attackDamage = c.dmg;
     this.attacking = true;
     this.attackStartAt = time;
     this.attackStartedActive = false;
-    this.attackActiveEndAt = time + P.attackWindupMs + P.attackActiveMs;
-    this.attackPhaseEndAt = time + P.attackWindupMs + P.attackActiveMs + P.attackRecoveryMs;
+    this.attackActiveEndAt = time + c.windupMs + c.activeMs;
+    this.attackPhaseEndAt = time + c.windupMs + c.activeMs + c.recoveryMs;
     this.comboWindowEnd = this.attackPhaseEndAt + P.comboWindowMs;
     this.mode = 'attack';
-    this.play(this.comboStep === 0 ? 'player-attack1' : 'player-attack2', true);
+    this.play(c.anim, true);
     this.sfx.slash();
-    // small forward lunge
-    this.body.setVelocityX(this.facing * P.attackLungeSpeed);
-    // schedule the active window
-    this.scene.time.delayedCall(P.attackWindupMs, () => this.openHitbox(), undefined, this);
+    this.body.setVelocityX(this.facing * c.lunge); // step-in scales with the hit
+    this.scene.time.delayedCall(c.windupMs, () => this.openHitbox(), undefined, this);
   }
 
   private openHitbox(): void {
     if (!this.attacking) return;
-    const cx = this.x + this.facing * (P.attackReach * 0.5);
+    const c = this.curAttack;
+    const cx = this.x + this.facing * (c.reach * 0.5);
     const cy = this.y - P.bodyH * 0.55;
-    this.hitbox.fire(cx, cy, P.attackReach, P.attackHeight);
+    this.hitbox.fire(cx, cy, c.reach, c.height);
     this.attackStartedActive = true;
-    this.spawnSlash(cx, cy);
+    this.spawnSlash(cx, cy, c.arc);
   }
 
-  /** A bright crescent that sweeps through the swing — sells the arc of the blade. */
-  private spawnSlash(cx: number, cy: number): void {
-    const dir = this.comboStep === 0 ? 1 : -1; // overhead vs rising
-    const r = P.attackReach * 1.15;
+  /** A bright crescent that sweeps through the swing — sells the arc of the blade.
+   *  `arcScale` grows with the combo so the big finisher reads as a heavy cleave. */
+  private spawnSlash(cx: number, cy: number, arcScale = 1): void {
+    const dir = this.comboStep % 2 === 0 ? 1 : -1; // alternate swing direction
+    const r = 22 * 1.15 * arcScale;
     const g = this.scene.add.graphics({ x: cx, y: cy }).setDepth(52).setBlendMode(Phaser.BlendModes.ADD);
-    g.lineStyle(3, Palette.bloom, 0.9);
+    g.lineStyle(2 + arcScale, Palette.bloom, 0.9);
     g.beginPath();
     g.arc(0, 0, r, Phaser.Math.DegToRad(-58), Phaser.Math.DegToRad(58), false);
     g.strokePath();
-    g.lineStyle(1.5, Palette.grace, 0.7);
+    g.lineStyle(1 + arcScale * 0.4, Palette.grace, 0.7);
     g.beginPath();
     g.arc(0, 0, r - 3, Phaser.Math.DegToRad(-50), Phaser.Math.DegToRad(50), false);
     g.strokePath();
@@ -251,20 +256,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (!this.attacking) return;
     // Whole-body swing: lean through the strike (pivot at the feet) + motion-smear
     // ghosts so the attack reads as a full-body lunge, not just a sword waggle.
+    const c = this.curAttack;
     const dur = Math.max(1, this.attackPhaseEndAt - this.attackStartAt);
     const t = Phaser.Math.Clamp((time - this.attackStartAt) / dur, 0, 1);
-    const dir = this.comboStep === 0 ? 1 : -1;
-    this.setRotation(this.facing * dir * Math.sin(t * Math.PI) * 0.22);
+    const dir = this.comboStep % 2 === 0 ? 1 : -1;
+    this.setRotation(this.facing * dir * Math.sin(t * Math.PI) * c.lean);
     if (this.hitbox.live && time - this.lastAfterimageAt >= 24) {
       this.spawnAfterimage();
       this.lastAfterimageAt = time;
     }
     if (this.hitbox.live) {
       // keep hitbox glued in front of the player during the active window
-      const cx = this.x + this.facing * (P.attackReach * 0.5);
+      const cx = this.x + this.facing * (c.reach * 0.5);
       const cy = this.y - P.bodyH * 0.55;
-      this.hitbox.setPosition(cx - P.attackReach / 2, cy - P.attackHeight / 2);
-      this.hitbox.body.reset(cx - P.attackReach / 2, cy - P.attackHeight / 2);
+      this.hitbox.setPosition(cx - c.reach / 2, cy - c.height / 2);
+      this.hitbox.body.reset(cx - c.reach / 2, cy - c.height / 2);
       if (time >= this.attackActiveEndAt) this.hitbox.disable();
     }
     if (time >= this.attackPhaseEndAt) {

@@ -123,6 +123,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         break;
     }
 
+    // Tie ground-anim speed to actual movement so slow foes don't sprint in place
+    // (the "wild" run). Floored so they never fully freeze.
+    if (!this.cfg.flying) {
+      this.anims.timeScale = Phaser.Math.Clamp(Math.abs(this.body.velocity.x) / 90, 0.5, 1.6);
+    }
     this.setFlipX(this.facing < 0); // art faces right by default (snout points +x)
   }
 
@@ -221,6 +226,21 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (time >= this.recoverEndAt) this.mode = 'patrol';
         break;
     }
+    this.applyTelegraphTint();
+  }
+
+  /** Readability for heavy foes: danger flush as it winds up / charges, then a
+   *  cool "vulnerable" glow during the punishable recovery — the weave window. */
+  private applyTelegraphTint(): void {
+    const tell =
+      this.mode === 'windup'
+        ? 0xffd2d2
+        : this.mode === 'strike'
+          ? 0xff6a6a
+          : this.mode === 'recover'
+            ? Palette.grace
+            : (this.cfg.tint ?? 0xffffff);
+    this.setTint(tell);
   }
 
   private updateFlyer(time: number): void {

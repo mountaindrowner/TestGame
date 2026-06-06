@@ -3,7 +3,8 @@ import { Room } from './build';
 
 // Spine room 2 — open both sides; walk right to keep going right. Floor feet row 16.
 export function descent(): RoomData {
-  const r = new Room('THE DESCENT', 60, 20).frame({ left: true, right: true });
+  // (id stays 'descent'; named per docs/WORLD_PLAN.md — you're at the bottom, rising)
+  const r = new Room('THE LOWER VAULTS', 60, 20).frame({ left: true, right: true });
   r.platform(16, 12, 6);
   r.platform(30, 10, 6);
   r.platform(44, 12, 6);
