@@ -81,6 +81,80 @@ export const EnemyTune = {
   edgeCheck: true, // turn at ledges/walls while patrolling
 };
 
+// --- BIO-01 enemy family (gameplay numbers only; body dims + art live in the
+//     enemy registry). Each maps to a behavior tag in src/data/enemyRegistry.ts.
+
+// Regret Crawler — slow, relentless ground pursuer; once it sees you it never
+// disengages. "Regret won't let go — turn and face it." Weak point: from behind.
+export const CrawlerTune = {
+  maxHealth: 70,
+  patrolSpeed: 26,
+  chaseSpeed: 64, // slower than the player's run; you can create space
+  aggroRange: 160,
+  aggroVertical: 44,
+  windupMs: 0,
+  contactDamage: 14,
+  knockbackTaken: 90,
+  coreStunMs: 160,
+  edgeCheck: true,
+  stickyAggro: true,
+};
+
+// Shame Spark — airborne, keeps its distance, flares then fires a burst; fragile
+// up close. "Shame flares from afar, strikes when you're not looking."
+export const SparkTune = {
+  maxHealth: 22,
+  patrolSpeed: 0,
+  chaseSpeed: 80,
+  aggroRange: 210,
+  aggroVertical: 170,
+  windupMs: 280, // flare telegraph before firing
+  contactDamage: 12,
+  knockbackTaken: 220,
+  coreStunMs: 120,
+  edgeCheck: false,
+  hoverOffset: 64, // floats this far above the player
+  standoff: 130, // tries to keep this much horizontal distance
+  fireEveryMs: 1700,
+  projectile: { speed: 150, damage: 12, count: 1, spreadDeg: 0, lifespanMs: 2200 },
+};
+
+// Hollow Striker — heavy, armored; long telegraph, a committed strike, then a
+// punishable recovery. "Survive by patience, not aggression." Weak in recovery.
+export const StrikerTune = {
+  maxHealth: 90,
+  patrolSpeed: 26,
+  chaseSpeed: 150, // strike lunge speed
+  aggroRange: 124,
+  aggroVertical: 52,
+  windupMs: 600,
+  contactDamage: 22,
+  knockbackTaken: 70,
+  coreStunMs: 380,
+  edgeCheck: true,
+  strikeMs: 260,
+  recoveryMs: 520,
+  damageReduction: 0.35, // armor: chip damage reduced
+};
+
+// The Guardian — an elite Striker at the gate. Bigger, far tankier, single-phase
+// for now (a second telegraph can be added later).
+export const GuardianTune = {
+  maxHealth: 320,
+  patrolSpeed: 22,
+  chaseSpeed: 140,
+  aggroRange: 220,
+  aggroVertical: 90,
+  windupMs: 680,
+  contactDamage: 28,
+  knockbackTaken: 26,
+  coreStunMs: 300,
+  edgeCheck: false,
+  strikeMs: 300,
+  recoveryMs: 560,
+  damageReduction: 0.5,
+};
+
 export const Juice = {
   hitstopMs: 70, // freeze on landing a hit (manual flag, not world.pause)
   hitstopHeavyMs: 110,

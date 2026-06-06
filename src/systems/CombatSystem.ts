@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PlayerTune, EnemyTune, Juice } from '../data/Tunables';
+import { PlayerTune, Juice } from '../data/Tunables';
 import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { Sfx } from '../systems/Sfx';
@@ -30,7 +30,7 @@ export class CombatSystem {
     // Striking the exposed molten core (during its windup, or from behind) is the
     // high-reward punish: bonus damage, the lunge is interrupted, the core flares.
     const core = enemy.isCoreHit(this.player.x);
-    const dmg = core ? PlayerTune.attackDamage * EnemyTune.coreBonusMult : PlayerTune.attackDamage;
+    const dmg = core ? PlayerTune.attackDamage * enemy.coreBonusMult : PlayerTune.attackDamage;
     enemy.takeDamage(dmg, this.player.x, core);
 
     this.sfx.hit();

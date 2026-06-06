@@ -3,6 +3,8 @@ import { buildFirstFall, RoomData, Spawn } from '../data/roomData';
 import { Assets, Vis, VIS_SOLID_MAX } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace } from '../data/Tunables';
+import { RunState } from '../data/RunState';
+import { ENEMY_REGISTRY, EnemyKind, isEnemyKind } from '../data/enemyRegistry';
 import { InputManager } from '../systems/InputManager';
 import { TouchControls } from '../systems/TouchControls';
 import { Sfx } from '../systems/Sfx';
@@ -30,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   private graceSpawn = new Phaser.Math.Vector2();
   private respawning = false;
   private fadeRect!: Phaser.GameObjects.Rectangle;
+  private run!: RunState;
 
   constructor() {
     super('GameScene');
@@ -39,6 +42,10 @@ export class GameScene extends Phaser.Scene {
     this.room = buildFirstFall();
     const roomW = this.room.w * World.tile;
     const roomH = this.room.h * World.tile;
+
+    // Per-run state that persists across room transitions (lives in the registry).
+    this.run = new RunState(this.registry);
+    this.run.ensure(this.room.name);
 
     // Systems that don't need the world yet
     this.sfx = new Sfx();
@@ -56,6 +63,13 @@ export class GameScene extends Phaser.Scene {
     // Entities
     this.enemies = this.add.group({ runChildUpdate: true });
     this.spawnFromData();
+
+    // Restore carried-over health, and persist any change back to the run.
+    this.player.health = this.run.health;
+    this.events.emit('player-health', this.player.health, this.run.data.maxHealth);
+    this.events.on('player-health', (h: number) => {
+      this.run.health = h;
+    });
 
     // Combat wiring
     new CombatSystem(this, this.player, this.enemies, this.sfx, this.juice, this.particles);
@@ -131,27 +145,36 @@ export class GameScene extends Phaser.Scene {
           particles: this.particles,
         });
         break;
-      case 'runner':
-        this.enemies.add(
-          new Enemy(this, x, y, {
-            player: this.player,
-            sfx: this.sfx,
-            juice: this.juice,
-            particles: this.particles,
-            groundCheck: (gx, gy) => {
-              const t = this.layer.getTileAtWorldXY(gx, gy);
-              return !!t && t.index >= 0 && t.index <= Vis.PLATFORM; // solid or platform
-            },
-          }),
-        );
-        break;
       case 'door':
         this.makeDoor(x, y);
         break;
       case 'torch':
         this.makeTorch(x, y - 8);
         break;
+      default:
+        if (isEnemyKind(s.type)) this.spawnEnemy(s.type, x, y);
     }
+  }
+
+  private spawnEnemy(kind: EnemyKind, x: number, y: number): void {
+    this.enemies.add(
+      new Enemy(
+        this,
+        x,
+        y,
+        {
+          player: this.player,
+          sfx: this.sfx,
+          juice: this.juice,
+          particles: this.particles,
+          groundCheck: (gx, gy) => {
+            const t = this.layer.getTileAtWorldXY(gx, gy);
+            return !!t && t.index >= 0 && t.index <= Vis.PLATFORM; // solid or platform
+          },
+        },
+        ENEMY_REGISTRY[kind],
+      ),
+    );
   }
 
   private makeDoor(x: number, y: number): void {
@@ -286,10 +309,10 @@ export class GameScene extends Phaser.Scene {
   private resetEnemies(): void {
     this.enemies.clear(true, true);
     for (const s of this.room.spawns) {
-      if (s.type !== 'runner') continue;
+      if (!isEnemyKind(s.type)) continue;
       const x = s.tx * World.tile + World.tile / 2;
       const y = s.ty * World.tile + World.tile;
-      this.spawnOne(s, x, y);
+      this.spawnEnemy(s.type, x, y);
     }
     this.physics.add.collider(this.enemies, this.layer);
     new CombatSystem(this, this.player, this.enemies, this.sfx, this.juice, this.particles);
