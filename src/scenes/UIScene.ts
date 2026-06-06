@@ -2,13 +2,17 @@ import Phaser from 'phaser';
 import { Palette } from '../data/palette';
 import { PlayerTune } from '../data/Tunables';
 
-/** Parallel HUD scene — health + the area name + the defiant line on death.
- *  Runs above GameScene so it never scrolls or shakes with the world camera. */
+/** Parallel HUD scene — health, the current area name, the Broken Memory
+ *  indicator, transient hints, and the defiant line on death. Runs above
+ *  GameScene so it never scrolls or shakes with the world camera. */
 export class UIScene extends Phaser.Scene {
   private bar!: Phaser.GameObjects.Graphics;
   private health = PlayerTune.maxHealth;
   private maxHealth = PlayerTune.maxHealth;
   private defiant!: Phaser.GameObjects.Text;
+  private areaText!: Phaser.GameObjects.Text;
+  private keyPip!: Phaser.GameObjects.Text;
+  private hintText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('UIScene');
@@ -18,13 +22,25 @@ export class UIScene extends Phaser.Scene {
     this.bar = this.add.graphics();
     this.drawHealth();
 
-    this.add
-      .text(8, 18, 'THE FIRST FALL', {
-        fontFamily: 'monospace',
-        fontSize: '7px',
-        color: '#7ef0ff',
-      })
+    this.areaText = this.add
+      .text(8, 18, 'THE FIRST FALL', { fontFamily: 'monospace', fontSize: '7px', color: '#7ef0ff' })
       .setAlpha(0.55);
+
+    // Broken Memory indicator — dim until found, then bright.
+    this.keyPip = this.add
+      .text(8, 30, '◇ MEMORY', { fontFamily: 'monospace', fontSize: '7px', color: '#7ef0ff' })
+      .setAlpha(0.25);
+
+    // Transient contextual hint (e.g. at the sealed gate).
+    this.hintText = this.add
+      .text(this.scale.width / 2, this.scale.height - 24, '', {
+        fontFamily: 'monospace',
+        fontSize: '8px',
+        color: '#eaf7ff',
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
 
     // The world says you failed; the game says get back up.
     this.defiant = this.add
@@ -46,6 +62,21 @@ export class UIScene extends Phaser.Scene {
     });
     game.events.on('player-died', () => this.showDefiant());
     game.events.on('player-reborn', () => this.defiant.setAlpha(0));
+    game.events.on('room-name', (name: string) => this.areaText.setText(name));
+    game.events.on('key-state', (has: boolean) => {
+      this.keyPip.setText(has ? '◆ MEMORY' : '◇ MEMORY').setAlpha(has ? 0.9 : 0.25);
+    });
+    game.events.on('hint', (msg: string) => this.showHint(msg));
+    game.events.on('level-complete', () => {
+      this.hintText.setAlpha(0);
+      this.defiant.setAlpha(0);
+    });
+  }
+
+  private showHint(msg: string): void {
+    this.hintText.setText(msg).setAlpha(0);
+    this.tweens.killTweensOf(this.hintText);
+    this.tweens.add({ targets: this.hintText, alpha: 0.95, duration: 220, yoyo: true, hold: 1300 });
   }
 
   private drawHealth(): void {
@@ -63,10 +94,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   private showDefiant(): void {
-    const lines = [
-      'THE WORLD SAYS YOU FAILED.',
-      'GET BACK UP.',
-    ];
+    const lines = ['THE WORLD SAYS YOU FAILED.', 'GET BACK UP.'];
     this.defiant.setText(lines).setAlpha(0);
     this.tweens.add({ targets: this.defiant, alpha: 0.9, duration: 500, yoyo: true, hold: 900 });
   }

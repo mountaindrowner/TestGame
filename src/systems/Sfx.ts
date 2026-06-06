@@ -4,6 +4,8 @@ export class Sfx {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   private muted = false;
+  private musicTimer: number | null = null;
+  private musicStep = 0;
 
   constructor() {
     // Resume on the first gesture (Sfx may be constructed before any input).
@@ -109,4 +111,55 @@ export class Sfx {
     const notes = [523, 659, 784, 1047]; // C E G C — major, rising
     notes.forEach((n, i) => setTimeout(() => this.tone(n, 0.5, 'triangle', 0.22), i * 90));
   }
+
+  // --- enemy vocabulary -------------------------------------------------
+  /** Heavy enemy winding up a committed strike. */
+  telegraph(): void {
+    this.tone(150, 0.26, 'sawtooth', 0.16, 110);
+  }
+  /** Heavy enemy's strike landing. */
+  slam(): void {
+    this.tone(90, 0.2, 'square', 0.3, 50);
+    this.noise(0.12, 0.22, 300);
+  }
+  /** Shame Spark firing a mote. */
+  shoot(): void {
+    this.tone(900, 0.12, 'sawtooth', 0.12, 1500);
+    this.noise(0.06, 0.1, 2000);
+  }
+
+  // --- ambient music ----------------------------------------------------
+  /** A sparse, low procedural drone — somber but not hopeless. Idempotent. */
+  startMusic(): void {
+    if (this.musicTimer != null) return;
+    const chords = [
+      [110, 165], // A2 + E3
+      [98, 147], // G2 + D3
+      [131, 196], // C3 + G3
+      [87, 131], // F2 + C3
+    ];
+    const motes = [392, 440, 330, 294];
+    const tick = (): void => {
+      if (this.muted) return;
+      const c = chords[this.musicStep % chords.length];
+      c.forEach((f) => this.tone(f, 3.4, 'sine', 0.05)); // soft sustained fifth
+      if (this.musicStep % 2 === 1) this.tone(motes[this.musicStep % motes.length], 1.6, 'triangle', 0.03);
+      this.musicStep++;
+    };
+    tick();
+    this.musicTimer = window.setInterval(tick, 3200);
+  }
+  stopMusic(): void {
+    if (this.musicTimer != null) {
+      window.clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+  }
+}
+
+// Single shared instance: the AudioContext + gesture listeners must persist
+// across scene.restart (a new Sfx per room would leak contexts + music timers).
+let _instance: Sfx | null = null;
+export function getSfx(): Sfx {
+  return (_instance ??= new Sfx());
 }

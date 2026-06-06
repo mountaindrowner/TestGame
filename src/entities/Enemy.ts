@@ -193,6 +193,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
           this.facing = dx < 0 ? -1 : 1;
           this.body.setVelocityX(0);
           this.play(this.cfg.anims.windup, true);
+          this.deps.sfx.telegraph();
         }
         break;
       case 'windup':
@@ -203,6 +204,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
           this.facing = dx < 0 ? -1 : 1;
           this.body.setVelocityX(this.facing * this.t.chaseSpeed);
           this.play(this.cfg.anims.strike ?? this.cfg.anims.run, true);
+          this.deps.sfx.slam();
         }
         break;
       case 'strike':
@@ -253,6 +255,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private fire(p: Player): void {
     const pr = this.t.projectile;
     if (!this.deps.fireProjectile || !pr) return;
+    this.deps.sfx.shoot();
     const ang = Math.atan2(p.y - this.y, p.x - this.x);
     const spread = Phaser.Math.DegToRad(pr.spreadDeg);
     for (let i = 0; i < pr.count; i++) {

@@ -8,7 +8,8 @@ import { RunState } from '../data/RunState';
 import { ENEMY_REGISTRY, EnemyKind, isEnemyKind } from '../data/enemyRegistry';
 import { InputManager } from '../systems/InputManager';
 import { TouchControls } from '../systems/TouchControls';
-import { Sfx } from '../systems/Sfx';
+import { Sfx, getSfx } from '../systems/Sfx';
+import { Tutorial } from '../systems/Tutorial';
 import { JuiceSystem } from '../systems/JuiceSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { ParallaxBackground } from '../systems/ParallaxBackground';
@@ -87,13 +88,15 @@ export class GameScene extends Phaser.Scene {
     this.run.data.currentRoomId = roomId;
 
     // Systems
-    this.sfx = new Sfx();
+    this.sfx = getSfx(); // shared singleton (one AudioContext across room reloads)
+    this.sfx.startMusic();
     this.juice = new JuiceSystem(this);
     this.parallax = new ParallaxBackground(this);
     this.particles = new ParticleSystem(this);
     this.particles.startAmbient(roomW, roomH);
     this.actions = new InputManager(this);
     new TouchControls(this, this.actions);
+    new Tutorial(this, this.actions, roomId === START_ROOM); // onboarding in the opener only
 
     this.buildTilemap();
     this.decorations = new Decorations(this, this.room);
