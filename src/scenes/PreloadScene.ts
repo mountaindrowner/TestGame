@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Assets } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { PlayerAnims, RunnerAnims, registerAnims } from '../data/Animations';
+import { FONT } from '../data/ui';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -39,8 +40,18 @@ export class PreloadScene extends Phaser.Scene {
   create(): void {
     registerAnims(this, PlayerAnims);
     registerAnims(this, RunnerAnims);
-    // GameScene is the world; UIScene runs in parallel above it for the HUD.
-    this.scene.start('GameScene');
+    // Make sure the display font is ready before any text is drawn (canvas text
+    // bakes the font at creation; loading it late would show a fallback flash).
+    const start = () => this.scene.start('GameScene');
+    const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+    if (fonts?.load) {
+      Promise.all([fonts.load('16px "Dash Horizon"'), fonts.load('600 16px "Dash Horizon"')])
+        .then(() => fonts.ready)
+        .then(start)
+        .catch(start);
+    } else {
+      start();
+    }
   }
 
   private drawLoader(): void {
@@ -51,7 +62,7 @@ export class PreloadScene extends Phaser.Scene {
     const y = height / 2;
     this.add
       .text(width / 2, y - 18, 'R E P E N T A N C E', {
-        fontFamily: 'monospace',
+        fontFamily: FONT,
         fontSize: '10px',
         color: '#7ef0ff',
       })

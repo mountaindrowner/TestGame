@@ -9,6 +9,14 @@
     <title>REPENTANCE</title>
     <link rel="icon" href="data:," />
     <style>
+      /* Main display font — Dash Horizon (Anomali Creatype, free for
+         personal/non-commercial use). Per-glyph fallback to monospace for any
+         symbols the display face lacks. */
+      @font-face {
+        font-family: 'Dash Horizon';
+        src: url('./fonts/dash-horizon.otf') format('opentype');
+        font-display: swap;
+      }
       html,
       body {
         margin: 0;
@@ -32,7 +40,7 @@
         display: grid;
         place-items: center;
         color: #7ef0ff;
-        font: 600 14px/1.4 ui-monospace, monospace;
+        font: 600 16px/1.4 'Dash Horizon', ui-monospace, monospace;
         letter-spacing: 0.3em;
         opacity: 0.6;
         pointer-events: none;

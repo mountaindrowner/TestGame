@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Palette } from '../data/palette';
 import { PlayerTune } from '../data/Tunables';
+import { FONT } from '../data/ui';
 
 /** Parallel HUD scene — health, the current area name, the Broken Memory
  *  indicator, transient hints, and the defiant line on death. Runs above
@@ -23,24 +24,24 @@ export class UIScene extends Phaser.Scene {
     this.drawHealth();
 
     this.areaText = this.add
-      .text(8, 18, 'THE FIRST FALL', { fontFamily: 'monospace', fontSize: '7px', color: '#7ef0ff' })
+      .text(8, 18, 'THE FIRST FALL', { fontFamily: FONT, fontSize: '7px', color: '#7ef0ff' })
       .setAlpha(0.55);
 
     // Build stamp, top-center — tiny, so we know which build is live.
     this.add
-      .text(this.scale.width / 2, 4, __BUILD_ID__, { fontFamily: 'monospace', fontSize: '6px', color: '#7ef0ff' })
+      .text(this.scale.width / 2, 4, __BUILD_ID__, { fontFamily: FONT, fontSize: '6px', color: '#7ef0ff' })
       .setOrigin(0.5, 0)
       .setAlpha(0.4);
 
     // Broken Memory indicator — dim until found, then bright.
     this.keyPip = this.add
-      .text(8, 30, '◇ MEMORY', { fontFamily: 'monospace', fontSize: '7px', color: '#7ef0ff' })
+      .text(8, 30, '◇ MEMORY', { fontFamily: FONT, fontSize: '7px', color: '#7ef0ff' })
       .setAlpha(0.25);
 
     // Transient contextual hint (e.g. at the sealed gate).
     this.hintText = this.add
       .text(this.scale.width / 2, this.scale.height - 24, '', {
-        fontFamily: 'monospace',
+        fontFamily: FONT,
         fontSize: '8px',
         color: '#eaf7ff',
         align: 'center',
@@ -51,7 +52,7 @@ export class UIScene extends Phaser.Scene {
     // The world says you failed; the game says get back up.
     this.defiant = this.add
       .text(this.scale.width / 2, this.scale.height / 2, '', {
-        fontFamily: 'monospace',
+        fontFamily: FONT,
         fontSize: '11px',
         color: '#eaf7ff',
         align: 'center',

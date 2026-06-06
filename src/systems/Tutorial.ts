@@ -31,7 +31,7 @@ export class Tutorial {
     style.textContent = `
       #tutorial{position:fixed;left:50%;bottom:max(env(safe-area-inset-bottom,0px),12px);
         transform:translateX(-50%);z-index:9000;pointer-events:none;opacity:0;
-        transition:opacity 0.5s;font-family:ui-monospace,monospace;}
+        transition:opacity 0.5s;font-family:'Dash Horizon',ui-monospace,monospace;}
       #tutorial.show{opacity:0.82;}
       #tutorial .card{display:flex;gap:14px;padding:8px 14px;border-radius:10px;
         background:rgba(10,16,24,0.55);border:1px solid rgba(126,240,255,0.3);

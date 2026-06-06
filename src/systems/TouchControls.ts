@@ -32,7 +32,7 @@ export class TouchControls {
     style.textContent = `
       #touch-controls {
         position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-        font-family: ui-monospace, monospace; -webkit-user-select: none; user-select: none;
+        font-family: 'Dash Horizon', ui-monospace, monospace; -webkit-user-select: none; user-select: none;
         touch-action: none;
       }
       #touch-controls .pad {

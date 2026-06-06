@@ -497,7 +497,7 @@ export class GameScene extends Phaser.Scene {
     el.innerHTML = `
       <style>
         #${id}{position:fixed;inset:0;display:grid;place-items:center;z-index:9998;
-          font-family:ui-monospace,monospace;color:#eaf7ff;text-align:center;
+          font-family:'Dash Horizon',ui-monospace,monospace;color:#eaf7ff;text-align:center;
           background:radial-gradient(ellipse at center, rgba(10,16,24,0.2), rgba(5,5,10,0.86));}
         #${id} .ttl{font-size:22px;letter-spacing:0.35em;color:#7ef0ff;margin-bottom:10px;}
         #${id} .sub{font-size:12px;opacity:0.8;letter-spacing:0.2em;margin-bottom:22px;}
