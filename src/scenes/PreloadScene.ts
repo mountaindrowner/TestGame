@@ -28,6 +28,10 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(Assets.bgNear.key, Assets.bgNear.path);
     this.load.image(Assets.fog.key, Assets.fog.path);
     this.load.image(Assets.dot.key, Assets.dot.path);
+    this.load.image(Assets.chain.key, Assets.chain.path);
+    this.load.image(Assets.vine.key, Assets.vine.path);
+    this.load.image(Assets.root.key, Assets.root.path);
+    this.load.image(Assets.banner.key, Assets.banner.path);
   }
 
   create(): void {

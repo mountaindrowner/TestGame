@@ -29,8 +29,16 @@ parallax baked + scrolled (never repainted); procedural assets via `tools/*.py` 
 ## Architecture
 `src/main.ts` (Phaser config only) → scenes Boot→Preload→Game(+parallel UI). Entities
 (`Player`, `Enemy`, `AttackHitbox`) own their body/state. Systems (`InputManager`,
-`CombatSystem`, `JuiceSystem`, `ParticleSystem`, `ParallaxBackground`, `Sfx`) act on entities.
-`window.__GAME_READY` + `window.__poseScene()` are the screenshot hooks.
+`CombatSystem`, `JuiceSystem`, `ParticleSystem`, `ParallaxBackground`, `Decorations`, `Sfx`)
+act on entities. `window.__GAME_READY` + `window.__poseScene()` are the screenshot hooks.
+
+## Tile system (the "tile family" leg of each theme)
+Rooms store SEMANTIC codes (`Sem.*` in roomData). `Autotiler.autotile()` converts them to
+edge-aware VISUAL tiles (`Vis.*`): walls keyed by a 4-bit exposed-edge mask → lit bevels +
+rounded convex corners; big interiors scatter across variants so fills don't look stamped.
+`tools/gen_tileset.py` packs 16 wall-masks + interior variants + cracked + platform + molten.
+`Decorations` hangs swaying props (chains/vines/roots/banners from `tools/gen_decor.py`) off
+ledge undersides. To add a biome: new palette + `gen_tileset`/`gen_decor` variant → same engine.
 
 ## Gotchas (don't relearn the hard way)
 - Audio is gesture-gated (browser autoplay) — `Sfx` resumes the AudioContext on first input.

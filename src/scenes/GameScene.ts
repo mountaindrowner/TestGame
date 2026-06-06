@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { buildFirstFall, RoomData, Spawn } from '../data/roomData';
-import { Assets, Tile, SOLID_TILES } from '../data/assetManifest';
+import { Assets, Vis, VIS_SOLID_MAX } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace } from '../data/Tunables';
 import { InputManager } from '../systems/InputManager';
@@ -9,6 +9,8 @@ import { JuiceSystem } from '../systems/JuiceSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { ParallaxBackground } from '../systems/ParallaxBackground';
 import { CombatSystem } from '../systems/CombatSystem';
+import { autotile } from '../systems/Autotiler';
+import { Decorations } from '../systems/Decorations';
 import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 
@@ -21,6 +23,7 @@ export class GameScene extends Phaser.Scene {
 
   private room!: RoomData;
   private layer!: Phaser.Tilemaps.TilemapLayer;
+  private decorations!: Decorations;
   private player!: Player;
   private enemies!: Phaser.GameObjects.Group;
   private graceSpawn = new Phaser.Math.Vector2();
@@ -45,6 +48,7 @@ export class GameScene extends Phaser.Scene {
     this.actions = new InputManager(this);
 
     this.buildTilemap();
+    this.decorations = new Decorations(this, this.room);
     this.physics.world.setBounds(0, 0, roomW, roomH);
 
     // Entities
@@ -88,8 +92,9 @@ export class GameScene extends Phaser.Scene {
 
   // ----------------------------------------------------------------------
   private buildTilemap(): void {
+    const visual = autotile(this.room); // semantic cells -> edge-aware visual tiles
     const map = this.make.tilemap({
-      data: this.room.tiles,
+      data: visual,
       tileWidth: World.tile,
       tileHeight: World.tile,
     });
@@ -97,10 +102,11 @@ export class GameScene extends Phaser.Scene {
     this.layer = map.createLayer(0, tileset, 0, 0)!;
     this.layer.setDepth(10);
 
-    this.layer.setCollision([Tile.STONE, Tile.STONE_TOP, Tile.CRACKED, Tile.PLATFORM]);
+    this.layer.setCollisionBetween(Vis.WALL_MIN, VIS_SOLID_MAX); // 0..18 walls are solid
+    this.layer.setCollision(Vis.PLATFORM);
     // One-way platforms: collide only on the top face.
     this.layer.forEachTile((t) => {
-      if (t.index === Tile.PLATFORM) t.setCollision(false, false, true, false);
+      if (t.index === Vis.PLATFORM) t.setCollision(false, false, true, false);
     });
   }
 
@@ -132,7 +138,7 @@ export class GameScene extends Phaser.Scene {
             particles: this.particles,
             groundCheck: (gx, gy) => {
               const t = this.layer.getTileAtWorldXY(gx, gy);
-              return !!t && SOLID_TILES.includes(t.index as never);
+              return !!t && t.index >= 0 && t.index <= Vis.PLATFORM; // solid or platform
             },
           }),
         );
@@ -187,13 +193,14 @@ export class GameScene extends Phaser.Scene {
     this.actions.update(time);
     this.juice.update(time);
     this.parallax.update(this.cameras.main, time);
+    this.decorations.update(time);
     if (!this.juice.frozen) this.checkHazards();
   }
 
   private checkHazards(): void {
     if (this.respawning || this.player.isInvulnerable()) return;
     const t = this.layer.getTileAtWorldXY(this.player.x, this.player.y - 3);
-    if (t && t.index === Tile.MOLTEN) {
+    if (t && t.index === Vis.MOLTEN) {
       this.player.takeDamage(40, this.player.x);
       this.player.body.setVelocity(0, -240); // pop up out of the fire
       this.particles.debris(this.player.x, this.player.y, 8);

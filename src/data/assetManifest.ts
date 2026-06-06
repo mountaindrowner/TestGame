@@ -1,43 +1,42 @@
-// Single source of truth for asset keys, paths, and frame dimensions.
-// The Python packer (tools/*.py) MUST produce sheets matching these dims and the
-// frame order declared in Animations.ts. The packer prints its layout to verify.
+// Single source of truth for asset keys, paths, and tile contracts.
+// The Python packers (tools/*.py) MUST produce sheets matching these.
 
 export const Assets = {
-  player: {
-    key: 'player',
-    path: 'assets/sprites/player.png',
-    frameW: 24,
-    frameH: 32,
-  },
-  runner: {
-    key: 'runner',
-    path: 'assets/sprites/runner.png',
-    frameW: 24,
-    frameH: 24,
-  },
-  tileset: {
-    key: 'tileset',
-    path: 'assets/tilesets/depths.png',
-    frameW: 16,
-    frameH: 16,
-  },
+  player: { key: 'player', path: 'assets/sprites/player.png', frameW: 24, frameH: 32 },
+  runner: { key: 'runner', path: 'assets/sprites/runner.png', frameW: 24, frameH: 24 },
+  tileset: { key: 'tileset', path: 'assets/tilesets/depths.png', frameW: 16, frameH: 16 },
   bgFar: { key: 'bg-far', path: 'assets/backgrounds/far.png' },
   bgMid: { key: 'bg-mid', path: 'assets/backgrounds/mid.png' },
   bgNear: { key: 'bg-near', path: 'assets/backgrounds/near.png' },
   fog: { key: 'fog', path: 'assets/backgrounds/fog.png' },
-  dot: { key: 'dot', path: 'assets/sprites/dot.png' }, // soft round particle
+  dot: { key: 'dot', path: 'assets/sprites/dot.png' },
+  // Aesthetic hanging decorations (origin top-center; swayed in the engine).
+  chain: { key: 'decor-chain', path: 'assets/sprites/decor/chain.png' },
+  vine: { key: 'decor-vine', path: 'assets/sprites/decor/vine.png' },
+  root: { key: 'decor-root', path: 'assets/sprites/decor/root.png' },
+  banner: { key: 'decor-banner', path: 'assets/sprites/decor/banner.png' },
 } as const;
 
-// Tileset frame indices (must match tools/gen_tileset.py order).
-export const Tile = {
+// SEMANTIC tile codes — what a room cell *means* (used by roomData).
+export const Sem = {
   EMPTY: -1,
-  STONE: 0, // solid body
-  STONE_TOP: 1, // solid, lit top edge
-  PLATFORM: 2, // one-way (collide from above)
-  MOLTEN: 3, // hazard surface (damages, not solid)
-  CRACKED: 4, // solid, visually fractured
+  SOLID: 0,
+  PLATFORM: 1,
+  MOLTEN: 2,
+  CRACKED: 3,
 } as const;
 
-export const SOLID_TILES = [Tile.STONE, Tile.STONE_TOP, Tile.CRACKED];
-export const ONEWAY_TILES = [Tile.PLATFORM];
-export const HAZARD_TILES = [Tile.MOLTEN];
+// VISUAL tile indices in depths.png (the autotiler's output).
+//   0..15  wall by exposed-edge bitmask (bit0 top, bit1 right, bit2 bottom, bit3 left)
+//   16 INT_A | 17 INT_B | 18 CRACK | 19 PLATFORM | 20 MOLTEN
+export const Vis = {
+  WALL_MIN: 0,
+  WALL_MAX: 15,
+  INT_A: 16,
+  INT_B: 17,
+  CRACK: 18,
+  PLATFORM: 19,
+  MOLTEN: 20,
+} as const;
+
+export const VIS_SOLID_MAX = 18; // indices 0..18 are solid walls (incl. variants + cracked)
