@@ -26,6 +26,9 @@ TOP, RIGHT, BOTTOM, LEFT = 1, 2, 4, 8
 
 LEAF = (46, 92, 78)
 LEAF_HI = (108, 184, 150)
+CALCITE = (146, 158, 170)      # pale damp mineral (flowstone / calcification)
+CALCITE_HI = (206, 218, 226)
+DAMP = (26, 36, 38)            # dark wet stain / pit
 
 
 def hsh(x, y, s=0):
@@ -106,6 +109,27 @@ def add_moss(d, seed, length_bias=1.0):
                 d.point((x, 2), fill=rgba(LEAF_HI))
 
 
+def add_calcite(d, seed):
+    """Pale mineral drips hanging from an exposed underside (calcification)."""
+    for x in range(2, T - 2):
+        if hsh(x, seed, 41) > 0.78:
+            ln = 1 + int(hsh(x, seed, 43) * 3)
+            for k in range(ln):
+                d.point((x, T - 1 - k), fill=rgba(lerp(CALCITE, STONE, 0.25)))
+            d.point((x, T - 1), fill=rgba(CALCITE_HI))  # bright drip tip
+
+
+def add_weather(d, seed):
+    """Damp pits + mineral flecks scattered over weathered ancient stone."""
+    for i in range(4):
+        x = 2 + int(hsh(i, seed, 51) * 12)
+        y = 3 + int(hsh(seed, i, 53) * 10)
+        if hsh(x, y, seed) > 0.5:
+            d.point((x, y), fill=rgba(DAMP))
+        else:
+            d.point((x, y), fill=rgba(lerp(STONE_HI, CALCITE, 0.5)))
+
+
 def wall(mask, variant=0):
     img = new(T, T)
     stone_fill(img, seed=1 + variant)
@@ -147,6 +171,9 @@ def wall(mask, variant=0):
 
     if top:
         add_moss(d, mask)  # overgrowth on any exposed-top ledge
+    add_weather(d, mask + variant * 7) # damp pitting + mineral flecks
+    if bottom:
+        add_calcite(d, mask + 5) # dripstone calcification under undersides
 
     # interior masonry only where not exposed (suggests deeper blocks)
     if not top and not bottom:

@@ -32,13 +32,34 @@ export class Room {
     for (let i = x; i < x + w; i++) if (this.inb(i, y)) this.t[y][i] = Sem.MOLTEN;
     return this;
   }
-  /** Ceiling (2) + bedrock floor (3) always; side walls unless that side is open. */
+  /** Ceiling (organic cave roof) + bedrock floor (3) always; side walls unless open. */
   frame(open: { left?: boolean; right?: boolean } = {}): this {
-    this.solid(0, 0, this.w, 2);
+    this.caveCeiling();
+    this.solid(0, 0, this.w, 1); // thin solid cap so the very top never has gaps
     this.solid(0, this.h - 3, this.w, 3);
     if (!open.left) this.solid(0, 0, 2, this.h);
     if (!open.right) this.solid(this.w - 2, 0, 2, this.h);
     return this;
+  }
+
+  /** An irregular, ancient-cave roof: depth varies per column + occasional
+   *  hanging stalactite nubs, so the underside reads jagged, never boxed. */
+  private caveCeiling(): void {
+    const rnd = (x: number, s: number): number => {
+      let n = (x * 374761393 + s * 668265263) >>> 0;
+      n = Math.imul(n ^ (n >>> 13), 1274126177) >>> 0;
+      return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+    };
+    const phase = this.w * 0.37 + this.h * 0.13;
+    for (let x = 0; x < this.w; x++) {
+      const wav = 0.5 + 0.5 * Math.sin(x * 0.55 + phase);
+      const wav2 = 0.5 + 0.5 * Math.sin(x * 0.21 + phase * 1.7);
+      // Kept shallow (≤4) so hanging geometry never clips a head on a high ledge;
+      // long dripstones come from the non-colliding stalactite decor instead.
+      const d = Math.min(4, 2 + Math.floor(wav * 1.5 + wav2 + rnd(x, 7) * 1.5));
+      this.solid(x, 0, 1, d);
+      if (rnd(x, 13) > 0.9) this.solid(x, d, 1, 1, Sem.CRACKED); // small stalactite nub
+    }
   }
   /** Fully closed room (a dead-end branch). */
   shell(): this {

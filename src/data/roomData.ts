@@ -63,7 +63,18 @@ export function buildFirstFall(): RoomData {
 
   // --- Outer shell: walls + ceiling + deep floor -------------------------
   // Right side is OPEN — walking off the right edge continues into THE DESCENT.
-  solid(0, 0, W, 2); // ceiling
+  // Organic ancient-cave roof: varied depth + the odd hanging stalactite.
+  const croof = (x: number, s: number): number => {
+    let n = (x * 374761393 + s * 668265263) >>> 0;
+    n = Math.imul(n ^ (n >>> 13), 1274126177) >>> 0;
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+  };
+  for (let x = 0; x < W; x++) {
+    const d = Math.min(4, 2 + Math.floor((0.5 + 0.5 * Math.sin(x * 0.5 + 3)) * 1.5 + croof(x, 7) * 1.5));
+    solid(x, 0, 1, d);
+    if (croof(x, 13) > 0.9) solid(x, d, 1, 1, Sem.CRACKED);
+  }
+  solid(0, 0, W, 1); // thin top cap
   solid(0, 0, 2, H); // left wall
   solid(0, H - 3, W, 3); // bedrock floor
 

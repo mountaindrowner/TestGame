@@ -137,8 +137,27 @@ def fern():
     return apply_bloom(img, threshold=170, radius=1.2, gain=0.7)
 
 
+CALCITE = (146, 158, 170)
+CALCITE_HI = (206, 218, 226)
+
+
+def stalactite():
+    """A hanging dripstone spike — weathered stone with a pale calcite tip."""
+    w, h = 8, 22
+    img = new(w, h)
+    d = ImageDraw.Draw(img)
+    cx = w / 2
+    d.polygon([(1, 0), (w - 1, 0), (cx + 0.5, h - 1)], fill=rgba(STONE_LO))
+    d.line([(1, 0), (cx, h - 2)], fill=rgba(lerp(STONE, STONE_HI, 0.4)))  # lit edge
+    for y in range(2, h - 3, 4):
+        d.point((int(cx + math.sin(y) * 0.6), y), fill=rgba(CALCITE))  # mineral banding
+    d.point((int(cx), h - 1), fill=rgba(CALCITE_HI))  # bright wet tip
+    return apply_bloom(img, threshold=180, radius=1.0, gain=0.6)
+
+
 def build():
     save(chain(), "sprites", "decor", "chain.png")
+    save(stalactite(), "sprites", "decor", "stalactite.png")
     save(vine(), "sprites", "decor", "vine.png")
     save(root(), "sprites", "decor", "root.png")
     save(banner(), "sprites", "decor", "banner.png")
