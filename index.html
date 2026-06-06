@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>REPENTANCE</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #05050a;
+        overflow: hidden;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      #game {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+      }
+      /* Tiny pre-boot title so a blank frame never shows. */
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #7ef0ff;
+        font: 600 14px/1.4 ui-monospace, monospace;
+        letter-spacing: 0.3em;
+        opacity: 0.6;
+        pointer-events: none;
+        transition: opacity 0.4s;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="boot">R E P E N T A N C E</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
