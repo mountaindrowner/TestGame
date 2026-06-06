@@ -22,9 +22,9 @@ export const PlayerTune = {
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
   // a touch LOOSE/floaty in the air (the grace of getting back up); dash = crisp burst.
-  runSpeed: 132,
-  runAccel: 1400,
-  runDecel: 1700, // friction when no input on ground
+  runSpeed: 140,
+  runAccel: 1700, // snappy off-the-line response (Game-Feel rule #1)
+  runDecel: 1800, // friction when no input on ground
   airAccel: 1000,
   airDecel: 600,
   turnBonus: 1.7, // accel multiplier when reversing (snappy turns)

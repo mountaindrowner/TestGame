@@ -57,6 +57,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private sqX = 1;
   private sqY = 1;
   private lastPivotAt = 0;
+  private lastRunDustAt = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: PlayerDeps) {
     super(scene, x, y, Assets.player.key, 0);
@@ -334,6 +335,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     else next = Math.abs(this.body.velocity.x) > 12 ? 'player-run' : 'player-idle';
     this.mode = onGround ? (next === 'player-run' ? 'run' : 'idle') : vy < 0 ? 'jump' : 'fall';
     if (this.anims.currentAnim?.key !== next) this.play(next, true);
+    // couple the run cadence to actual speed so the gait never churns or drags
+    this.anims.timeScale =
+      next === 'player-run' ? Phaser.Math.Clamp(Math.abs(this.body.velocity.x) / (P.runSpeed * 0.8), 0.6, 1.5) : 1;
+    // kicked-up dust while sprinting
+    if (onGround && Math.abs(this.body.velocity.x) > P.runSpeed * 0.6 && this.scene.time.now - this.lastRunDustAt > 190) {
+      this.particles.dust(this.x, this.y, 2);
+      this.lastRunDustAt = this.scene.time.now;
+    }
     // ease squash/stretch back toward neutral (feet stay planted: origin 0.5,1)
     this.sqX += (1 - this.sqX) * P.squashDecay;
     this.sqY += (1 - this.sqY) * P.squashDecay;
@@ -344,6 +353,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.sqX = 1;
     this.sqY = 1;
     this.setScale(P.scale, P.scale);
+    this.anims.timeScale = 1; // run-cadence coupling shouldn't bleed into other clips
   }
 
   // ----------------------------------------------------------------------
