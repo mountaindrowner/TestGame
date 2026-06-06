@@ -48,6 +48,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private attackStartedActive = false;
   private comboStep = 0;
   private comboWindowEnd = 0;
+  private attackStartAt = 0;
   // hurt/stun
   private stunUntil = 0;
 
@@ -162,6 +163,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.dashing) return;
     if (this.controls.justPressed('dash') && time >= this.dashReadyAt) {
       this.dashing = true;
+      this.attacking = false; // dash cancels a swing
+      this.hitbox.disable();
+      this.setRotation(0);
       this.dashEndAt = time + P.dashDurationMs;
       this.dashReadyAt = time + P.dashCooldownMs;
       this.invulnUntil = Math.max(this.invulnUntil, time + P.dashIFrameMs);
@@ -195,6 +199,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // start or chain
     this.comboStep = this.attacking ? (this.comboStep + 1) % 2 : 0;
     this.attacking = true;
+    this.attackStartAt = time;
     this.attackStartedActive = false;
     this.attackActiveEndAt = time + P.attackWindupMs + P.attackActiveMs;
     this.attackPhaseEndAt = time + P.attackWindupMs + P.attackActiveMs + P.attackRecoveryMs;
@@ -214,10 +219,46 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const cy = this.y - P.bodyH * 0.55;
     this.hitbox.fire(cx, cy, P.attackReach, P.attackHeight);
     this.attackStartedActive = true;
+    this.spawnSlash(cx, cy);
+  }
+
+  /** A bright crescent that sweeps through the swing — sells the arc of the blade. */
+  private spawnSlash(cx: number, cy: number): void {
+    const dir = this.comboStep === 0 ? 1 : -1; // overhead vs rising
+    const r = P.attackReach * 1.15;
+    const g = this.scene.add.graphics({ x: cx, y: cy }).setDepth(52).setBlendMode(Phaser.BlendModes.ADD);
+    g.lineStyle(3, Palette.bloom, 0.9);
+    g.beginPath();
+    g.arc(0, 0, r, Phaser.Math.DegToRad(-58), Phaser.Math.DegToRad(58), false);
+    g.strokePath();
+    g.lineStyle(1.5, Palette.grace, 0.7);
+    g.beginPath();
+    g.arc(0, 0, r - 3, Phaser.Math.DegToRad(-50), Phaser.Math.DegToRad(50), false);
+    g.strokePath();
+    g.setScale(this.facing, dir);
+    g.setRotation(Phaser.Math.DegToRad(-70));
+    this.scene.tweens.add({
+      targets: g,
+      rotation: Phaser.Math.DegToRad(70),
+      alpha: 0,
+      duration: 140,
+      ease: 'Quad.easeOut',
+      onComplete: () => g.destroy(),
+    });
   }
 
   private updateAttack(time: number): void {
     if (!this.attacking) return;
+    // Whole-body swing: lean through the strike (pivot at the feet) + motion-smear
+    // ghosts so the attack reads as a full-body lunge, not just a sword waggle.
+    const dur = Math.max(1, this.attackPhaseEndAt - this.attackStartAt);
+    const t = Phaser.Math.Clamp((time - this.attackStartAt) / dur, 0, 1);
+    const dir = this.comboStep === 0 ? 1 : -1;
+    this.setRotation(this.facing * dir * Math.sin(t * Math.PI) * 0.22);
+    if (this.hitbox.live && time - this.lastAfterimageAt >= 24) {
+      this.spawnAfterimage();
+      this.lastAfterimageAt = time;
+    }
     if (this.hitbox.live) {
       // keep hitbox glued in front of the player during the active window
       const cx = this.x + this.facing * (P.attackReach * 0.5);
@@ -229,6 +270,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (time >= this.attackPhaseEndAt) {
       this.attacking = false;
       this.hitbox.disable();
+      this.setRotation(0);
     }
   }
 
@@ -255,7 +297,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   private updateAnimation(onGround: boolean): void {
     this.setFlipX(this.facing < 0);
-    if (this.mode === 'attack' || this.dashing || this.mode === 'hurt') return;
+    if (!this.attacking) this.setRotation(0); // clear any swing lean once the strike is done
+    // Gate on the `attacking` flag (not mode) so the body returns to run/idle after
+    // a swing — mirrors how dash recovers via its boolean.
+    if (this.attacking || this.dashing || this.mode === 'hurt') return;
     const vy = this.body.velocity.y;
     let next: string;
     if (!onGround) next = vy < -10 ? 'player-jump' : 'player-fall';
@@ -281,6 +326,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashing = false;
     this.attacking = false;
     this.hitbox.disable();
+    this.setRotation(0);
     this.body.setAllowGravity(true);
     this.play('player-hurt', true);
     this.sfx.hurt();
@@ -327,6 +373,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.controllable = true;
     this.body.setAllowGravity(true);
     this.setAlpha(1);
+    this.setRotation(0);
     this.invulnUntil = this.scene.time.now + 900;
     this.play('player-idle', true);
   }

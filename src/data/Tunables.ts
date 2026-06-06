@@ -49,7 +49,7 @@ export const PlayerTune = {
   attackReach: 22, // hitbox extends this far in front of the body center
   attackHeight: 26,
   attackDamage: 34,
-  attackLungeSpeed: 70, // small forward push on swing (game feel)
+  attackLungeSpeed: 120, // forward step-in on swing — sells a full-body lunge
 
   // Survivability
   maxHealth: 100,
