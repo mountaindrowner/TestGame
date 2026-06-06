@@ -1,19 +1,21 @@
 import { RoomData } from '../roomData';
 import { Room } from './build';
 
-// Room 3 — the branch hub. Down-left to the buried memory; right to the gate.
+// Spine room 3 — open both sides (descent ↔ gate). A deliberate ↑ door drops to
+// the buried-memory branch (central, so you don't trigger it just passing through).
 export function crossroads(): RoomData {
-  const r = new Room('THE CROSSROADS', 50, 28).shell();
-  r.solid(21, 16, 8, 2); // central entry ledge (drop down to choose a way)
-  r.platform(14, 20, 5); // step back up toward the entry
-  r.platform(31, 20, 5);
+  const r = new Room('THE CROSSROADS', 58, 20).frame({ left: true, right: true });
+  r.solid(22, 12, 12, 2); // central ledge
+  r.platform(12, 15, 5);
+  r.platform(42, 15, 5);
 
-  r.at('door', 25, 15, { id: 'from-descent', to: 'descent', toEntry: 'to-cross' });
-  r.at('door', 7, 24, { id: 'to-memory', to: 'memory', toEntry: 'from-cross' });
-  r.at('door', 43, 24, { id: 'to-gate', to: 'gate', toEntry: 'from-cross' });
-  r.at('spark', 25, 9); // airborne, harasses from above the hub
-  r.at('runner', 14, 24);
-  r.at('torch', 4, 24);
-  r.at('torch', 46, 24);
+  r.at('spark', 28, 8); // airborne harasser
+  r.at('runner', 16, 16);
+  r.at('door', 29, 16, { id: 'cross-mem', to: 'memory', toEntry: 'from-cross' });
+  r.at('torch', 6, 16);
+  r.at('torch', 52, 16);
+
+  r.link('west', 'descent');
+  r.link('east', 'gate');
   return r.build('crossroads');
 }

@@ -30,6 +30,7 @@ interface DoorRef {
 interface EnterData {
   roomId?: string;
   entryDoorId?: string;
+  entrySide?: 'east' | 'west';
 }
 
 export class GameScene extends Phaser.Scene {
@@ -52,6 +53,8 @@ export class GameScene extends Phaser.Scene {
 
   // multi-room
   private entryDoorId?: string;
+  private entrySide?: 'east' | 'west';
+  private interactArmed = false; // must leave an edge zone before it can fire
   private doors: DoorRef[] = [];
   private gate?: { x: number; y: number; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle };
   private transitioning = false;
@@ -69,6 +72,7 @@ export class GameScene extends Phaser.Scene {
   create(data: EnterData): void {
     const roomId = data?.roomId ?? START_ROOM;
     this.entryDoorId = data?.entryDoorId;
+    this.entrySide = data?.entrySide;
     const fadeIn = data?.roomId !== undefined; // arriving via a transition
 
     this.doors = [];
@@ -77,6 +81,7 @@ export class GameScene extends Phaser.Scene {
     this.transitioning = false;
     this.won = false;
     this.respawning = false;
+    this.interactArmed = false;
 
     this.room = buildRoom(roomId);
     const roomW = this.room.w * World.tile;
@@ -152,6 +157,7 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(30, syncHud); // also reach UIScene on its very first create
 
     this.interactReadyAt = this.time.now + 300; // avoid re-triggering the door we just used
+    this.makeEdgeHints();
 
     this.installDebugHooks();
     this.time.delayedCall(60, () => {
@@ -189,13 +195,21 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnFromData(): void {
-    // 1) Player: at the door we entered from, else the room's player spawn.
+    // 1) Player entry: a named door we came through > the edge we walked in from >
+    //    the room's own player spawn > a safe fallback.
     const entryDoor = this.entryDoorId
       ? this.room.spawns.find((s) => s.type === 'door' && s.id === this.entryDoorId)
       : undefined;
-    const pSpawn = this.room.spawns.find((s) => s.type === 'player');
-    const p = entryDoor ?? pSpawn;
-    const pos = p ? this.tileToWorld(p) : { x: World.tile * 4, y: World.tile * 5 };
+    let pos: { x: number; y: number };
+    if (entryDoor) {
+      pos = this.tileToWorld(entryDoor);
+    } else if (this.entrySide) {
+      const tx = this.entrySide === 'west' ? 3 : this.room.w - 4; // arrive just inside that edge
+      pos = { x: tx * World.tile + World.tile / 2, y: (this.room.h - 4) * World.tile + World.tile };
+    } else {
+      const pSpawn = this.room.spawns.find((s) => s.type === 'player');
+      pos = pSpawn ? this.tileToWorld(pSpawn) : { x: World.tile * 4, y: World.tile * 5 };
+    }
     this.graceSpawn.set(pos.x, pos.y);
     this.player = new Player(this, pos.x, pos.y, {
       input: this.actions,
@@ -391,21 +405,30 @@ export class GameScene extends Phaser.Scene {
 
   private checkInteractions(time: number): void {
     if (this.transitioning || this.respawning || this.won || time < this.interactReadyAt) return;
-    if (!this.actions.justPressed('up')) return;
     const px = this.player.x;
     const py = this.player.y;
-    for (const d of this.doors) {
-      if (Math.abs(px - d.x) < 14 && Math.abs(py - d.y) < 30) {
-        this.transitionTo(d.to, d.toEntry);
-        return;
-      }
+    const roomW = this.room.w * World.tile;
+    const L = this.room.links ?? {};
+    const ax = this.actions.axisX();
+
+    if (px > 24 && px < roomW - 24) this.interactArmed = true; // clear of the edge zones
+
+    // Edges: just walk into them — the world keeps going. Quick fade.
+    if (this.interactArmed) {
+      if (L.east && px > roomW - 24 && ax > 0) return void this.transitionTo(L.east, { entrySide: 'west' });
+      if (L.west && px < 24 && ax < 0) return void this.transitionTo(L.west, { entrySide: 'east' });
     }
-    if (this.gate && Math.abs(px - this.gate.x) < 18 && Math.abs(py - this.gate.y) < 32) {
-      this.tryGate();
+
+    // Side doors + the gate are deliberate — press ↑.
+    if (this.actions.justPressed('up')) {
+      for (const d of this.doors) {
+        if (Math.abs(px - d.x) < 14 && Math.abs(py - d.y) < 30) return void this.transitionTo(d.to, { entryDoorId: d.toEntry });
+      }
+      if (this.gate && Math.abs(px - this.gate.x) < 18 && Math.abs(py - this.gate.y) < 32) this.tryGate();
     }
   }
 
-  private transitionTo(roomId: string, entryDoorId?: string): void {
+  private transitionTo(roomId: string, opts: { entryDoorId?: string; entrySide?: 'east' | 'west' }): void {
     if (this.transitioning) return;
     this.transitioning = true;
     this.run.health = this.player.health;
@@ -413,9 +436,23 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.fadeRect,
       alpha: 1,
-      duration: 240,
-      onComplete: () => this.scene.restart({ roomId, entryDoorId }),
+      duration: 160,
+      onComplete: () => this.scene.restart({ roomId, ...opts }),
     });
+  }
+
+  private makeEdgeHints(): void {
+    const L = this.room.links ?? {};
+    const roomW = this.room.w * World.tile;
+    const y = (this.room.h - 4) * World.tile;
+    const chevron = (x: number, ch: string) =>
+      this.add
+        .text(x, y, ch, { fontFamily: 'monospace', fontSize: '12px', color: '#7ef0ff' })
+        .setOrigin(0.5)
+        .setAlpha(0.35)
+        .setDepth(9);
+    if (L.west) chevron(16, '«');
+    if (L.east) chevron(roomW - 16, '»');
   }
 
   private tryGate(): void {

@@ -26,6 +26,12 @@ export class UIScene extends Phaser.Scene {
       .text(8, 18, 'THE FIRST FALL', { fontFamily: 'monospace', fontSize: '7px', color: '#7ef0ff' })
       .setAlpha(0.55);
 
+    // Build stamp, top-center — tiny, so we know which build is live.
+    this.add
+      .text(this.scale.width / 2, 4, __BUILD_ID__, { fontFamily: 'monospace', fontSize: '6px', color: '#7ef0ff' })
+      .setOrigin(0.5, 0)
+      .setAlpha(0.4);
+
     // Broken Memory indicator — dim until found, then bright.
     this.keyPip = this.add
       .text(8, 30, '◇ MEMORY', { fontFamily: 'monospace', fontSize: '7px', color: '#7ef0ff' })

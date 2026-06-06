@@ -33,6 +33,8 @@ export interface RoomData {
   h: number; // tiles
   tiles: number[][]; // [y][x] of Sem codes, -1 empty
   spawns: Spawn[];
+  // Edge links: walking off this side enters the named room (seamless-ish travel).
+  links?: { east?: string; west?: string; up?: string; down?: string };
 }
 
 const W = 54;
@@ -60,9 +62,9 @@ export function buildFirstFall(): RoomData {
   };
 
   // --- Outer shell: walls + ceiling + deep floor -------------------------
+  // Right side is OPEN — walking off the right edge continues into THE DESCENT.
   solid(0, 0, W, 2); // ceiling
   solid(0, 0, 2, H); // left wall
-  solid(W - 2, 0, 2, H); // right wall
   solid(0, H - 3, W, 3); // bedrock floor
 
   // --- Descending, winding ledges (down AND across) ----------------------
@@ -93,11 +95,10 @@ export function buildFirstFall(): RoomData {
     { type: 'runner', tx: 26, ty: 13 },
     { type: 'runner', tx: 45, ty: 15 },
     { type: 'runner', tx: 23, ty: 23 },
-    { type: 'door', tx: 49, ty: H - 7, id: 'exit', to: 'descent', toEntry: 'from-fall' }, // exit shelf → the descent
     { type: 'torch', tx: 4, ty: 7 },
     { type: 'torch', tx: 48, ty: 15 },
     { type: 'torch', tx: 6, ty: 29 },
   ];
 
-  return { name: 'THE FIRST FALL', w: W, h: H, tiles: t, spawns };
+  return { name: 'THE FIRST FALL', w: W, h: H, tiles: t, spawns, links: { east: 'descent' } };
 }

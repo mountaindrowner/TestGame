@@ -1,21 +1,21 @@
 import { RoomData } from '../roomData';
 import { Room } from './build';
 
-// Room 2 — descending ledges; the impulse to keep falling. First real fights.
+// Spine room 2 — open both sides; walk right to keep going right. Floor feet row 16.
 export function descent(): RoomData {
-  const r = new Room('THE DESCENT', 48, 30).shell();
-  r.solid(2, 8, 12, 2); // top-left landing (entry from the first fall)
-  r.platform(16, 12, 5);
-  r.solid(22, 15, 12, 2); // mid ledge
-  r.platform(36, 18, 5);
-  r.solid(30, 21, 10, 2);
-  r.solid(4, 24, 12, 2); // lower-left ledge (exit shelf)
+  const r = new Room('THE DESCENT', 60, 20).frame({ left: true, right: true });
+  r.platform(16, 12, 6);
+  r.platform(30, 10, 6);
+  r.platform(44, 12, 6);
+  r.solid(50, 14, 7, 1);
 
-  r.at('door', 4, 7, { id: 'from-fall', to: 'first-fall', toEntry: 'exit' });
-  r.at('door', 8, 23, { id: 'to-cross', to: 'crossroads', toEntry: 'from-descent' });
-  r.at('runner', 28, 14);
-  r.at('crawler', 34, 20);
-  r.at('torch', 6, 7);
-  r.at('torch', 40, 17);
+  r.at('runner', 18, 16);
+  r.at('crawler', 38, 16);
+  r.at('runner', 52, 16);
+  r.at('torch', 8, 16);
+  r.at('torch', 46, 11);
+
+  r.link('west', 'first-fall');
+  r.link('east', 'crossroads');
   return r.build('descent');
 }
