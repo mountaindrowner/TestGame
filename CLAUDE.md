@@ -35,8 +35,12 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   → big forward cleave, ~1:1.5:2.6 dmg; chain within `comboWindowMs`). `CombatSystem` reads the
   live `player.attackDamage`; swings lean the body + sweep a scaled slash arc.
 - **Design direction:** `docs/WORLD_PLAN.md` gives every room a name/role/mood + the ascent-from-
-  the-depths gradients (why assets go where). `docs/ENEMY_ART_SPEC.md` is the PixelLab spec for
-  real enemy/boss sprites (still placeholder-tinted; sandbox egress blocks downloading frames).
+  the-depths gradients (why assets go where). `docs/ENEMY_ART_SPEC.md` is the PixelLab spec/IDs for
+  the enemy/boss sprites. `docs/GAME_FEEL_RULES.md` is the platformer game-feel charter (coyote/
+  buffer/variable-jump ✅, squash-stretch micro-anims ✅, feel>…>art priority; flags the rules that
+  don't fit a solo AI build, e.g. "≥5 live playtesters" → the user is the playtester).
+- **Game feel:** squash/stretch on jump/double-jump/land + a pivot squish on hard turns (feet-
+  anchored scale, no new art; `PlayerTune.*Squash`), atop dash afterimages + attack body-lean/slash.
 - **Player art:** AI (PixelLab "Hollow Revenant"), 48×44, 9 anims. `art_src/player/` → `tools/pack_player.py`.
 - **Enemy art:** ALL now real PixelLab art — runner (`art_src/enemy/`) + crawler/spark/striker/
   warden (`art_src/<kind>/`, varied native frame sizes). Pulled via `tools/fetch_enemy_art.py`

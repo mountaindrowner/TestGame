@@ -18,6 +18,8 @@ export const PlayerTune = {
   bodyOffsetY: 16, // body spans rows 16..44 (feet at frame bottom; head above)
 
   // Horizontal movement
+  // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
+  // a touch LOOSE/floaty in the air (the grace of getting back up); dash = crisp burst.
   runSpeed: 132,
   runAccel: 1400,
   runDecel: 1700, // friction when no input on ground
@@ -46,6 +48,18 @@ export const PlayerTune = {
   attackReach: 22, // hitbox extends this far in front of the body center
   attackHeight: 26,
   attackDamage: 26, // fallback if combo config is unavailable
+
+  // Squash & stretch (feet-anchored micro-animation; origin 0.5,1 keeps the base
+  // planted). Pure scale tweaks — no new art. Decay = ease-back per frame.
+  squashDecay: 0.18,
+  jumpSquashX: 0.86,
+  jumpSquashY: 1.16,
+  airJumpSquashX: 0.9,
+  airJumpSquashY: 1.1,
+  landSquashX: 1.18,
+  landSquashY: 0.82,
+  pivotSquashX: 1.12,
+  pivotSquashY: 0.9,
 
   // Survivability
   maxHealth: 100,

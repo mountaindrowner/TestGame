@@ -53,6 +53,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private curAttack: (typeof PlayerCombo)[number] = PlayerCombo[0];
   // hurt/stun
   private stunUntil = 0;
+  // squash & stretch (eased back toward 1 each frame)
+  private sqX = 1;
+  private sqY = 1;
+  private lastPivotAt = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: PlayerDeps) {
     super(scene, x, y, Assets.player.key, 0);
@@ -125,6 +129,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (axis !== 0) {
       // snappier turns when reversing direction
       const turning = Math.sign(axis) !== Math.sign(v) && v !== 0;
+      // pivot micro-anim: a quick squish + dust when cutting hard the other way
+      if (turning && onGround && Math.abs(v) > P.runSpeed * 0.55 && time - this.lastPivotAt > 220) {
+        this.sqX = P.pivotSquashX;
+        this.sqY = P.pivotSquashY;
+        this.particles.dust(this.x, this.y, 4);
+        this.lastPivotAt = time;
+      }
       const a = accel * (turning ? P.turnBonus : 1) * dt;
       let nv = v + axis * a;
       nv = Phaser.Math.Clamp(nv, -P.runSpeed, P.runSpeed);
@@ -146,11 +157,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (onGround || canCoyote) {
         this.body.setVelocityY(P.jumpVelocity);
         this.lastGroundedAt = 0; // consume coyote
+        this.sqX = P.jumpSquashX;
+        this.sqY = P.jumpSquashY; // stretch up off the ground
         this.sfx.jump();
         this.particles.dust(this.x, this.y, 5);
       } else if (this.airJumpsUsed < P.maxAirJumps) {
         this.airJumpsUsed++;
         this.body.setVelocityY(P.doubleJumpVelocity);
+        this.sqX = P.airJumpSquashX;
+        this.sqY = P.airJumpSquashY;
         this.sfx.doubleJump();
         this.particles.sparks(this.x, this.y - 12, 6);
       }
@@ -168,6 +183,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.attacking = false; // dash cancels a swing
       this.hitbox.disable();
       this.setRotation(0);
+      this.resetSquash();
       this.dashEndAt = time + P.dashDurationMs;
       this.dashReadyAt = time + P.dashCooldownMs;
       this.invulnUntil = Math.max(this.invulnUntil, time + P.dashIFrameMs);
@@ -204,6 +220,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.curAttack = c;
     this.attackDamage = c.dmg;
     this.attacking = true;
+    this.resetSquash(); // attack uses body-lean, not squash
     this.attackStartAt = time;
     this.attackStartedActive = false;
     this.attackActiveEndAt = time + c.windupMs + c.activeMs;
@@ -293,6 +310,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private onLand(): void {
+    this.sqX = P.landSquashX;
+    this.sqY = P.landSquashY; // squash on impact, eases back up
     this.sfx.land();
     this.particles.dust(this.x, this.y, 8);
   }
@@ -313,6 +332,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     else next = Math.abs(this.body.velocity.x) > 12 ? 'player-run' : 'player-idle';
     this.mode = onGround ? (next === 'player-run' ? 'run' : 'idle') : vy < 0 ? 'jump' : 'fall';
     if (this.anims.currentAnim?.key !== next) this.play(next, true);
+    // ease squash/stretch back toward neutral (feet stay planted: origin 0.5,1)
+    this.sqX += (1 - this.sqX) * P.squashDecay;
+    this.sqY += (1 - this.sqY) * P.squashDecay;
+    this.setScale(this.sqX, this.sqY);
+  }
+
+  private resetSquash(): void {
+    this.sqX = 1;
+    this.sqY = 1;
+    this.setScale(1, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -333,6 +362,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.attacking = false;
     this.hitbox.disable();
     this.setRotation(0);
+    this.resetSquash();
     this.body.setAllowGravity(true);
     this.play('player-hurt', true);
     this.sfx.hurt();
@@ -380,6 +410,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setAllowGravity(true);
     this.setAlpha(1);
     this.setRotation(0);
+    this.resetSquash();
     this.invulnUntil = this.scene.time.now + 900;
     this.play('player-idle', true);
   }
