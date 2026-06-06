@@ -3,7 +3,7 @@
 
 export const Assets = {
   player: { key: 'player', path: 'assets/sprites/player.png', frameW: 48, frameH: 44 },
-  runner: { key: 'runner', path: 'assets/sprites/runner.png', frameW: 24, frameH: 24 },
+  runner: { key: 'runner', path: 'assets/sprites/runner.png', frameW: 48, frameH: 44 },
   tileset: { key: 'tileset', path: 'assets/tilesets/depths.png', frameW: 16, frameH: 16 },
   bgFar: { key: 'bg-far', path: 'assets/backgrounds/far.png' },
   bgMid: { key: 'bg-mid', path: 'assets/backgrounds/mid.png' },

@@ -31,11 +31,12 @@ export const PlayerAnims: AnimDef[] = [
   { key: 'player-death', sheet: 'player', start: 37, end: 43, frameRate: 10, repeat: 0 },
 ];
 
-// RUNNER strip (24x24): run 0-3 | windup 4-5 | hurt 6
+// RUNNER strip (48x44), packed by tools/pack_enemy.py from PixelLab frames:
+//   run 0-4 | windup 5-9 (crouch-coil telegraph) | hurt 10-15
 export const RunnerAnims: AnimDef[] = [
-  { key: 'runner-run', sheet: 'runner', start: 0, end: 3, frameRate: 16, repeat: -1 },
-  { key: 'runner-windup', sheet: 'runner', start: 4, end: 5, frameRate: 10, repeat: 0 },
-  { key: 'runner-hurt', sheet: 'runner', start: 6, end: 6, frameRate: 1, repeat: 0 },
+  { key: 'runner-run', sheet: 'runner', start: 0, end: 4, frameRate: 16, repeat: -1 },
+  { key: 'runner-windup', sheet: 'runner', start: 5, end: 9, frameRate: 22, repeat: 0 },
+  { key: 'runner-hurt', sheet: 'runner', start: 10, end: 15, frameRate: 20, repeat: 0 },
 ];
 
 export function registerAnims(scene: Phaser.Scene, defs: AnimDef[]): void {

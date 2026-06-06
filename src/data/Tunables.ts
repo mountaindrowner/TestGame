@@ -60,19 +60,20 @@ export const PlayerTune = {
 
 export const EnemyTune = {
   // Impulse Runner — fast, rushes you, punishes hesitation.
-  frameW: 24,
-  frameH: 24,
-  bodyW: 12,
-  bodyH: 16,
-  bodyOffsetX: 6,
-  bodyOffsetY: 8,
+  // 48x44 PixelLab art (shadow-imp ~37px tall; feet at frame bottom).
+  frameW: 48,
+  frameH: 44,
+  bodyW: 14,
+  bodyH: 24,
+  bodyOffsetX: 17, // (frameW - bodyW)/2 -> centred at x=24
+  bodyOffsetY: 20, // body spans rows 20..44 (feet at frame bottom)
 
   maxHealth: 40,
   patrolSpeed: 36,
   chaseSpeed: 138, // faster than the player's run — you must dash/commit
   aggroRange: 130, // detects the player within this horizontal distance
   aggroVertical: 56,
-  windupMs: 160, // brief telegraph before it lunges
+  windupMs: 230, // crouch-coil telegraph before it lunges (matches the 5-frame windup anim)
   contactDamage: 18,
   knockbackTaken: 180,
   edgeCheck: true, // turn at ledges/walls while patrolling
