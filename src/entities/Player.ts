@@ -58,6 +58,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private sqY = 1;
   private lastPivotAt = 0;
   private lastRunDustAt = 0;
+  private jumpAnim = 'player-jump'; // 'player-runjump' when leaping while moving
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: PlayerDeps) {
     super(scene, x, y, Assets.player.key, 0);
@@ -156,6 +157,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const wantJump = this.controls.consumeBuffered('jump', P.jumpBufferMs);
 
     if (wantJump) {
+      // running jump when there's real horizontal speed, else the standstill leap
+      this.jumpAnim = Math.abs(this.body.velocity.x) > P.runSpeed * 0.4 ? 'player-runjump' : 'player-jump';
       if (onGround || canCoyote) {
         this.body.setVelocityY(P.jumpVelocity);
         this.lastGroundedAt = 0; // consume coyote
@@ -331,7 +334,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.attacking || this.dashing || this.mode === 'hurt') return;
     const vy = this.body.velocity.y;
     let next: string;
-    if (!onGround) next = vy < -10 ? 'player-jump' : 'player-fall';
+    if (!onGround) next = vy < -10 ? this.jumpAnim : 'player-fall';
     else next = Math.abs(this.body.velocity.x) > 12 ? 'player-run' : 'player-idle';
     this.mode = onGround ? (next === 'player-run' ? 'run' : 'idle') : vy < 0 ? 'jump' : 'fall';
     if (this.anims.currentAnim?.key !== next) this.play(next, true);

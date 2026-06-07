@@ -44,7 +44,9 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
 - **Player art:** the **original "Hollow Revenant"** (PixelLab id `d6e11e94`, 48px source → packed
   **41×40**, `PlayerTune.scale` 1) — the robot/HD re-rolls were rejected. Its stiff template clips
   were **re-animated emotively** (v3, 7–13 frames each, real wind-up/extension/follow-through):
-  idle/run/jump/fall/dash/hurt + **3 distinct attack swings** + death. Pulled via
+  idle/run/jump/fall/dash/hurt + **3 distinct attack swings** + death, plus a user-made
+  **running-jump** (`runjump`, used when leaping with horizontal speed; standstill uses the leap).
+  Pulled via
   `tools/fetch_enemy_art.py` (player id + per-clip keywords there; note PixelLab keys animations by
   name, so emotive re-rolls of same-named clips need `delete_animation` first), packed by
   `tools/pack_player.py` (union-bbox, feet-anchored). Run cadence speed-coupled; squash/stretch via

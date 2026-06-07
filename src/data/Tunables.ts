@@ -9,14 +9,14 @@ export const World = {
 };
 
 export const PlayerTune = {
-  // Frame / body  (41x40 original Revenant, re-animated emotive + bbox-packed).
-  frameW: 41,
-  frameH: 40,
+  // Frame / body  (45x41 original Revenant, emotive clips + a running-jump, bbox-packed).
+  frameW: 45,
+  frameH: 41,
   scale: 1,
   bodyW: 12,
   bodyH: 28,
-  bodyOffsetX: 15, // (frameW - bodyW)/2 -> centred
-  bodyOffsetY: 12, // body spans rows 12..40 (feet at frame bottom)
+  bodyOffsetX: 16, // (frameW - bodyW)/2 -> centred
+  bodyOffsetY: 13, // body spans rows 13..41 (feet at frame bottom)
 
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
