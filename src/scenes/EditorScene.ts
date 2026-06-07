@@ -56,6 +56,12 @@ export class EditorScene extends Phaser.Scene {
   private dragging = false;
   private dirty = false;
 
+  // world-map view
+  private mapMode = false;
+  private mapGos: Phaser.GameObjects.GameObject[] = [];
+  private mapLayout = new Map<string, { x: number; y: number; w: number; h: number }>();
+  private mapBtn?: HTMLButtonElement;
+
   // DOM
   private panel?: HTMLDivElement;
   private inspector?: HTMLDivElement;
@@ -184,13 +190,25 @@ export class EditorScene extends Phaser.Scene {
     g.strokeRect(s.tx * World.tile - 1, s.ty * World.tile - 1, World.tile + 2, World.tile + 2);
   }
 
-  private fitCamera(): void {
-    const w = this.room.w * World.tile;
-    const h = this.room.h * World.tile;
+  /** Fit a world rect into the viewport, reserving the left strip for the DOM
+   *  panel so nothing important hides behind it. */
+  private fitTo(minx: number, miny: number, maxx: number, maxy: number, cap = 4): void {
+    const PANEL = 122; // internal px the editor panel occupies on the left
+    const MARGIN = 14;
+    const cw = maxx - minx || 1;
+    const ch = maxy - miny || 1;
+    const availW = World.internalWidth - PANEL - MARGIN;
+    const availH = World.internalHeight - MARGIN * 2;
     const cam = this.cameras.main;
-    cam.setBounds(-220, -160, w + 440, h + 320);
-    cam.setZoom(Math.min(World.internalWidth / w, World.internalHeight / h) * 0.94);
-    cam.centerOn(w / 2, h / 2);
+    cam.removeBounds(); // free pan/zoom — exact framing (no clamp fighting our scroll)
+    const zoom = Math.min((availW / cw) * 0.94, (availH / ch) * 0.94, cap);
+    cam.setZoom(zoom);
+    cam.centerOn((minx + maxx) / 2, (miny + maxy) / 2);
+    cam.scrollX -= (PANEL + MARGIN) / 2 / zoom; // nudge content clear of the left panel
+  }
+
+  private fitCamera(): void {
+    this.fitTo(0, 0, this.room.w * World.tile, this.room.h * World.tile, 4);
   }
 
   // --- pointer ----------------------------------------------------------
@@ -204,6 +222,24 @@ export class EditorScene extends Phaser.Scene {
 
   private onDown(p: Phaser.Input.Pointer): void {
     if (p.rightButtonDown()) return; // right-drag pans (handled in onMove)
+    if (this.mapMode) {
+      const wp = this.cameras.main.getWorldPoint(p.x, p.y);
+      let hit: string | undefined;
+      this.mapLayout.forEach((n, id) => {
+        if (Math.abs(wp.x - n.x) <= n.w / 2 && Math.abs(wp.y - n.y) <= n.h / 2) hit = id;
+      });
+      if (!hit) return;
+      if (hit !== this.roomId) {
+        if (this.dirty && !confirm('Discard unsaved changes?')) return;
+        this.exitMapView();
+        this.loadRoom(hit);
+        this.refreshInspector();
+        this.updateStatus();
+      } else {
+        this.exitMapView();
+      }
+      return;
+    }
     const { tx, ty } = this.tileUnder(p);
     if (!this.inb(tx, ty)) return;
     if (this.tool === 'paint') {
@@ -347,6 +383,144 @@ export class EditorScene extends Phaser.Scene {
     this.scene.start('GameScene', { roomId: this.roomId, fromEditor: true });
   }
 
+  // --- world-map view ---------------------------------------------------
+  private toggleMapView(): void {
+    if (this.mapMode) this.exitMapView();
+    else this.enterMapView();
+  }
+
+  private setEditVisible(v: boolean): void {
+    this.layer?.setVisible(v);
+    this.grid.setVisible(v);
+    if (!v) this.sel.clear();
+    for (const m of this.markers) (m.go as unknown as { setVisible(b: boolean): void }).setVisible(v);
+  }
+
+  private enterMapView(): void {
+    this.mapMode = true;
+    this.selected = undefined;
+    this.setEditVisible(false);
+    const ids = allRoomIds();
+    const rooms = new Map(ids.map((id) => [id, buildRoom(id)] as const));
+    rooms.set(this.roomId, this.room); // reflect the current room's live edits
+    this.computeMapLayout(ids, rooms);
+    this.drawMap(rooms);
+    this.fitMap();
+    if (this.mapBtn) {
+      this.mapBtn.textContent = '✕ Exit map';
+      this.mapBtn.classList.add('on');
+    }
+  }
+
+  private exitMapView(): void {
+    this.mapMode = false;
+    for (const go of this.mapGos) go.destroy();
+    this.mapGos = [];
+    this.setEditVisible(true);
+    this.fitCamera();
+    if (this.mapBtn) {
+      this.mapBtn.textContent = '🗺 Map view';
+      this.mapBtn.classList.remove('on');
+    }
+  }
+
+  /** Lay rooms out spatially by following their edge-link directions from the
+   *  start room (BFS); rooms with no link path drop into a row below. */
+  private computeMapLayout(ids: string[], rooms: Map<string, RoomData>): void {
+    const grid = new Map<string, { gx: number; gy: number }>();
+    const start = ids.includes(START_ROOM) ? START_ROOM : ids[0];
+    const D = { east: [1, 0], west: [-1, 0], up: [0, -1], down: [0, 1] } as const;
+    if (start) {
+      grid.set(start, { gx: 0, gy: 0 });
+      const q = [start];
+      while (q.length) {
+        const id = q.shift()!;
+        const g = grid.get(id)!;
+        const r = rooms.get(id);
+        if (!r) continue;
+        for (const dir of LINK_DIRS) {
+          const to = r.links?.[dir];
+          if (!to || !rooms.has(to) || grid.has(to)) continue;
+          const [dx, dy] = D[dir];
+          grid.set(to, { gx: g.gx + dx, gy: g.gy + dy });
+          q.push(to);
+        }
+      }
+    }
+    let maxgy = 0;
+    grid.forEach((g) => (maxgy = Math.max(maxgy, g.gy)));
+    let stray = 0;
+    for (const id of ids) if (!grid.has(id)) grid.set(id, { gx: stray++, gy: maxgy + 2 });
+
+    const CELL = 150;
+    const K = 1.4;
+    this.mapLayout.clear();
+    grid.forEach((g, id) => {
+      const r = rooms.get(id)!;
+      this.mapLayout.set(id, { x: g.gx * CELL, y: g.gy * CELL, w: r.w * K, h: r.h * K });
+    });
+  }
+
+  private drawMap(rooms: Map<string, RoomData>): void {
+    const g = this.add.graphics().setDepth(40);
+    this.mapGos.push(g);
+    const seen = new Set<string>();
+    // connections
+    this.mapLayout.forEach((n, id) => {
+      const r = rooms.get(id);
+      if (!r) return;
+      for (const dir of LINK_DIRS) {
+        const to = r.links?.[dir];
+        const m = to && this.mapLayout.get(to);
+        if (!m) continue;
+        const key = 'L' + [id, to].sort().join('|');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        g.lineStyle(2, 0x7ef0ff, 0.5);
+        g.lineBetween(n.x, n.y, m.x, m.y);
+      }
+      for (const s of r.spawns) {
+        if (s.type !== 'door' || !s.to) continue;
+        const m = this.mapLayout.get(s.to);
+        if (!m) continue;
+        const key = 'D' + [id, s.to].sort().join('|');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        g.lineStyle(1, 0xff9d3a, 0.7);
+        g.lineBetween(n.x, n.y, m.x, m.y);
+      }
+    });
+    // nodes
+    this.mapLayout.forEach((n, id) => {
+      const cur = id === this.roomId;
+      g.fillStyle(cur ? 0xff5af0 : 0x16203a, cur ? 0.3 : 0.7);
+      g.lineStyle(2, cur ? 0xff5af0 : 0x7ef0ff, 0.95);
+      g.fillRect(n.x - n.w / 2, n.y - n.h / 2, n.w, n.h);
+      g.strokeRect(n.x - n.w / 2, n.y - n.h / 2, n.w, n.h);
+      const r = rooms.get(id)!;
+      const label = this.add
+        .text(n.x, n.y, `${id}\n${r.w}×${r.h}`, { fontFamily: FONT, fontSize: '9px', color: '#cdeffb', align: 'center' })
+        .setOrigin(0.5)
+        .setDepth(41);
+      this.mapGos.push(label);
+    });
+  }
+
+  private fitMap(): void {
+    let minx = Infinity;
+    let miny = Infinity;
+    let maxx = -Infinity;
+    let maxy = -Infinity;
+    this.mapLayout.forEach((n) => {
+      minx = Math.min(minx, n.x - n.w / 2);
+      miny = Math.min(miny, n.y - n.h / 2);
+      maxx = Math.max(maxx, n.x + n.w / 2);
+      maxy = Math.max(maxy, n.y + n.h / 2);
+    });
+    if (!isFinite(minx)) return;
+    this.fitTo(minx, miny, maxx, maxy, 1.5);
+  }
+
   // --- DOM panel --------------------------------------------------------
   private mountPanel(): void {
     document.getElementById('editor-panel')?.remove();
@@ -484,6 +658,8 @@ export class EditorScene extends Phaser.Scene {
     ar.appendChild(this.btn('Revert', () => this.revert()));
     ar.appendChild(this.btn('Export', () => this.exportJson()));
     act.appendChild(ar);
+    this.mapBtn = this.btn('🗺 Map view', () => this.toggleMapView(), 'big');
+    act.appendChild(this.mapBtn);
     act.appendChild(this.btn('▶ Play-test', () => this.play(), 'big'));
     root.appendChild(act);
 

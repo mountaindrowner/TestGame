@@ -103,8 +103,8 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   players, persists across room reloads. It's the seam the level editor reuses. Conventions,
   the three-box combat-bias rule, the restart-teardown checklist, and our deliberate
   divergences from generic Phaser guides are recorded in `DECISIONS.md`.
-- **Level editor (v1 — `EditorScene`, open with `?edit`):** an in-engine dev-kit that renders any
-  room WYSIWYG via the same `autotile`/tileset, with a DOM tool palette. **Paint** terrain
+- **Level editor (`EditorScene`, open with `?edit`):** an in-engine dev-kit that renders any room
+  WYSIWYG via the same `autotile`/tileset, with a DOM tool palette. **Paint** terrain
   (solid/platform/molten/cracked/erase) and **place/move/delete** entities (drag in select mode;
   Del removes; door/gate get an id/to/toEntry inspector); right-drag pans, wheel zooms. **Save**
   writes a browser-local override (`src/data/roomStore.ts`) that `buildRoom()` prefers, so edits
@@ -112,8 +112,17 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   the repo; **▶ Play-test** launches `GameScene` on the live edit (Esc returns to the editor).
   Reuses the enemy registry (markers/art) + the data-shaped `RoomData`. Overrides live only in the
   browser — production ships the built-in rooms until exported JSON is committed.
-- **Next milestone:** editor **v2** — create new rooms, edit door/edge links, a world-map view
-  (the deferred parts), then **BIO-02** (PixelLab sidescroller tileset, DECISIONS.md).
+- **Editor v2 (done):** **＋ New room** / **🗑 Delete** (editor-made rooms are override-only, marked
+  `*` in the picker; `allRoomIds`/`isBuiltInRoom` in `levelGraph`, `listOverrideRooms` in
+  `roomStore`). **Edge-link editor** (east/west/up/down → room id). **Live validation**
+  (`src/data/roomValidate.ts`, reusable by a future smoke test) flags dangling doors / unknown
+  link targets in red. **🗺 Map view** — rooms laid out spatially by their edge-link directions
+  (BFS), cyan link edges + orange door edges, current room highlighted; click a node to jump there.
+  `fitTo()` reserves the left strip for the panel (free-pan camera, no bounds clamp).
+- **Next milestone:** **BIO-02** — a second biome via PixelLab's `create_sidescroller_tileset`
+  (slice→quantize→remap into the 21-slot Vis contract; see DECISIONS.md "Environment art").
+  Mockup-first (reference a target-scene image before generating). The editor now makes authoring
+  BIO-02's rooms fast.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
