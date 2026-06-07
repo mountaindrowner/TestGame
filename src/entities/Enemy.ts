@@ -89,6 +89,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     return this.mode !== 'dead';
   }
 
+  /** Debug overlay: current threat state for box coloring (no behavior impact). */
+  debugInfo(): { danger: boolean; vulnerable: boolean } {
+    return {
+      danger: this.mode === 'windup' || this.mode === 'strike',
+      vulnerable: this.mode === 'recover' || this.mode === 'hurt',
+    };
+  }
+
   private fromBehind(ax: number): boolean {
     return (this.facing === 1 && ax < this.x) || (this.facing === -1 && ax > this.x);
   }

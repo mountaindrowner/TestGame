@@ -31,6 +31,15 @@ export class Sfx {
     this.muted = m;
   }
 
+  toggleMute(): boolean {
+    this.muted = !this.muted;
+    return this.muted;
+  }
+
+  isMuted(): boolean {
+    return this.muted;
+  }
+
   private tone(
     freq: number,
     dur: number,

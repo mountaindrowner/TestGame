@@ -39,6 +39,47 @@
 - Hitstop is a manual timer flag, not `physics.world.pause()`.
 - If a designer might tweak it per-room, it's **data** (room/level config), not code.
 
+## Collision boxes & combat bias (three boxes per actor)
+Keep three boxes distinct (per the Phaser build guide):
+1. **Visual bounds** — the full sprite frame; display only.
+2. **Hitbox** — the Arcade body; where an actor can be hit. Smaller than the frame (~80% rule
+   above). The player body is the *smallest* of all actors.
+3. **Attack box** — the `AttackHitbox` zone, live ONLY during a swing's active window
+   (`PlayerCombo[*].activeMs`) — never during idle/walk/windup.
+Bias toward the player: **player hitbox ≤ every enemy hitbox** and **player attack reach ≥
+enemy contact reach**. Audited 2026-06 with the debug overlay — current `Tunables.ts` /
+`enemyRegistry.ts` values already satisfy this (enemy bodies sit inside their sprites, scaled
+foes included); re-check with the overlay whenever an enemy or the player rig changes.
+
+## Scene lifecycle — restart teardown (the #1 Phaser bug)
+`GameScene` is one instance reloaded per room via `scene.restart`. On every create:
+- Bind scene-event listeners EXACTLY once (`this.bound` flag) — the emitter survives restart.
+- Recreate per-room groups (`enemies` / `enemyProjectiles` / `bossHazards`); grace-respawn's
+  `resetEnemies()` clears them (`clear(true,true)`) before re-spawning.
+- Per-run state (health / key / guardian) lives in the registry (`RunState`), not the scene.
+- DOM overlays (TouchControls, Tutorial, DebugOverlay, win screen) self-remove on
+  SHUTDOWN/DESTROY so a restart never stacks duplicates.
+Re-test death→respawn and room transitions whenever you touch this path.
+
+## Dev tooling — debug overlay
+`src/systems/DebugOverlay.ts` is a dev-only collision/zone x-ray: the three boxes, trigger
+zones, spawn points, room bounds, plus a toggle panel (per-category checkboxes, mute,
+FPS/room/clip readout). Off by default; toggle with the ` key, `?debug`, or `window.__debug()`
+(state persists across room reloads via the registry). It's how feel/hit bugs get found and is
+the seam the planned level editor reuses (it already visualizes spawns + zones). Sibling pose
+hooks: `window.__poseScene`, `__poseBoss`, `__gotoRoom`.
+
+## External Phaser/PixelLab guides — adopt vs deliberately diverge
+We've folded in the good generic advice (juice; the three-box discipline; build-the-overlay-
+early; restart teardown; frame-count verification; mockup-first). We **deliberately diverge** on
+the following — do NOT "correct" these toward a generic guide:
+- **TypeScript (strict)**, not vanilla JS.
+- **Typed `assetManifest.ts` + `Animations.ts`** as the asset source of truth, not a runtime
+  `index.json` — the Python packers print and we verify the frame layout in lockstep.
+- **Procedural Web-Audio `Sfx`**, not `bgm/`+`sfx/` files or `.env` keys.
+- **One reusable `GameScene`** reloaded per room, not a separate scene per room.
+- **No waves/XP config** — this is a hand-authored roguevania level, not a wave-survival arena.
+
 ## Why these
 - 480×270 (vs SDA's 320×180): more density for the high-detail atmospheric look requested,
   still cheap to render and an integer-friendly scale target.
@@ -64,3 +105,13 @@
   our locked palette, and remaps into the 21-slot Vis contract; the Autotiler, one-way
   platform / molten / cracked specials, and `gen_decor` props stay as-is. BIO-01 (depths)
   remains the procedural `gen_tileset.py`.
+
+## Future-milestone notes (capture now; build when we get there)
+- **Minimap / fog-of-war** (when the world grows past BIO-01): give each room a dedicated
+  low-res **map sprite** — never shrink live tilemap geometry to draw the map (a cited test:
+  ~2500 → ~40 FPS at ~300 rooms). Reveal only the areas the player has touched. Settle the
+  map's *visual target* before building the reveal/styling system.
+- **Mockup-first for BIO-02:** before generating the sidescroller tileset, reference a target-
+  scene composition image — individual assets don't convey the scene's layout.
+- **Transition micro-polish (optional):** fire edge transitions once the player is fully past
+  the camera edge rather than at the 24px edge zone, so it never reads as abrupt.

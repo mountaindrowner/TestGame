@@ -10,5 +10,6 @@ declare global {
     __poseScene?: (opts?: { pose?: string; anim?: string; progress?: number }) => void;
     __gotoRoom?: (id: string) => void; // dev: jump to a room by id (verification/editor)
     __poseBoss?: (opts?: { anim?: string; progress?: number }) => void; // dev: pose the elite
+    __debug?: (on?: boolean) => void; // dev: toggle the collision/zone x-ray overlay
   }
 }

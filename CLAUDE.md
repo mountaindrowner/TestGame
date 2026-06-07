@@ -96,7 +96,13 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   enemy SFX (`Sfx` is now a `getSfx()` singleton — one AudioContext across reloads); HUD shows
   area name + Broken Memory pip + contextual gate hints. Tileset/decor enriched with moss
   overgrowth + hanging moss/fern (`gen_tileset.py`/`gen_decor.py`), within the 21-tile Vis contract.
-- **Dev hooks:** `window.__gotoRoom(id)` jumps rooms; `__poseScene`, `__GAME_READY` as before.
+- **Dev hooks:** `window.__gotoRoom(id)` jumps rooms; `__poseScene`/`__poseBoss` pose clips;
+  `__GAME_READY` as before. **Debug overlay** (`src/systems/DebugOverlay.ts`): a dev-only
+  collision/zone x-ray (three boxes + triggers + spawns + bounds, toggle panel, mute,
+  FPS/room/clip readout) — toggle with the **` key**, `?debug`, or `window.__debug()`; off for
+  players, persists across room reloads. It's the seam the level editor reuses. Conventions,
+  the three-box combat-bias rule, the restart-teardown checklist, and our deliberate
+  divergences from generic Phaser guides are recorded in `DECISIONS.md`.
 - **Next milestone:** the in-engine **level-editor / dev-kit** (plan already designed: biome/content
   registry + data-driven levels + editor scene; the enemy registry + per-room data are its
   foundation). Then **BIO-02** (PixelLab sidescroller tileset, DECISIONS.md).

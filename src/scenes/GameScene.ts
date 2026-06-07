@@ -10,6 +10,7 @@ import { InputManager } from '../systems/InputManager';
 import { TouchControls } from '../systems/TouchControls';
 import { Sfx, getSfx } from '../systems/Sfx';
 import { Tutorial } from '../systems/Tutorial';
+import { DebugOverlay } from '../systems/DebugOverlay';
 import { JuiceSystem } from '../systems/JuiceSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { ParallaxBackground } from '../systems/ParallaxBackground';
@@ -62,6 +63,7 @@ export class GameScene extends Phaser.Scene {
   private interactReadyAt = 0;
   private won = false;
   private bound = false; // scene.restart reuses this instance + its event emitter
+  private debug!: DebugOverlay; // dev-only collision/zone x-ray (` to toggle)
   // boss arena
   private bossActive = false;
   private bossIntroPlayed = false;
@@ -176,6 +178,28 @@ export class GameScene extends Phaser.Scene {
     this.makeEdgeHints();
 
     this.installDebugHooks();
+    this.debug = new DebugOverlay(this, {
+      player: this.player,
+      enemies: this.enemies,
+      bossHazards: this.bossHazards,
+      doors: () => this.doors,
+      gate: () => this.gate,
+      spawns: () => this.room.spawns,
+      tile: World.tile,
+      worldW: roomW,
+      worldH: roomH,
+      edgeZone: 24,
+      roomId,
+      sfx: this.sfx,
+    });
+    // Persist the toggle across room reloads (the scene is rebuilt each time);
+    // start on with ?debug. Players never see it — it's off by default.
+    const startOn = (this.registry.get('debug') as boolean | undefined) ?? new URLSearchParams(location.search).has('debug');
+    this.debug.setEnabled(!!startOn);
+    this.input.keyboard?.on('keydown-BACKTICK', () => {
+      this.debug.toggle();
+      this.registry.set('debug', this.debug.enabled);
+    });
     this.time.delayedCall(60, () => {
       window.__GAME_READY = true;
       const boot = document.getElementById('boot');
@@ -435,6 +459,7 @@ export class GameScene extends Phaser.Scene {
 
   // ----------------------------------------------------------------------
   update(time: number, _delta: number): void {
+    this.debug.update(time); // x-ray draws even during hitstop
     this.actions.update(time);
     this.juice.update(time);
     this.parallax.update(this.cameras.main, time);
@@ -743,6 +768,10 @@ export class GameScene extends Phaser.Scene {
       boss.anims.setProgress(opts?.progress ?? 0.5);
       this.cameras.main.stopFollow();
       this.cameras.main.centerOn(boss.x, boss.y - 20);
+    };
+    window.__debug = (on?: boolean) => {
+      this.debug.setEnabled(on ?? !this.debug.enabled);
+      this.registry.set('debug', this.debug.enabled);
     };
   }
 
