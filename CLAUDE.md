@@ -3,6 +3,11 @@
 > **New session: read this first.** Only what's pushed to git survives. Update this file as
 > major work lands. Branch: `claude/repentance-roguevania-dev-Zq3QP`. Verify reality against
 > files — don't trust memory.
+>
+> **Working agreement with the user (always):** whenever new art/animations are generated,
+> **surface the actual render images** to the user (`SendUserFile` — contact strips and/or
+> in-game shots, don't just describe them), and **always include the live link**
+> (`https://mountaindrowner.github.io/TestGame/`) after pushing.
 
 ## What this is
 A Dead Cells–inspired **roguevania** that is a **playable metaphor for repentance** (art
