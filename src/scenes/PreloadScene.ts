@@ -58,7 +58,8 @@ export class PreloadScene extends Phaser.Scene {
     registerAnims(this, WardenAnims);
     // Make sure the display font is ready before any text is drawn (canvas text
     // bakes the font at creation; loading it late would show a fallback flash).
-    const start = () => this.scene.start('GameScene');
+    const target = new URLSearchParams(location.search).has('edit') ? 'EditorScene' : 'GameScene';
+    const start = () => this.scene.start(target);
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
     if (fonts?.load) {
       Promise.all([fonts.load('16px "Dash Horizon"'), fonts.load('600 16px "Dash Horizon"')])

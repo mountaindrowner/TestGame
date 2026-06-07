@@ -5,6 +5,7 @@ import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
 import { GameScene } from './scenes/GameScene';
 import { UIScene } from './scenes/UIScene';
+import { EditorScene } from './scenes/EditorScene';
 
 // Phaser config only. See DECISIONS.md for why each field matters.
 const config: Phaser.Types.Core.GameConfig = {
@@ -31,7 +32,7 @@ const config: Phaser.Types.Core.GameConfig = {
     },
   },
   fps: { target: 60, min: 30 },
-  scene: [BootScene, PreloadScene, GameScene, UIScene],
+  scene: [BootScene, PreloadScene, GameScene, UIScene, EditorScene],
 };
 
 // eslint-disable-next-line no-new

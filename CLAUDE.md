@@ -103,9 +103,17 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   players, persists across room reloads. It's the seam the level editor reuses. Conventions,
   the three-box combat-bias rule, the restart-teardown checklist, and our deliberate
   divergences from generic Phaser guides are recorded in `DECISIONS.md`.
-- **Next milestone:** the in-engine **level-editor / dev-kit** (plan already designed: biome/content
-  registry + data-driven levels + editor scene; the enemy registry + per-room data are its
-  foundation). Then **BIO-02** (PixelLab sidescroller tileset, DECISIONS.md).
+- **Level editor (v1 — `EditorScene`, open with `?edit`):** an in-engine dev-kit that renders any
+  room WYSIWYG via the same `autotile`/tileset, with a DOM tool palette. **Paint** terrain
+  (solid/platform/molten/cracked/erase) and **place/move/delete** entities (drag in select mode;
+  Del removes; door/gate get an id/to/toEntry inspector); right-drag pans, wheel zooms. **Save**
+  writes a browser-local override (`src/data/roomStore.ts`) that `buildRoom()` prefers, so edits
+  play instantly; **Revert** clears it; **Export** downloads/clipboards the room JSON to fold into
+  the repo; **▶ Play-test** launches `GameScene` on the live edit (Esc returns to the editor).
+  Reuses the enemy registry (markers/art) + the data-shaped `RoomData`. Overrides live only in the
+  browser — production ships the built-in rooms until exported JSON is committed.
+- **Next milestone:** editor **v2** — create new rooms, edit door/edge links, a world-map view
+  (the deferred parts), then **BIO-02** (PixelLab sidescroller tileset, DECISIONS.md).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

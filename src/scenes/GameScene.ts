@@ -32,6 +32,7 @@ interface EnterData {
   roomId?: string;
   entryDoorId?: string;
   entrySide?: 'east' | 'west';
+  fromEditor?: boolean; // launched from the editor's Play-test — Esc returns there
 }
 
 export class GameScene extends Phaser.Scene {
@@ -176,6 +177,17 @@ export class GameScene extends Phaser.Scene {
 
     this.interactReadyAt = this.time.now + 300; // avoid re-triggering the door we just used
     this.makeEdgeHints();
+
+    if (data?.fromEditor) {
+      this.registry.set('fromEditor', true);
+    }
+    if (this.registry.get('fromEditor')) {
+      this.input.keyboard?.once('keydown-ESC', () => {
+        this.registry.set('fromEditor', false);
+        this.scene.stop('UIScene');
+        this.scene.start('EditorScene');
+      });
+    }
 
     this.installDebugHooks();
     this.debug = new DebugOverlay(this, {
