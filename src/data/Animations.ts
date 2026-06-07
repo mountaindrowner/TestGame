@@ -58,12 +58,20 @@ export const StrikerAnims: AnimDef[] = [
   { key: 'striker-strike', sheet: 'striker', start: 16, end: 24, frameRate: 18, repeat: 0 },
   { key: 'striker-hurt', sheet: 'striker', start: 25, end: 31, frameRate: 16, repeat: 0 },
 ];
+// WARDEN strip (70x71), packed by tools/pack_enemy.py in this order. The new
+// poses (taunt arms-out, slam overhead) widened the union frame 44x68 -> 70x71.
+// slam runs slow enough that its overhead-smash impact lands at the windup->
+// strike boundary (where Enemy emits the ground shockwave).
 export const WardenAnims: AnimDef[] = [
   { key: 'warden-run', sheet: 'warden', start: 0, end: 8, frameRate: 10, repeat: -1 },
   { key: 'warden-windup', sheet: 'warden', start: 9, end: 17, frameRate: 12, repeat: 0 },
   { key: 'warden-strike', sheet: 'warden', start: 18, end: 26, frameRate: 18, repeat: 0 },
   { key: 'warden-recovery', sheet: 'warden', start: 27, end: 33, frameRate: 12, repeat: 0 },
   { key: 'warden-hurt', sheet: 'warden', start: 34, end: 40, frameRate: 14, repeat: 0 },
+  { key: 'warden-idle', sheet: 'warden', start: 41, end: 49, frameRate: 6, repeat: -1 },
+  { key: 'warden-taunt', sheet: 'warden', start: 50, end: 62, frameRate: 14, repeat: 0 },
+  { key: 'warden-slam', sheet: 'warden', start: 63, end: 79, frameRate: 14, repeat: 0 },
+  { key: 'warden-death', sheet: 'warden', start: 80, end: 96, frameRate: 16, repeat: 0 },
 ];
 
 export function registerAnims(scene: Phaser.Scene, defs: AnimDef[]): void {

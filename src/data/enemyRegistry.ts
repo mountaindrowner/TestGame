@@ -30,6 +30,13 @@ export interface EnemyTuneBase {
   recoveryMs?: number; // heavy punishable recovery window
   damageReduction?: number; // heavy armor (0..1 of incoming chipped)
   projectile?: { speed: number; damage: number; count: number; spreadDeg: number; lifespanMs: number };
+  // Boss slam (a second, close-range attack: an overhead smash that sends a
+  // jumpable ground shockwave outward). Only the elite reads these.
+  slamRange?: number; // if the player is closer than this, slam instead of charging
+  slamWindupMs?: number; // overhead raise telegraph
+  slamMs?: number; // the smash / impact window
+  slamRecoveryMs?: number; // punish window after the slam
+  slamDamage?: number; // shockwave contact damage
 }
 
 export interface EnemyConfig {
@@ -37,7 +44,11 @@ export interface EnemyConfig {
   displayName: string;
   behavior: BehaviorTag;
   spriteKey: string;
-  anims: { run: string; windup: string; hurt: string; strike?: string; fire?: string; recovery?: string };
+  anims: {
+    run: string; windup: string; hurt: string;
+    strike?: string; fire?: string; recovery?: string;
+    idle?: string; taunt?: string; slam?: string; death?: string;
+  };
   tune: EnemyTuneBase;
   body: { w: number; h: number; offX: number; offY: number };
   hasCore: boolean; // shows the molten core glow + a windup weak point
@@ -119,9 +130,13 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
       hurt: 'warden-hurt',
       strike: 'warden-strike',
       recovery: 'warden-recovery',
+      idle: 'warden-idle', // looms/breathes when out of range + after the intro taunt
+      taunt: 'warden-taunt', // the Mega-Man intro roar
+      slam: 'warden-slam', // close-range overhead smash -> jumpable ground shockwave
+      death: 'warden-death', // collapse on defeat
     },
     tune: GuardianTune,
-    body: { w: 28, h: 52, offX: 8, offY: 16 }, // frame 44x68
+    body: { w: 28, h: 52, offX: 21, offY: 19 }, // frame 70x71 (wide bbox: taunt arms-out + slam)
     hasCore: false,
     coreBonusMult: 2.0, // weaving in during its recovery is the whole fight
     elite: true,

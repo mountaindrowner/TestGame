@@ -177,6 +177,14 @@ export const GuardianTune = {
   strikeMs: 360, // the committed charge
   recoveryMs: 680, // big punish window after it overcommits
   damageReduction: 0.5, // armoured plating
+  // Slam: when you crowd it, it stops charging and smashes the ground — a long
+  // overhead telegraph, then a shockwave that races along the floor (jump it).
+  slamRange: 78, // closer than this -> it slams instead of charging
+  slamWindupMs: 600, // overhead raise (readable); impact lands ~frame 8 of the slam clip
+
+  slamMs: 180, // the impact
+  slamRecoveryMs: 620, // punish window after the smash
+  slamDamage: 24,
 };
 
 export const Juice = {

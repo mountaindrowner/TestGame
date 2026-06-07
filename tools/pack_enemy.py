@@ -92,7 +92,7 @@ def build() -> None:
     pack_bbox("crawler", ["run", "hurt"])
     pack_bbox("spark", ["run", "windup", "hurt"])
     pack_bbox("striker", ["run", "windup", "strike", "hurt"])
-    pack_bbox("warden", ["run", "windup", "strike", "recovery", "hurt"])
+    pack_bbox("warden", ["run", "windup", "strike", "recovery", "hurt", "idle", "taunt", "slam", "death"])
 
 
 if __name__ == "__main__":

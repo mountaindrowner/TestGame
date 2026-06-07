@@ -39,6 +39,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private stunUntil = 0;
   private nextFireAt = 0;
   private latched = false; // pursuer aggro, once on never off
+  private attackType: 'charge' | 'slam' = 'charge'; // heavy_telegraph: which attack this cycle
   private coreGlow?: Phaser.GameObjects.Image; // burning ember weak point (runner only)
   public introHold = false; // frozen during the boss intro cinematic
 
@@ -198,13 +199,24 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     switch (this.mode) {
       case 'patrol':
-        this.patrol(onGround);
+        // A boss with an idle clip looms in place when you're out of reach
+        // (no pacing); lesser heavy foes still patrol.
+        if (this.cfg.anims.idle && !inRange) {
+          this.body.setVelocityX(0);
+          this.play(this.cfg.anims.idle, true);
+        } else {
+          this.patrol(onGround);
+        }
         if (inRange) {
+          // Crowd it and it smashes; give it room and it charges.
+          this.attackType =
+            this.cfg.anims.slam && Math.abs(dx) < (this.t.slamRange ?? 0) ? 'slam' : 'charge';
           this.mode = 'windup';
-          this.windupEndAt = time + this.t.windupMs;
+          this.windupEndAt =
+            time + (this.attackType === 'slam' ? (this.t.slamWindupMs ?? this.t.windupMs) : this.t.windupMs);
           this.facing = dx < 0 ? -1 : 1;
           this.body.setVelocityX(0);
-          this.play(this.cfg.anims.windup, true);
+          this.play(this.attackType === 'slam' ? this.cfg.anims.slam! : this.cfg.anims.windup, true);
           this.deps.sfx.telegraph();
         }
         break;
@@ -212,20 +224,32 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.body.setVelocityX(0);
         if (time >= this.windupEndAt) {
           this.mode = 'strike';
-          this.strikeEndAt = time + (this.t.strikeMs ?? 250);
           this.facing = dx < 0 ? -1 : 1;
-          this.body.setVelocityX(this.facing * this.t.chaseSpeed);
-          this.play(this.cfg.anims.strike ?? this.cfg.anims.run, true);
-          this.deps.sfx.slam();
+          if (this.attackType === 'slam') {
+            // Planted overhead smash -> a shockwave the scene races along the floor.
+            this.strikeEndAt = time + (this.t.slamMs ?? 200);
+            this.body.setVelocityX(0);
+            this.scene.events.emit('boss-slam', this.x, this.y, this.facing, this.t.slamDamage ?? this.contactDamage);
+            this.deps.sfx.slam();
+          } else {
+            this.strikeEndAt = time + (this.t.strikeMs ?? 250);
+            this.body.setVelocityX(this.facing * this.t.chaseSpeed);
+            this.play(this.cfg.anims.strike ?? this.cfg.anims.run, true);
+            this.deps.sfx.slam();
+          }
         }
         break;
       case 'strike':
-        if (onGround && !this.groundAhead()) this.body.setVelocityX(0);
+        if (this.attackType === 'slam') this.body.setVelocityX(0);
+        else if (onGround && !this.groundAhead()) this.body.setVelocityX(0);
         if (time >= this.strikeEndAt) {
           this.mode = 'recover';
-          this.recoverEndAt = time + (this.t.recoveryMs ?? 500);
+          this.recoverEndAt =
+            time + (this.attackType === 'slam' ? (this.t.slamRecoveryMs ?? this.t.recoveryMs ?? 500) : (this.t.recoveryMs ?? 500));
           this.body.setVelocityX(0);
-          this.play(this.cfg.anims.recovery ?? this.cfg.anims.run, true);
+          // The slam clip already sinks into a low crouch — let it finish as the
+          // recovery pose; the charge swaps to the dedicated stagger clip.
+          if (this.attackType !== 'slam') this.play(this.cfg.anims.recovery ?? this.cfg.anims.run, true);
         }
         break;
       case 'recover':
@@ -354,11 +378,27 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.deps.sfx.enemyDie();
     this.deps.particles.debris(this.x, this.y - 8, this.cfg.elite ? 30 : 16);
     this.deps.juice.flash(Palette.molten, this.cfg.elite ? 120 : 60);
+    this.body.setVelocity(0, 0);
     this.body.enable = false;
     if (this.cfg.elite) {
       this.scene.events.emit('guardian-defeated');
       this.scene.events.emit('boss-defeated');
     }
+
+    // Foes with a death clip (the boss) buckle and collapse, then fade out once
+    // the animation finishes; everyone else keeps the quick squash-pop.
+    if (this.cfg.anims.death) {
+      this.clearTint();
+      if (this.cfg.tint !== undefined) this.setTint(this.cfg.tint);
+      this.anims.timeScale = 1;
+      this.play(this.cfg.anims.death, true);
+      this.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+        if (!this.scene) return;
+        this.scene.tweens.add({ targets: this, alpha: 0, duration: 480, ease: 'Sine.easeIn', onComplete: () => this.destroy() });
+      });
+      return;
+    }
+
     const sx = this.scaleX;
     const sy = this.scaleY;
     this.scene.tweens.add({

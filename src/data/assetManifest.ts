@@ -8,7 +8,7 @@ export const Assets = {
   crawler: { key: 'crawler', path: 'assets/sprites/crawler.png', frameW: 43, frameH: 49 },
   spark: { key: 'spark', path: 'assets/sprites/spark.png', frameW: 31, frameH: 45 },
   striker: { key: 'striker', path: 'assets/sprites/striker.png', frameW: 54, frameH: 53 },
-  warden: { key: 'warden', path: 'assets/sprites/warden.png', frameW: 44, frameH: 68 },
+  warden: { key: 'warden', path: 'assets/sprites/warden.png', frameW: 70, frameH: 71 },
   tileset: { key: 'tileset', path: 'assets/tilesets/depths.png', frameW: 16, frameH: 16 },
   bgFar: { key: 'bg-far', path: 'assets/backgrounds/far.png' },
   bgMid: { key: 'bg-mid', path: 'assets/backgrounds/mid.png' },

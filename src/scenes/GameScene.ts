@@ -46,6 +46,7 @@ export class GameScene extends Phaser.Scene {
   private player!: Player;
   private enemies!: Phaser.GameObjects.Group;
   private enemyProjectiles!: Phaser.Physics.Arcade.Group;
+  private bossHazards!: Phaser.Physics.Arcade.Group; // ground shockwaves from the slam
   private graceSpawn = new Phaser.Math.Vector2();
   private respawning = false;
   private fadeRect!: Phaser.GameObjects.Rectangle;
@@ -115,6 +116,7 @@ export class GameScene extends Phaser.Scene {
     // Entities
     this.enemies = this.add.group({ runChildUpdate: true });
     this.enemyProjectiles = this.physics.add.group({ classType: Projectile, maxSize: 24 });
+    this.bossHazards = this.physics.add.group();
     this.spawnFromData();
 
     // Restore carried-over health and persist changes back to the run.
@@ -128,6 +130,7 @@ export class GameScene extends Phaser.Scene {
       });
       this.events.on('player-died', this.startGraceRespawn, this);
       this.events.on('guardian-defeated', this.onGuardianDefeated, this);
+      this.events.on('boss-slam', this.onBossSlam, this);
     }
 
     // Combat wiring
@@ -135,6 +138,10 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.layer);
     this.physics.add.collider(this.enemies, this.layer);
     this.wireProjectiles();
+    this.physics.add.overlap(this.player, this.bossHazards, (_p, hz) => {
+      const h = hz as Phaser.Physics.Arcade.Image;
+      if (h.active) this.player.takeDamage((h.getData('dmg') as number) ?? 20, h.x);
+    });
 
     // Camera
     const cam = this.cameras.main;
@@ -292,6 +299,33 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.enemyProjectiles, this.layer, (prObj) => {
       (prObj as Projectile).kill();
     });
+  }
+
+  /** The Warden's overhead smash: two molten shockwaves race outward along the
+   *  floor from its feet. They sit low, so a well-timed jump clears them. */
+  private onBossSlam(x: number, y: number, _facing: number, damage: number): void {
+    this.juice.shake(220, 0.014);
+    this.particles.debris(x, y - 4, 18);
+    for (const dir of [-1, 1]) {
+      const wave = this.bossHazards.create(x + dir * 14, y - 6, Assets.dot.key) as Phaser.Physics.Arcade.Image;
+      wave
+        .setTint(Palette.molten)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(45)
+        .setScale(2.4, 1.3)
+        .setData('dmg', damage);
+      const body = wave.body as Phaser.Physics.Arcade.Body;
+      body.setAllowGravity(false);
+      body.setVelocityX(dir * 168);
+      this.tweens.add({
+        targets: wave,
+        scaleX: 3.6,
+        alpha: 0.25,
+        duration: 720,
+        ease: 'Quad.easeOut',
+        onComplete: () => wave.destroy(),
+      });
+    }
   }
 
   private makeDoor(x: number, y: number, _s: Spawn): void {
@@ -508,7 +542,7 @@ export class GameScene extends Phaser.Scene {
     cam.stopFollow();
     cam.pan(guardian.x, guardian.y - 24, 600, 'Sine.easeInOut');
     this.time.delayedCall(680, () => {
-      guardian.play(guardian.cfg.anims.windup, true); // rear back — the taunt
+      guardian.play(guardian.cfg.anims.taunt ?? guardian.cfg.anims.windup, true); // the roar
       this.sfx.roar();
       this.juice.shake(380, 0.012);
       this.events.emit('boss-intro', guardian.cfg.displayName); // bar draws in
@@ -517,7 +551,7 @@ export class GameScene extends Phaser.Scene {
       cam.startFollow(this.player, true, 0.12, 0.12);
       this.player.controllable = true;
       guardian.introHold = false;
-      guardian.play(guardian.cfg.anims.run, true);
+      guardian.play(guardian.cfg.anims.idle ?? guardian.cfg.anims.run, true);
     });
   }
 
@@ -675,6 +709,7 @@ export class GameScene extends Phaser.Scene {
   private resetEnemies(): void {
     this.enemies.clear(true, true);
     this.enemyProjectiles.clear(true, true);
+    this.bossHazards.clear(true, true);
     for (const s of this.room.spawns) {
       if (!isEnemyKind(s.type)) continue;
       const { x, y } = this.tileToWorld(s);
@@ -690,6 +725,17 @@ export class GameScene extends Phaser.Scene {
   private installDebugHooks(): void {
     window.__poseScene = (opts) => this.poseScene(opts?.pose ?? 'default', opts?.anim, opts?.progress);
     window.__gotoRoom = (id) => this.scene.restart({ roomId: id });
+    window.__poseBoss = (opts) => {
+      const boss = this.enemies.getChildren().find((e) => (e as Enemy).cfg?.elite) as Enemy | undefined;
+      if (!boss) return;
+      this.physics.world.pause();
+      boss.introHold = true;
+      boss.setFlipX(true); // face the incoming player (left)
+      if (opts?.anim) boss.play(opts.anim, true);
+      boss.anims.setProgress(opts?.progress ?? 0.5);
+      this.cameras.main.stopFollow();
+      this.cameras.main.centerOn(boss.x, boss.y - 20);
+    };
   }
 
   private poseScene(pose: string, anim?: string, progress?: number): void {

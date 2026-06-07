@@ -57,10 +57,19 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   `tools/pack_player.py` (union-bbox, feet-anchored). Run cadence speed-coupled; squash/stretch via
   `PlayerTune.*Squash`.
 - **Boss arena:** the gate room is the Warden's arena — entering **seals the exits** (barrier +
-  edge-lock via `bossActive`) and plays a **Mega-Man-style intro** (camera to boss, rear-back
-  taunt + `Sfx.roar()` + shake, then the **boss health bar** draws in; `UIScene` listens to
-  `boss-spawn/intro/health/defeated` from `Enemy` elites). Defeat lifts the lock + opens the gate.
-  An ability reward (earmarked "Grace Burst" air-dash) is deferred until the hub/next biome.
+  edge-lock via `bossActive`) and plays a **Mega-Man-style intro** (camera to boss, a dedicated
+  **roar taunt** clip + `Sfx.roar()` + shake, then the **boss health bar** draws in; `UIScene`
+  listens to `boss-spawn/intro/health/defeated` from `Enemy` elites). Defeat lifts the lock +
+  opens the gate. An ability reward (earmarked "Grace Burst" air-dash) is deferred until the
+  hub/next biome.
+- **Warden moveset (4 new clips):** beyond charge/recover the Warden now has **idle** (looms in
+  place when you're out of reach + holds after the intro), **taunt** (the intro roar, arms-wide),
+  a **ground slam** (a second, *close-range* attack — when you crowd it within `slamRange` it
+  plants and smashes overhead instead of charging, emitting `boss-slam` → GameScene races two
+  **jumpable molten shockwaves** along the floor; the slam clip's own low crouch is its vulnerable
+  recovery), and a **death collapse** (elites with a `death` clip play it, then fade — see
+  `Enemy.die()`). Slam tuning in `GuardianTune.slam*`; clips are `warden-idle/taunt/slam/death`.
+  Dev hook `__poseBoss({anim,progress})` poses the elite for verification.
 - **HUD health:** neon **rune-block** glyphs (≈1 per 20 HP) that color-shift blood→molten→grace
   with current life (`UIScene.drawHealth`), replacing the old bar.
 - **Enemy art:** ALL now real PixelLab art — runner (`art_src/enemy/`) + crawler/spark/striker/

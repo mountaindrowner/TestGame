@@ -27,7 +27,12 @@ ENEMIES = {
     "crawler": ("e69cc50e-451e-4e02-ae1d-8111c2931e02", {"run": "crawling", "hurt": "recoiling"}),
     "spark": ("7d0aa99c-c02c-400e-b494-03146403a4a1", {"run": "floating", "windup": "flaring", "hurt": "flickering"}),
     "striker": ("074b1852-528c-4722-b217-2c52ede76b9a", {"run": "walking", "windup": "rearing", "strike": "swinging", "hurt": "staggering"}),
-    "warden": ("1b45195b-92f1-45f7-a2de-75da99e081a9", {"run": "walking", "windup": "telegraphing", "strike": "charging", "recovery": "staggering", "hurt": "reeling"}),
+    "warden": ("1b45195b-92f1-45f7-a2de-75da99e081a9", {
+        "run": "walking", "windup": "telegraphing", "strike": "charging",
+        "recovery": "staggering", "hurt": "reeling",
+        # new boss animations (v3, east):
+        "idle": "breathing", "taunt": "roaring", "slam": "smashing", "death": "collapsing",
+    }),
 }
 
 
