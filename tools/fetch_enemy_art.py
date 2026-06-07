@@ -16,8 +16,13 @@ URL = "https://api.pixellab.ai/mcp/characters/{}/download"
 ENEMIES = {
     "player": ("d6e11e94-d526-46f8-a306-92181692a41a", {
         "idle": "sway", "run": "strides", "jump": "leap", "runjump": "running_jump",
-        "fall": "billow", "dash": "lunge", "hurt": "snapping", "attack1": "slashing",
-        "attack2": "horizontal", "attack3": "cleave", "death": "collapsing",
+        "fall": "billow", "dash": "lunge", "hurt": "snapping",
+        # 3-hit combo = the newer, richer hand-made swings:
+        #   1 light  -> fast overhead broken-sword chop (7f)
+        #   2 heavy  -> pull the glowing blade back, big horizontal slash (17f)
+        #   3 finish -> explosive crouch->leap forward thrust + follow-through (9f)
+        "attack1": "broken_sword", "attack2": "glowing_blue", "attack3": "animating-433",
+        "death": "collapsing",
     }),
     "crawler": ("e69cc50e-451e-4e02-ae1d-8111c2931e02", {"run": "crawling", "hurt": "recoiling"}),
     "spark": ("7d0aa99c-c02c-400e-b494-03146403a4a1", {"run": "floating", "windup": "flaring", "hurt": "flickering"}),

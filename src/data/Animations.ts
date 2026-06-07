@@ -12,10 +12,13 @@ export interface AnimDef {
   repeat: number; // -1 = loop
 }
 
-// PLAYER strip (45x41), packed by tools/pack_player.py:
+// PLAYER strip (45x43), packed by tools/pack_player.py:
 //   idle 0-8 | run 9-19 | jump 20-34 | runjump 35-42 | fall 43-49 | dash 50-56 |
-//   hurt 57-65 | attack1 66-76 | attack2 77-89 | attack3 90-102 | death 103-113
+//   hurt 57-65 | attack1 66-72 | attack2 73-89 | attack3 90-98 | death 99-109
 // jump = standstill leap (15f); runjump = user-made running jump (8f, used when moving).
+// 3-hit combo = the hand-made swings: 1 fast overhead broken-sword chop (7f),
+// 2 heavy pull-back glowing horizontal slash (17f), 3 leap-thrust finisher (9f).
+// Frame rates chosen so each swing plays ~start-to-finish across its combo step.
 export const PlayerAnims: AnimDef[] = [
   { key: 'player-idle', sheet: 'player', start: 0, end: 8, frameRate: 8, repeat: -1 },
   { key: 'player-run', sheet: 'player', start: 9, end: 19, frameRate: 16, repeat: -1 },
@@ -24,10 +27,10 @@ export const PlayerAnims: AnimDef[] = [
   { key: 'player-fall', sheet: 'player', start: 43, end: 49, frameRate: 12, repeat: -1 },
   { key: 'player-dash', sheet: 'player', start: 50, end: 56, frameRate: 22, repeat: 0 },
   { key: 'player-hurt', sheet: 'player', start: 57, end: 65, frameRate: 18, repeat: 0 },
-  { key: 'player-attack1', sheet: 'player', start: 66, end: 76, frameRate: 34, repeat: 0 },
-  { key: 'player-attack2', sheet: 'player', start: 77, end: 89, frameRate: 32, repeat: 0 },
-  { key: 'player-attack3', sheet: 'player', start: 90, end: 102, frameRate: 28, repeat: 0 },
-  { key: 'player-death', sheet: 'player', start: 103, end: 113, frameRate: 12, repeat: 0 },
+  { key: 'player-attack1', sheet: 'player', start: 66, end: 72, frameRate: 32, repeat: 0 },
+  { key: 'player-attack2', sheet: 'player', start: 73, end: 89, frameRate: 39, repeat: 0 },
+  { key: 'player-attack3', sheet: 'player', start: 90, end: 98, frameRate: 21, repeat: 0 },
+  { key: 'player-death', sheet: 'player', start: 99, end: 109, frameRate: 12, repeat: 0 },
 ];
 
 // RUNNER strip (48x44), packed by tools/pack_enemy.py from PixelLab frames:

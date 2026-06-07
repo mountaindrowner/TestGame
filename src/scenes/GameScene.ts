@@ -688,14 +688,23 @@ export class GameScene extends Phaser.Scene {
 
   // ----------------------------------------------------------------------
   private installDebugHooks(): void {
-    window.__poseScene = (opts) => this.poseScene(opts?.pose ?? 'default');
+    window.__poseScene = (opts) => this.poseScene(opts?.pose ?? 'default', opts?.anim, opts?.progress);
     window.__gotoRoom = (id) => this.scene.restart({ roomId: id });
   }
 
-  private poseScene(pose: string): void {
+  private poseScene(pose: string, anim?: string, progress?: number): void {
     this.physics.world.pause();
     const tileX = (tx: number) => tx * World.tile + World.tile / 2;
     const tileY = (ty: number) => ty * World.tile + World.tile;
+    // Dev: pose an arbitrary player anim at a given progress (verifying clips).
+    if (anim) {
+      this.player.setPosition(tileX(24), tileY(15));
+      this.player.setFlipX(false);
+      this.player.play(anim, true);
+      this.player.anims.setProgress(progress ?? 0.5);
+      this.cameras.main.centerOn(tileX(26), tileY(13));
+      return;
+    }
     if (pose === 'dash') {
       this.player.setPosition(tileX(24), tileY(13));
       this.player.setFlipX(false);

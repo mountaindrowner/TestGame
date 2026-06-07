@@ -42,10 +42,15 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
 - **Game feel:** squash/stretch on jump/double-jump/land + a pivot squish on hard turns (feet-
   anchored scale, no new art; `PlayerTune.*Squash`), atop dash afterimages + attack body-lean/slash.
 - **Player art:** the **original "Hollow Revenant"** (PixelLab id `d6e11e94`, 48px source → packed
-  **41×40**, `PlayerTune.scale` 1) — the robot/HD re-rolls were rejected. Its stiff template clips
-  were **re-animated emotively** (v3, 7–13 frames each, real wind-up/extension/follow-through):
+  **45×43**, `PlayerTune.scale` 1) — the robot/HD re-rolls were rejected. Its stiff template clips
+  were **re-animated emotively** (v3, 7–17 frames each, real wind-up/extension/follow-through):
   idle/run/jump/fall/dash/hurt + **3 distinct attack swings** + death, plus a user-made
   **running-jump** (`runjump`, used when leaping with horizontal speed; standstill uses the leap).
+  The **3-hit combo** now uses the **newer hand-made swings**: 1 = fast overhead broken-sword chop
+  (7f), 2 = pull-the-glowing-blade-back heavy horizontal slash (17f), 3 = explosive crouch→leap
+  forward-thrust finisher (9f) — wired in `PlayerCombo`/`PlayerAnims` (the older slash/horizontal/
+  cleave clips remain on the character but are no longer mapped). The leap finisher added 2px of
+  union-bbox headroom (41→43 tall); `__poseScene({anim,progress})` poses any clip for verification.
   Pulled via
   `tools/fetch_enemy_art.py` (player id + per-clip keywords there; note PixelLab keys animations by
   name, so emotive re-rolls of same-named clips need `delete_animation` first), packed by

@@ -9,14 +9,16 @@ export const World = {
 };
 
 export const PlayerTune = {
-  // Frame / body  (45x41 original Revenant, emotive clips + a running-jump, bbox-packed).
+  // Frame / body  (45x43 original Revenant, emotive clips + running-jump + the
+  // new hand-made 3-hit swings; bbox-packed — the leap-thrust finisher added 2px
+  // of headroom so the union frame grew 45x41 -> 45x43).
   frameW: 45,
-  frameH: 41,
+  frameH: 43,
   scale: 1,
   bodyW: 12,
   bodyH: 28,
   bodyOffsetX: 16, // (frameW - bodyW)/2 -> centred
-  bodyOffsetY: 13, // body spans rows 13..41 (feet at frame bottom)
+  bodyOffsetY: 15, // body spans rows 15..43 (feet at frame bottom; frameH - bodyH)
 
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
@@ -74,7 +76,7 @@ export const PlayerTune = {
 // hardest but is slow to recover (whiff = punishable). Damage roughly 1 : 1.5 : 2.6.
 export const PlayerCombo = [
   { dmg: 20, reach: 22, height: 26, windupMs: 30, activeMs: 80, recoveryMs: 110, lunge: 90, anim: 'player-attack1', arc: 1.0, lean: 0.16 },
-  { dmg: 30, reach: 27, height: 30, windupMs: 45, activeMs: 95, recoveryMs: 150, lunge: 120, anim: 'player-attack2', arc: 1.3, lean: 0.22 },
+  { dmg: 30, reach: 28, height: 30, windupMs: 60, activeMs: 110, recoveryMs: 250, lunge: 130, anim: 'player-attack2', arc: 1.4, lean: 0.24 },
   { dmg: 52, reach: 34, height: 34, windupMs: 70, activeMs: 115, recoveryMs: 240, lunge: 240, anim: 'player-attack3', arc: 1.7, lean: 0.32 },
 ] as const;
 
