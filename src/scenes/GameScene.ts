@@ -131,6 +131,7 @@ export class GameScene extends Phaser.Scene {
       this.events.on('player-died', this.startGraceRespawn, this);
       this.events.on('guardian-defeated', this.onGuardianDefeated, this);
       this.events.on('boss-slam', this.onBossSlam, this);
+      this.events.on('boss-stomp', this.onBossStomp, this);
     }
 
     // Combat wiring
@@ -326,6 +327,13 @@ export class GameScene extends Phaser.Scene {
         onComplete: () => wave.destroy(),
       });
     }
+  }
+
+  /** A heavy boss footfall: a small stage shake, a puff of dust, a low thud. */
+  private onBossStomp(x: number, y: number): void {
+    this.juice.shake(80, 0.004);
+    this.particles.dust(x, y, 4);
+    this.sfx.stomp();
   }
 
   private makeDoor(x: number, y: number, _s: Spawn): void {

@@ -23,6 +23,8 @@ ENEMIES = {
         #   3 finish -> explosive crouch->leap forward thrust + follow-through (9f)
         "attack1": "broken_sword", "attack2": "glowing_blue", "attack3": "animating-433",
         "death": "collapsing",
+        # long-idle "waits" poses: rest (healthy) + weary (below half HP)
+        "rest": "propped", "weary": "weary",
     }),
     "crawler": ("e69cc50e-451e-4e02-ae1d-8111c2931e02", {"run": "crawling", "hurt": "recoiling"}),
     "spark": ("7d0aa99c-c02c-400e-b494-03146403a4a1", {"run": "floating", "windup": "flaring", "hurt": "flickering"}),

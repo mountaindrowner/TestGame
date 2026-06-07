@@ -51,6 +51,9 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   forward-thrust finisher (9f) — wired in `PlayerCombo`/`PlayerAnims` (the older slash/horizontal/
   cleave clips remain on the character but are no longer mapped). The leap finisher added 2px of
   union-bbox headroom (41→43 tall); `__poseScene({anim,progress})` poses any clip for verification.
+  A **long-idle "waits" pose**: stand still > `PlayerTune.restDelayMs` and he props the blade on
+  his shoulder (`player-rest`); below half HP it's the hunched, weary, blade-dragging variant
+  (`player-weary`) — gated in `Player.updateAnimation` via an `idleSince` timer.
   Pulled via
   `tools/fetch_enemy_art.py` (player id + per-clip keywords there; note PixelLab keys animations by
   name, so emotive re-rolls of same-named clips need `delete_animation` first), packed by
@@ -70,6 +73,11 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   recovery), and a **death collapse** (elites with a `death` clip play it, then fade — see
   `Enemy.die()`). Slam tuning in `GuardianTune.slam*`; clips are `warden-idle/taunt/slam/death`.
   Dev hook `__poseBoss({anim,progress})` poses the elite for verification.
+- **Warden approach (heavy stomps):** the elite no longer just looms — when it spots you beyond
+  `GuardianTune.attackRange` it **stalks in** at `walkSpeed` (reusing the heavy walk clip), and an
+  `ANIMATION_UPDATE` footfall hook emits `boss-stomp` on the planted-foot frames → GameScene gives
+  a small stage **shake + dust + `Sfx.stomp()`**. Within `attackRange` it commits (charge, or slam
+  inside `slamRange`). Generic heavy foes (striker) keep the old immediate-windup patrol.
 - **HUD health:** neon **rune-block** glyphs (≈1 per 20 HP) that color-shift blood→molten→grace
   with current life (`UIScene.drawHealth`), replacing the old bar.
 - **Enemy art:** ALL now real PixelLab art — runner (`art_src/enemy/`) + crawler/spark/striker/

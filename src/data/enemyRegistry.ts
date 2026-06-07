@@ -37,6 +37,8 @@ export interface EnemyTuneBase {
   slamMs?: number; // the smash / impact window
   slamRecoveryMs?: number; // punish window after the slam
   slamDamage?: number; // shockwave contact damage
+  walkSpeed?: number; // heavy approach gait (elite stalks you in)
+  attackRange?: number; // within this it commits; beyond it walks closer first
 }
 
 export interface EnemyConfig {

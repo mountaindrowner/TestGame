@@ -64,6 +64,10 @@ export const PlayerTune = {
   pivotSquashX: 1.12,
   pivotSquashY: 0.9,
 
+  // Stand still this long and the figure rests the blade on his shoulder and
+  // waits (a "long idle"); below half health it's the weary, battered variant.
+  restDelayMs: 2600,
+
   // Survivability
   maxHealth: 100,
   hurtKnockback: 150,
@@ -185,6 +189,10 @@ export const GuardianTune = {
   slamMs: 180, // the impact
   slamRecoveryMs: 620, // punish window after the smash
   slamDamage: 24,
+  // Approach: it stalks you with heavy stomping steps until it's close enough
+  // to commit (then it charges, or slams if you're right on top of it).
+  walkSpeed: 46, // slow, weighty gait
+  attackRange: 150, // within this it commits to charge/slam; beyond it walks in
 };
 
 export const Juice = {

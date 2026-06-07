@@ -127,6 +127,11 @@ export class Sfx {
     this.tone(900, 0.12, 'sawtooth', 0.12, 1500);
     this.noise(0.06, 0.1, 2000);
   }
+  /** A heavy armored footfall — deep, short, with a dusty thud. */
+  stomp(): void {
+    this.tone(58, 0.16, 'square', 0.34, 28);
+    this.noise(0.1, 0.16, 200);
+  }
   /** The Warden's intro roar — deep, dread. */
   roar(): void {
     this.tone(70, 0.75, 'sawtooth', 0.34, 38);

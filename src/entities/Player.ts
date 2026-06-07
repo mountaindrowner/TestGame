@@ -59,6 +59,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private lastPivotAt = 0;
   private lastRunDustAt = 0;
   private jumpAnim = 'player-jump'; // 'player-runjump' when leaping while moving
+  private idleSince = 0; // when the figure last started standing still (-> long idle)
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: PlayerDeps) {
     super(scene, x, y, Assets.player.key, 0);
@@ -331,11 +332,29 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (!this.attacking) this.setRotation(0); // clear any swing lean once the strike is done
     // Gate on the `attacking` flag (not mode) so the body returns to run/idle after
     // a swing — mirrors how dash recovers via its boolean.
-    if (this.attacking || this.dashing || this.mode === 'hurt') return;
+    const now = this.scene.time.now;
+    if (this.attacking || this.dashing || this.mode === 'hurt') {
+      this.idleSince = now; // any action resets the "waiting" timer
+      return;
+    }
     const vy = this.body.velocity.y;
     let next: string;
-    if (!onGround) next = vy < -10 ? this.jumpAnim : 'player-fall';
-    else next = Math.abs(this.body.velocity.x) > 12 ? 'player-run' : 'player-idle';
+    if (!onGround) {
+      next = vy < -10 ? this.jumpAnim : 'player-fall';
+      this.idleSince = now;
+    } else if (Math.abs(this.body.velocity.x) > 12) {
+      next = 'player-run';
+      this.idleSince = now;
+    } else {
+      // Standing still: after a beat he rests the blade on his shoulder and
+      // waits — weary/battered once he's below half health.
+      next =
+        now - this.idleSince > P.restDelayMs
+          ? this.health <= P.maxHealth * 0.5
+            ? 'player-weary'
+            : 'player-rest'
+          : 'player-idle';
+    }
     this.mode = onGround ? (next === 'player-run' ? 'run' : 'idle') : vy < 0 ? 'jump' : 'fall';
     if (this.anims.currentAnim?.key !== next) this.play(next, true);
     // couple the run cadence to actual speed so the gait never churns or drags

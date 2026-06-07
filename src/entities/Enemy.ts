@@ -73,7 +73,16 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         .setScale(2.4);
     }
     if (cfg.behavior === 'flyer_ranged') this.nextFireAt = scene.time.now + (this.t.fireEveryMs ?? 1500);
-    if (cfg.elite) scene.events.emit('boss-spawn', cfg.displayName, this.health, cfg.tune.maxHealth);
+    if (cfg.elite) {
+      scene.events.emit('boss-spawn', cfg.displayName, this.health, cfg.tune.maxHealth);
+      // Heavy footfalls: when the walk clip plants a foot while it's stalking
+      // in, shake the stage a little (GameScene listens for 'boss-stomp').
+      this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (anim: Phaser.Animations.Animation, frame: Phaser.Animations.AnimationFrame) => {
+        if (this.mode !== 'patrol' || this.introHold || anim.key !== cfg.anims.run) return;
+        if (Math.abs(this.body.velocity.x) < 1) return; // only when actually stepping
+        if (frame.index === 3 || frame.index === 7) scene.events.emit('boss-stomp', this.x, this.y);
+      });
+    }
   }
 
   isAlive(): boolean {
@@ -198,16 +207,16 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const inRange = Math.abs(dx) < this.t.aggroRange && dy < this.t.aggroVertical;
 
     switch (this.mode) {
-      case 'patrol':
-        // A boss with an idle clip looms in place when you're out of reach
-        // (no pacing); lesser heavy foes still patrol.
-        if (this.cfg.anims.idle && !inRange) {
-          this.body.setVelocityX(0);
-          this.play(this.cfg.anims.idle, true);
-        } else {
-          this.patrol(onGround);
-        }
-        if (inRange) {
+      case 'patrol': {
+        const atk = this.t.attackRange;
+        if (inRange && atk !== undefined && Math.abs(dx) > atk) {
+          // Stalk in with heavy stomping steps (footfalls shake the stage —
+          // see the ANIMATION_UPDATE hook) until close enough to commit.
+          this.facing = dx < 0 ? -1 : 1;
+          if (onGround && !this.groundAhead()) this.body.setVelocityX(0);
+          else this.body.setVelocityX(this.facing * (this.t.walkSpeed ?? this.t.patrolSpeed));
+          this.play(this.cfg.anims.run, true);
+        } else if (inRange) {
           // Crowd it and it smashes; give it room and it charges.
           this.attackType =
             this.cfg.anims.slam && Math.abs(dx) < (this.t.slamRange ?? 0) ? 'slam' : 'charge';
@@ -218,8 +227,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
           this.body.setVelocityX(0);
           this.play(this.attackType === 'slam' ? this.cfg.anims.slam! : this.cfg.anims.windup, true);
           this.deps.sfx.telegraph();
+        } else if (this.cfg.anims.idle) {
+          // A boss with an idle clip looms in place when out of reach (no pacing).
+          this.body.setVelocityX(0);
+          this.play(this.cfg.anims.idle, true);
+        } else {
+          this.patrol(onGround); // lesser heavy foes still patrol
         }
         break;
+      }
       case 'windup':
         this.body.setVelocityX(0);
         if (time >= this.windupEndAt) {

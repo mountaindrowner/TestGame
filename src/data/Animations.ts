@@ -14,8 +14,10 @@ export interface AnimDef {
 
 // PLAYER strip (45x43), packed by tools/pack_player.py:
 //   idle 0-8 | run 9-19 | jump 20-34 | runjump 35-42 | fall 43-49 | dash 50-56 |
-//   hurt 57-65 | attack1 66-72 | attack2 73-89 | attack3 90-98 | death 99-109
+//   hurt 57-65 | attack1 66-72 | attack2 73-89 | attack3 90-98 | death 99-109 |
+//   rest 110-118 | weary 119-129
 // jump = standstill leap (15f); runjump = user-made running jump (8f, used when moving).
+// rest/weary = long-idle "waits" poses (blade on shoulder; weary = below half HP).
 // 3-hit combo = the hand-made swings: 1 fast overhead broken-sword chop (7f),
 // 2 heavy pull-back glowing horizontal slash (17f), 3 leap-thrust finisher (9f).
 // Frame rates chosen so each swing plays ~start-to-finish across its combo step.
@@ -31,6 +33,9 @@ export const PlayerAnims: AnimDef[] = [
   { key: 'player-attack2', sheet: 'player', start: 73, end: 89, frameRate: 39, repeat: 0 },
   { key: 'player-attack3', sheet: 'player', start: 90, end: 98, frameRate: 21, repeat: 0 },
   { key: 'player-death', sheet: 'player', start: 99, end: 109, frameRate: 12, repeat: 0 },
+  // Long-idle "waits" poses (blade on shoulder). Ranges/size confirmed by the packer.
+  { key: 'player-rest', sheet: 'player', start: 110, end: 118, frameRate: 7, repeat: -1 },
+  { key: 'player-weary', sheet: 'player', start: 119, end: 129, frameRate: 6, repeat: -1 },
 ];
 
 // RUNNER strip (48x44), packed by tools/pack_enemy.py from PixelLab frames:
