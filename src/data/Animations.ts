@@ -14,20 +14,20 @@ export interface AnimDef {
 
 // PLAYER strip (48x44), packed by tools/pack_player.py from PixelLab frames:
 // PLAYER strip (41x40 original Revenant, emotive rework), packed by pack_player.py:
-//   idle 0-8 | run 9-19 | jump 20-28 | fall 29-35 | dash 36-42 | hurt 43-51 |
-//   attack1 52-62 | attack2 63-75 | attack3 76-88 | death 89-99
-// Full expressive clips (wind-up + extension + follow-through); jump/fall now play.
+//   idle 0-8 | run 9-19 | jump 20-34 | fall 35-41 | dash 42-48 | hurt 49-57 |
+//   attack1 58-68 | attack2 69-81 | attack3 82-94 | death 95-105
+// Full expressive clips; jump is a 15-frame energetic launch→stretch→tuck.
 export const PlayerAnims: AnimDef[] = [
   { key: 'player-idle', sheet: 'player', start: 0, end: 8, frameRate: 8, repeat: -1 },
   { key: 'player-run', sheet: 'player', start: 9, end: 19, frameRate: 16, repeat: -1 },
-  { key: 'player-jump', sheet: 'player', start: 20, end: 28, frameRate: 18, repeat: 0 },
-  { key: 'player-fall', sheet: 'player', start: 29, end: 35, frameRate: 12, repeat: -1 },
-  { key: 'player-dash', sheet: 'player', start: 36, end: 42, frameRate: 22, repeat: 0 },
-  { key: 'player-hurt', sheet: 'player', start: 43, end: 51, frameRate: 18, repeat: 0 },
-  { key: 'player-attack1', sheet: 'player', start: 52, end: 62, frameRate: 34, repeat: 0 },
-  { key: 'player-attack2', sheet: 'player', start: 63, end: 75, frameRate: 32, repeat: 0 },
-  { key: 'player-attack3', sheet: 'player', start: 76, end: 88, frameRate: 28, repeat: 0 },
-  { key: 'player-death', sheet: 'player', start: 89, end: 99, frameRate: 12, repeat: 0 },
+  { key: 'player-jump', sheet: 'player', start: 20, end: 34, frameRate: 20, repeat: 0 },
+  { key: 'player-fall', sheet: 'player', start: 35, end: 41, frameRate: 12, repeat: -1 },
+  { key: 'player-dash', sheet: 'player', start: 42, end: 48, frameRate: 22, repeat: 0 },
+  { key: 'player-hurt', sheet: 'player', start: 49, end: 57, frameRate: 18, repeat: 0 },
+  { key: 'player-attack1', sheet: 'player', start: 58, end: 68, frameRate: 34, repeat: 0 },
+  { key: 'player-attack2', sheet: 'player', start: 69, end: 81, frameRate: 32, repeat: 0 },
+  { key: 'player-attack3', sheet: 'player', start: 82, end: 94, frameRate: 28, repeat: 0 },
+  { key: 'player-death', sheet: 'player', start: 95, end: 105, frameRate: 12, repeat: 0 },
 ];
 
 // RUNNER strip (48x44), packed by tools/pack_enemy.py from PixelLab frames:
