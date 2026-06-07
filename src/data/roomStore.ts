@@ -40,3 +40,18 @@ export function hasRoomOverride(id: string): boolean {
     return false;
   }
 }
+
+/** Ids of every room saved as a browser override (includes editor-created rooms
+ *  that have no built-in builder). */
+export function listOverrideRooms(): string[] {
+  const ids: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX)) ids.push(k.slice(PREFIX.length));
+    }
+  } catch {
+    /* ignore */
+  }
+  return ids;
+}

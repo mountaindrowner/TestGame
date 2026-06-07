@@ -6,8 +6,12 @@ import { Assets, Sem } from '../data/assetManifest';
 import { autotile } from '../systems/Autotiler';
 import { ENEMY_REGISTRY, isEnemyKind } from '../data/enemyRegistry';
 import type { RoomData, Spawn, SpawnType } from '../data/roomData';
-import { buildRoom, ROOM_IDS, START_ROOM } from '../data/levelGraph';
+import { buildRoom, allRoomIds, isBuiltInRoom, START_ROOM } from '../data/levelGraph';
 import { saveRoomOverride, clearRoomOverride, hasRoomOverride } from '../data/roomStore';
+import { validateRoom } from '../data/roomValidate';
+import { Room } from '../data/rooms/build';
+
+const LINK_DIRS = ['east', 'west', 'up', 'down'] as const;
 
 type Tool = 'paint' | 'entity' | 'select';
 
@@ -56,6 +60,9 @@ export class EditorScene extends Phaser.Scene {
   private panel?: HTMLDivElement;
   private inspector?: HTMLDivElement;
   private status?: HTMLDivElement;
+  private roomSel?: HTMLSelectElement;
+  private linkSels: Partial<Record<(typeof LINK_DIRS)[number], HTMLSelectElement>> = {};
+  private warnDiv?: HTMLDivElement;
 
   constructor() {
     super('EditorScene');
@@ -103,6 +110,9 @@ export class EditorScene extends Phaser.Scene {
     if (this.grid) this.drawGrid();
     if (this.sel) this.sel.clear();
     this.fitCamera();
+    this.populateRoomSelect();
+    this.refreshLinks();
+    this.refreshWarnings();
   }
 
   private buildLayer(): void {
@@ -274,6 +284,39 @@ export class EditorScene extends Phaser.Scene {
   private markDirty(): void {
     this.dirty = true;
     this.updateStatus();
+    this.refreshWarnings();
+  }
+
+  // --- rooms: create / delete -------------------------------------------
+  private newRoom(): void {
+    const id = (prompt('New room id (e.g. "antechamber"):') ?? '').trim();
+    if (!id) return;
+    if (allRoomIds().includes(id)) {
+      alert(`Room "${id}" already exists.`);
+      return;
+    }
+    const wIn = parseInt(prompt('Width in tiles (e.g. 40):', '40') ?? '40', 10);
+    const hIn = parseInt(prompt('Height in tiles (e.g. 24):', '24') ?? '24', 10);
+    const w = Phaser.Math.Clamp(isNaN(wIn) ? 40 : wIn, 16, 120);
+    const h = Phaser.Math.Clamp(isNaN(hIn) ? 24 : hIn, 12, 80);
+    const room = new Room(id.toUpperCase(), w, h).frame().at('player', 3, h - 5).build(id);
+    saveRoomOverride(id, room);
+    this.loadRoom(id);
+    this.refreshInspector();
+    this.updateStatus();
+  }
+
+  private deleteRoom(): void {
+    if (isBuiltInRoom(this.roomId)) {
+      alert('Built-in room — use Revert to drop edits. Only editor-created rooms can be deleted.');
+      return;
+    }
+    if (!confirm(`Delete room "${this.roomId}" permanently (from this browser)?`)) return;
+    clearRoomOverride(this.roomId);
+    const next = allRoomIds()[0] ?? START_ROOM;
+    this.loadRoom(next);
+    this.refreshInspector();
+    this.updateStatus();
   }
 
   // --- actions ----------------------------------------------------------
@@ -325,6 +368,7 @@ export class EditorScene extends Phaser.Scene {
       #editor-panel .big { width:100%; margin-top:4px; }
       #editor-panel label { display:block; margin-top:4px; color:#9fd9ec; }
       #editor-panel .st { margin-top:7px; padding-top:6px; border-top:1px solid rgba(126,240,255,.18); color:#9fd9ec; white-space:pre-line; }
+      #editor-panel .warn { color:#ff9a9a; }
     `;
     document.head.appendChild(style);
 
@@ -334,15 +378,9 @@ export class EditorScene extends Phaser.Scene {
 
     root.appendChild(this.h('LEVEL EDITOR'));
 
-    // Room picker
+    // Room picker + create/delete
     const roomSel = document.createElement('select');
-    for (const id of ROOM_IDS) {
-      const o = document.createElement('option');
-      o.value = id;
-      o.textContent = id;
-      if (id === this.roomId) o.selected = true;
-      roomSel.appendChild(o);
-    }
+    this.roomSel = roomSel;
     roomSel.addEventListener('change', () => {
       if (this.dirty && !confirm('Discard unsaved changes?')) {
         roomSel.value = this.roomId;
@@ -353,6 +391,15 @@ export class EditorScene extends Phaser.Scene {
       this.updateStatus();
     });
     root.appendChild(roomSel);
+    const roomBtns = this.row();
+    roomBtns.appendChild(this.btn('＋ New room', () => this.newRoom()));
+    roomBtns.appendChild(this.btn('🗑 Delete', () => this.deleteRoom()));
+    root.appendChild(roomBtns);
+    // Connection warnings — kept near the top so validation is always visible.
+    this.warnDiv = document.createElement('div');
+    this.warnDiv.className = 'st';
+    root.appendChild(this.warnDiv);
+    this.populateRoomSelect();
 
     // Tools
     const toolSec = this.sec();
@@ -409,6 +456,26 @@ export class EditorScene extends Phaser.Scene {
     this.inspector = this.sec();
     this.inspector.id = 'ed-inspector';
     root.appendChild(this.inspector);
+
+    // Edge links (walk off this side -> linked room)
+    const linkSec = this.sec('edge links (room id)');
+    for (const dir of LINK_DIRS) {
+      const l = document.createElement('label');
+      l.textContent = dir;
+      const sel = document.createElement('select');
+      sel.id = `ed-link-${dir}`;
+      sel.addEventListener('change', () => {
+        const v = sel.value;
+        this.room.links = this.room.links ?? {};
+        if (v) this.room.links[dir] = v;
+        else delete this.room.links[dir];
+        this.markDirty();
+      });
+      this.linkSels[dir] = sel;
+      linkSec.appendChild(l);
+      linkSec.appendChild(sel);
+    }
+    root.appendChild(linkSec);
 
     // Actions
     const act = this.sec();
@@ -497,6 +564,52 @@ export class EditorScene extends Phaser.Scene {
       field('id', s.id ?? 'gate', (v) => (s.id = v));
     }
     ins.appendChild(this.btn('Delete', () => this.deleteSelected(), 'big'));
+  }
+
+  private populateRoomSelect(): void {
+    const sel = this.roomSel;
+    if (!sel) return;
+    sel.innerHTML = '';
+    for (const id of allRoomIds()) {
+      const o = document.createElement('option');
+      o.value = id;
+      o.textContent = id + (isBuiltInRoom(id) ? '' : ' *'); // * = editor-created
+      if (id === this.roomId) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+
+  private refreshLinks(): void {
+    const ids = allRoomIds();
+    for (const dir of LINK_DIRS) {
+      const sel = this.linkSels[dir];
+      if (!sel) continue;
+      sel.innerHTML = '';
+      const none = document.createElement('option');
+      none.value = '';
+      none.textContent = '—';
+      sel.appendChild(none);
+      for (const id of ids) {
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = id;
+        sel.appendChild(o);
+      }
+      sel.value = this.room.links?.[dir] ?? '';
+    }
+  }
+
+  private refreshWarnings(): void {
+    const w = this.warnDiv;
+    if (!w) return;
+    const warns = validateRoom(this.room);
+    if (warns.length === 0) {
+      w.className = 'st';
+      w.textContent = '✓ links valid';
+    } else {
+      w.className = 'st warn';
+      w.textContent = '⚠ ' + warns.join('\n⚠ ');
+    }
   }
 
   private updateStatus(): void {
