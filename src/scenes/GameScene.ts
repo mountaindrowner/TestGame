@@ -583,25 +583,79 @@ export class GameScene extends Phaser.Scene {
     if (open) this.tweens.add({ targets: prompt, alpha: 0.95, y: y - 48, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
+  /** The gate as a stone PORTCULLIS — frame + lintel + bars. Unlocked (Memory +
+   *  Warden down) the bars glow grace and the ascend prompt shows; activating it
+   *  lifts the bars and rides a lift up (see rideLift). */
   private drawGate(): void {
     if (!this.gate) return;
     const { x, y, visual, prompt } = this.gate;
-    const open = this.run.hasBrokenMemory && this.run.guardianDefeated;
+    const unlocked = this.run.hasBrokenMemory && this.run.guardianDefeated;
     visual.clear();
-    visual.fillStyle(Palette.shadow, 1).fillRect(x - 11, y - 34, 22, 34);
-    if (open) {
-      visual.fillStyle(Palette.grace, 0.5).fillRect(x - 8, y - 31, 16, 31);
-      // Reveal the ascend prompt the moment it opens (e.g. right after the boss).
-      if (prompt && !this.tweens.isTweening(prompt)) {
-        prompt.setAlpha(0);
-        this.tweens.add({ targets: prompt, alpha: 0.95, y: y - 48, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      }
-    } else {
-      // bars
-      visual.fillStyle(Palette.stoneHi, 1);
-      for (let i = -8; i <= 8; i += 5) visual.fillRect(x + i, y - 32, 2, 32);
-      visual.fillStyle(Palette.stone, 1).fillRect(x - 11, y - 34, 22, 3);
+    // frame: lintel + side posts
+    visual.fillStyle(Palette.shadow, 1).fillRect(x - 13, y - 38, 26, 5);
+    visual.fillStyle(Palette.shadow, 0.95).fillRect(x - 13, y - 34, 3, 34);
+    visual.fillStyle(Palette.shadow, 0.95).fillRect(x + 10, y - 34, 3, 34);
+    // portcullis bars (these are what lift)
+    const bar = unlocked ? Palette.grace : Palette.stoneHi;
+    visual.fillStyle(bar, unlocked ? 0.95 : 1);
+    for (let i = -8; i <= 8; i += 5) visual.fillRect(x + i, y - 32, 2, 32);
+    visual.fillRect(x - 9, y - 25, 18, 2); // cross-bars
+    visual.fillRect(x - 9, y - 13, 18, 2);
+    if (unlocked && prompt && !this.tweens.isTweening(prompt)) {
+      prompt.setAlpha(0);
+      this.tweens.add({ targets: prompt, alpha: 0.95, y: y - 48, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
+  }
+
+  /** Activate an unlocked gate: the portcullis lifts, then a stone lift carries the
+   *  figure up and out of frame into the next area. */
+  private rideLift(): void {
+    if (this.transitioning || !this.gate || !this.gate.to) return;
+    const g = this.gate;
+    this.transitioning = true;
+    this.player.controllable = false;
+    this.player.body.setVelocity(0, 0);
+    this.player.x = g.x; // center on the lift
+    g.prompt?.setVisible(false);
+    this.tweens.killTweensOf(g.glow);
+    g.glow.setAlpha(0.9);
+    this.sfx.stomp();
+    this.juice.shake(280, 0.006);
+
+    // 1) the bars grind upward and fade.
+    this.tweens.add({ targets: g.visual, y: -34, alpha: 0, duration: 600, ease: 'Quad.easeOut' });
+
+    // 2) a stone lift slab (with a grace underglow) appears beneath the figure.
+    const slab = this.add
+      .rectangle(g.x, this.player.y + 4, 30, 6, Palette.stoneHi)
+      .setStrokeStyle(1, Palette.grace, 0.7)
+      .setDepth(40);
+    const glow = this.add
+      .image(g.x, this.player.y + 2, Assets.dot.key)
+      .setScale(9, 3)
+      .setTint(Palette.grace)
+      .setAlpha(0.0)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(39);
+
+    // 3) once the bars are clear, rise up and out, then travel to the next area.
+    this.time.delayedCall(480, () => {
+      this.player.body.enable = false; // the tween drives position now
+      this.sfx.grace();
+      this.particles.dust(g.x, this.player.y, 6);
+      this.tweens.add({ targets: glow, alpha: 0.4, duration: 300 });
+      this.tweens.add({
+        targets: [this.player, slab, glow],
+        y: '-=176',
+        duration: 1500,
+        ease: 'Sine.easeIn',
+        onComplete: () => {
+          this.cameras.main.fadeOut(320, 0, 0, 0);
+          this.run.health = this.player.health;
+          this.time.delayedCall(340, () => this.scene.restart({ roomId: g.to, entryDoorId: g.toEntry }));
+        },
+      });
+    });
   }
 
   // ----------------------------------------------------------------------
@@ -612,6 +666,7 @@ export class GameScene extends Phaser.Scene {
     this.parallax.update(this.cameras.main, time);
     this.decorations.update(time);
     if (this.juice.frozen) return;
+    if (this.transitioning) return; // riding the lift / mid-transition — freeze world checks
     this.checkHazards();
     this.checkPickups();
     this.checkInteractions(time);
@@ -693,9 +748,9 @@ export class GameScene extends Phaser.Scene {
 
   private tryGate(): void {
     if (this.run.hasBrokenMemory && this.run.guardianDefeated) {
-      // An opened gate that leads somewhere (BIO-01 → House of Mirrors) travels there;
-      // otherwise it's the end of the line (level complete).
-      if (this.gate?.to) this.transitionTo(this.gate.to, { entryDoorId: this.gate.toEntry });
+      // An opened gate that leads somewhere (BIO-01 → House of Mirrors) lifts + rides
+      // a lift up to it; otherwise it's the end of the line (level complete).
+      if (this.gate?.to) this.rideLift();
       else this.onLevelComplete();
     } else {
       const need = !this.run.hasBrokenMemory && !this.run.guardianDefeated

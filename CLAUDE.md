@@ -212,10 +212,12 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   flyers=projectiles only). `CombatSystem.onContact` gates on it. To keep chasers dangerous, the
   **pursuer** (crawler / Reflection Hound) gained a telegraphed **lunge-bite** (windup→strike→recover;
   `attackRange` in tune, defaults in code). Verified: idle/touch = 0 dmg; attacks still land.
-- **Boss → next area (DONE):** the opened gate now shows a bright grace doorway + a pulsing **"↑ ASCEND"**
-  prompt (`gate.prompt`), and the hints are directive ("THE WAY OPENS ABOVE — REACH THE GATE (EAST) AND
-  PRESS ↑"; locked: where to find the Broken Memory). The post-Warden gate hint is sequenced *after* the
-  Grace Burst hint so the directional one lingers. Dev hook `__health()` reads player HP.
+- **Boss → next area (DONE):** the gate is a stone **PORTCULLIS** (frame + lintel + bars; `drawGate`)
+  that glows grace + shows a pulsing **"↑ ASCEND"** prompt once unlocked (Memory + Warden down).
+  Pressing ↑ runs `rideLift()`: the **bars grind up** and a **stone lift carries the figure up and out
+  of frame**, then it travels to the next area (a cinematic, not the instant fade). Hints are directive
+  (post-Warden, sequenced after the Grace Burst hint; locked = where to find the Broken Memory).
+  `__health()` dev hook reads HP.
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
   *ledge-grab/climb* (player FSM), *dynamic lighting*, a *higher-res player* sprite, a *catacomb* level
   grammar (connected architecture, no floating platforms, weaving passages, deep-shadow/fog occlusion),
