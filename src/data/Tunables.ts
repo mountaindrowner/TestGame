@@ -1,10 +1,12 @@
 // ALL game-feel constants live here. One file tunes the whole game.
-// Units: pixels and px/second (Arcade physics). Internal res is 480x270.
+// Units: pixels and px/second (Arcade physics).
 
 export const World = {
   gravity: 900, // px/s^2
-  internalWidth: 480,
-  internalHeight: 270,
+  // Internal render res — a tighter 384x216 (16:9) frames the action closer (a
+  // ~1.25x zoom vs the old 480x270), Dead-Cells-style; everything keys off this.
+  internalWidth: 384,
+  internalHeight: 216,
   tile: 16,
 };
 

@@ -390,6 +390,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   // ----------------------------------------------------------------------
+  /** Restore life (life orb). Clamped to max; emits the HUD update. */
+  heal(amount: number): void {
+    if (this.mode === 'dead') return;
+    this.health = Math.min(P.maxHealth, this.health + amount);
+    this.scene.events.emit('player-health', this.health, P.maxHealth);
+  }
+
   takeDamage(amount: number, sourceX: number): void {
     if (this.isInvulnerable() || this.mode === 'dead' || this.mode === 'reborn') return;
     this.health -= amount;

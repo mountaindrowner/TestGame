@@ -49,6 +49,8 @@ export class GameScene extends Phaser.Scene {
   private enemies!: Phaser.GameObjects.Group;
   private enemyProjectiles!: Phaser.Physics.Arcade.Group;
   private bossHazards!: Phaser.Physics.Arcade.Group; // ground shockwaves from the slam
+  private pickups!: Phaser.Physics.Arcade.Group; // dropped souls / life orbs
+  private urns!: Phaser.Physics.Arcade.Group; // breakable scenery
   private graceSpawn = new Phaser.Math.Vector2();
   private respawning = false;
   private fadeRect!: Phaser.GameObjects.Rectangle;
@@ -120,7 +122,10 @@ export class GameScene extends Phaser.Scene {
     this.enemies = this.add.group({ runChildUpdate: true });
     this.enemyProjectiles = this.physics.add.group({ classType: Projectile, maxSize: 24 });
     this.bossHazards = this.physics.add.group();
+    this.pickups = this.physics.add.group();
+    this.urns = this.physics.add.group();
     this.spawnFromData();
+    this.events.emit('souls', this.run.souls);
 
     // Restore carried-over health and persist changes back to the run.
     this.player.health = this.run.health;
@@ -141,6 +146,7 @@ export class GameScene extends Phaser.Scene {
       this.events.on('boss-slam', this.onBossSlam, this);
       this.events.on('boss-stomp', this.onBossStomp, this);
       this.events.on('enemy-split', this.onEnemySplit, this);
+      this.events.on('enemy-killed', this.onEnemyKilled, this);
     }
 
     // Combat wiring
@@ -148,6 +154,13 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.layer);
     this.physics.add.collider(this.enemies, this.layer);
     this.wireProjectiles();
+
+    // Economy: dropped souls / life orbs settle on the ground + are collected on
+    // touch; urns shatter when the blade sweeps them.
+    this.physics.add.collider(this.pickups, this.layer);
+    this.physics.add.collider(this.urns, this.layer);
+    this.physics.add.overlap(this.player, this.pickups, (_p, obj) => this.collectPickup(obj as Phaser.Physics.Arcade.Image));
+    this.physics.add.overlap(this.player.hitbox, this.urns, (_h, obj) => this.breakUrn(obj as Phaser.Physics.Arcade.Image));
     this.physics.add.overlap(this.player, this.bossHazards, (_p, hz) => {
       const h = hz as Phaser.Physics.Arcade.Image;
       if (h.active) this.player.takeDamage((h.getData('dmg') as number) ?? 20, h.x);
@@ -296,6 +309,9 @@ export class GameScene extends Phaser.Scene {
       case 'mirror':
         this.makeMirror(x, y, s.scale ?? 0.28);
         break;
+      case 'jar':
+        this.makeUrn(x, y);
+        break;
       case 'key':
         if (!this.run.hasBrokenMemory) this.makeKey(x, y - 12);
         break;
@@ -319,6 +335,61 @@ export class GameScene extends Phaser.Scene {
     return this.room.spawns.find(
       (s) => (s.type === 'guardian' || s.type === 'mirrorboss') && !this.eliteDefeated(s.type as EnemyKind),
     );
+  }
+
+  // ── Economy: souls, life orbs, breakable urns ─────────────────────────
+  /** A foe falls → it sheds souls (the elite a small fountain + a life orb). */
+  private onEnemyKilled(x: number, y: number, elite: boolean, kind: EnemyKind): void {
+    if (kind === 'fractureShard') return; // split shards don't drop (no fountain)
+    const n = elite ? 10 : Phaser.Math.Between(1, 2);
+    for (let i = 0; i < n; i++) this.spawnDrop(x + Phaser.Math.Between(-8, 8), y, 'soul');
+    if (elite) this.spawnDrop(x, y, 'heal');
+    else if (Phaser.Math.Between(0, 99) < 7) this.spawnDrop(x, y, 'heal');
+  }
+
+  private spawnDrop(x: number, y: number, kind: 'soul' | 'heal'): void {
+    const p = this.pickups.create(x, y, kind === 'heal' ? Assets.heal.key : Assets.soul.key) as Phaser.Physics.Arcade.Image;
+    p.setDepth(30).setBlendMode(Phaser.BlendModes.ADD).setData('kind', kind).setData('bornAt', this.time.now);
+    const b = p.body as Phaser.Physics.Arcade.Body;
+    b.setVelocity(Phaser.Math.Between(-55, 55), Phaser.Math.Between(-170, -90));
+    b.setBounce(0.45, 0.45);
+    b.setDragX(50);
+    b.setCollideWorldBounds(true);
+  }
+
+  private collectPickup(p: Phaser.Physics.Arcade.Image): void {
+    if (!p.active) return;
+    if (this.time.now - (p.getData('bornAt') as number) < 280) return; // let it pop out first
+    if (p.getData('kind') === 'heal') {
+      this.player.heal(28);
+      this.sfx.heal();
+      this.particles.graceMotes(p.x, p.y, 12);
+    } else {
+      this.run.souls += 1;
+      this.sfx.pickup();
+      this.particles.sparks(p.x, p.y, 4);
+      this.events.emit('souls', this.run.souls);
+    }
+    p.destroy();
+  }
+
+  private makeUrn(x: number, y: number): void {
+    const u = this.urns.create(x, y, Assets.urn.key) as Phaser.Physics.Arcade.Image;
+    u.setOrigin(0.5, 1).setDepth(11);
+    const b = u.body as Phaser.Physics.Arcade.Body;
+    b.setSize(11, 15).setOffset(2, 3);
+    b.setCollideWorldBounds(true);
+  }
+
+  private breakUrn(u: Phaser.Physics.Arcade.Image): void {
+    if (!u.active || !this.player.hitbox.live || u.getData('broken')) return;
+    u.setData('broken', true);
+    this.sfx.shatter();
+    this.particles.debris(u.x, u.y - 7, 12);
+    const n = Phaser.Math.Between(1, 3);
+    for (let i = 0; i < n; i++) this.spawnDrop(u.x + Phaser.Math.Between(-6, 6), u.y - 8, 'soul');
+    if (Phaser.Math.Between(0, 99) < 35) this.spawnDrop(u.x, u.y - 8, 'heal');
+    u.destroy();
   }
 
   /** A Fracture Wisp dies → scatter its shards in a little upward burst. */
@@ -536,6 +607,19 @@ export class GameScene extends Phaser.Scene {
     if (this.keyObj && !this.run.hasBrokenMemory) {
       if (Phaser.Math.Distance.Between(this.player.x, this.player.y - 8, this.keyPos.x, this.keyPos.y) < 18) {
         this.collectKey();
+      }
+    }
+    // Souls/orbs drift toward the player once settled + near (a little magnetism).
+    const px = this.player.x;
+    const py = this.player.y - 8;
+    for (const obj of this.pickups.getChildren()) {
+      const p = obj as Phaser.Physics.Arcade.Image;
+      if (!p.active || this.time.now - (p.getData('bornAt') as number) < 280) continue;
+      const d = Phaser.Math.Distance.Between(px, py, p.x, p.y);
+      if (d < 52) {
+        const b = p.body as Phaser.Physics.Arcade.Body;
+        b.setAllowGravity(false);
+        this.physics.velocityFromRotation(Math.atan2(py - p.y, px - p.x), 200, b.velocity);
       }
     }
   }

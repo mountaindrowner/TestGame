@@ -3,6 +3,7 @@ import { World } from './data/Tunables';
 import { Palette } from './data/palette';
 import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
+import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { UIScene } from './scenes/UIScene';
 import { EditorScene } from './scenes/EditorScene';
@@ -32,7 +33,7 @@ const config: Phaser.Types.Core.GameConfig = {
     },
   },
   fps: { target: 60, min: 30 },
-  scene: [BootScene, PreloadScene, GameScene, UIScene, EditorScene],
+  scene: [BootScene, PreloadScene, TitleScene, GameScene, UIScene, EditorScene],
 };
 
 // eslint-disable-next-line no-new

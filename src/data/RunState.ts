@@ -12,6 +12,7 @@ export interface RunStateData {
   guardianDefeated: boolean; // the gate guardian beaten
   untrueImageDefeated: boolean; // BIO-02 mini-boss (THE UNTRUE IMAGE) beaten
   graceBurst: boolean; // Grace Burst air-dash unlocked (earned from the Warden)
+  souls: number; // currency dropped by foes / urns
   currentRoomId: string;
   entryDoorId?: string; // which door we entered the current room from
 }
@@ -46,6 +47,7 @@ export class RunState {
       guardianDefeated: false,
       untrueImageDefeated: false,
       graceBurst: false,
+      souls: 0,
       currentRoomId: roomId,
     };
   }
@@ -84,5 +86,11 @@ export class RunState {
   }
   set graceBurst(v: boolean) {
     this.data.graceBurst = v;
+  }
+  get souls(): number {
+    return this.data.souls;
+  }
+  set souls(v: number) {
+    this.data.souls = v;
   }
 }

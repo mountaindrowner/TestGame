@@ -59,6 +59,9 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(Assets.fern.key, Assets.fern.path);
     this.load.image(Assets.stalactite.key, Assets.stalactite.path);
     this.load.image(Assets.mirror.key, Assets.mirror.path);
+    this.load.image(Assets.soul.key, Assets.soul.path);
+    this.load.image(Assets.heal.key, Assets.heal.path);
+    this.load.image(Assets.urn.key, Assets.urn.path);
   }
 
   create(): void {
@@ -75,8 +78,16 @@ export class PreloadScene extends Phaser.Scene {
     registerAnims(this, LookingGlassAnims);
     // Make sure the display font is ready before any text is drawn (canvas text
     // bakes the font at creation; loading it late would show a fallback flash).
-    const target = new URLSearchParams(location.search).has('edit') ? 'EditorScene' : 'GameScene';
-    const start = () => this.scene.start(target);
+    // Boot flow: Title menu by default; ?edit → editor; ?play → straight to the
+    // game (used by the screenshot/test harness so it never waits on the menu).
+    const params = new URLSearchParams(location.search);
+    const target = params.has('edit') ? 'EditorScene' : params.has('play') ? 'GameScene' : 'TitleScene';
+    // Explicit hand-off: run the target, then shut THIS loader down (calling
+    // scene.start from a late promise tick was leaving the loader rendering behind).
+    const start = () => {
+      this.scene.run(target);
+      this.scene.stop();
+    };
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
     if (fonts?.load) {
       Promise.all([fonts.load('16px "Dash Horizon"'), fonts.load('600 16px "Dash Horizon"')])
@@ -94,18 +105,20 @@ export class PreloadScene extends Phaser.Scene {
     const barW = 180;
     const x = (width - barW) / 2;
     const y = height / 2;
-    this.add
-      .text(width / 2, y - 18, 'R E P E N T A N C E', {
-        fontFamily: FONT,
-        fontSize: '10px',
-        color: '#7ef0ff',
-      })
+    const pct = this.add
+      .text(width / 2, y + 12, 'LOADING…', { fontFamily: FONT, fontSize: '8px', color: '#7ef0ff' })
       .setOrigin(0.5)
       .setAlpha(0.7);
     this.load.on('progress', (p: number) => {
       g.clear();
       g.fillStyle(Palette.stoneHi, 0.3).fillRect(x, y, barW, 3);
       g.fillStyle(Palette.grace, 1).fillRect(x, y, barW * p, 3);
+      pct.setText(`LOADING… ${Math.round(p * 100)}%`);
+    });
+    // Belt-and-suspenders: guarantee the loader UI is gone when this scene ends.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      g.destroy();
+      pct.destroy();
     });
   }
 }

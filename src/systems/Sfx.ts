@@ -121,6 +121,31 @@ export class Sfx {
     notes.forEach((n, i) => setTimeout(() => this.tone(n, 0.5, 'triangle', 0.22), i * 90));
   }
 
+  // --- UI / pickups -----------------------------------------------------
+  /** Menu cursor move — a soft blip. */
+  uiMove(): void {
+    this.tone(440, 0.06, 'square', 0.14, 540);
+  }
+  /** Menu confirm — a bright two-step. */
+  uiSelect(): void {
+    this.tone(660, 0.09, 'triangle', 0.2, 990);
+    setTimeout(() => this.tone(990, 0.12, 'triangle', 0.16, 1320), 70);
+  }
+  /** Picking up a dropped soul — a small crystalline ting. */
+  pickup(): void {
+    this.tone(880, 0.07, 'triangle', 0.14, 1240);
+  }
+  /** Drinking a life orb — a warm rising swell. */
+  heal(): void {
+    this.tone(392, 0.22, 'sine', 0.2, 588);
+    this.tone(523, 0.26, 'triangle', 0.12, 660);
+  }
+  /** An urn shattering — dry clay crack. */
+  shatter(): void {
+    this.noise(0.14, 0.22, 1200);
+    this.tone(240, 0.1, 'square', 0.14, 90);
+  }
+
   // --- enemy vocabulary -------------------------------------------------
   /** Heavy enemy winding up a committed strike. */
   telegraph(): void {

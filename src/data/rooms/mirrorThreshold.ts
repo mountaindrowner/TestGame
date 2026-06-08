@@ -21,5 +21,7 @@ export function mirrorThreshold(): RoomData {
   r.at('falseFace', 15, 15); //    a quick duelist
   r.at('torch', 6, 16);
   r.at('torch', 40, 12);
+  r.at('jar', 11, 16);
+  r.at('jar', 16, 16);
   return r.build('mirror-threshold');
 }

@@ -473,6 +473,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.scene.events.emit('guardian-defeated', this.cfg.kind); // kind routes which elite fell
       this.scene.events.emit('boss-defeated');
     }
+    // Sheds currency (the scene spawns the drops).
+    this.scene.events.emit('enemy-killed', this.x, this.y - 8, this.cfg.elite ?? false, this.cfg.kind);
 
     // Foes with a death clip (the boss) buckle and collapse, then fade out once
     // the animation finishes; everyone else keeps the quick squash-pop.

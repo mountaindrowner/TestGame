@@ -37,6 +37,10 @@ export const Assets = {
   stalactite: { key: 'decor-stalactite', path: 'assets/sprites/decor/stalactite.png' },
   // House of Mirrors — an ornate broken mirror pane (PixelLab), placed as wall decor.
   mirror: { key: 'decor-mirror', path: 'assets/sprites/decor/mirror.png' },
+  // Gameplay props — dropped currency (soul), heal orb, breakable urn.
+  soul: { key: 'prop-soul', path: 'assets/sprites/props/soul.png' },
+  heal: { key: 'prop-heal', path: 'assets/sprites/props/heal.png' },
+  urn: { key: 'prop-urn', path: 'assets/sprites/props/urn.png' },
 } as const;
 
 // Per-biome theme lookup: a room's `biome` resolves to its tileset + parallax

@@ -24,6 +24,8 @@ export function mirrorHall(): RoomData {
   r.at('reflectionHound', 31, 14);
   r.at('torch', 4, 18);
   r.at('torch', 31, 14);
+  r.at('jar', 9, 18);
+  r.at('jar', 38, 18);
 
   r.link('east', 'mirror-gallery');
   r.link('down', 'gate'); // reciprocal with the gate's up-link (map/validation)

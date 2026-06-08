@@ -4,7 +4,9 @@
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
-const URL = process.env.URL || 'http://localhost:5173';
+const BASE = process.env.URL || 'http://localhost:5173';
+// Skip the new boot/title menu so the harness lands straight in the game.
+const URL = BASE.includes('?') ? BASE : BASE + '?play';
 const poses = process.argv.slice(2);
 const SHOTS = poses.length ? poses : ['default', 'combat', 'dash', 'grace'];
 

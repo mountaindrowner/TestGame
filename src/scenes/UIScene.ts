@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Palette } from '../data/palette';
 import { PlayerTune } from '../data/Tunables';
+import { Assets } from '../data/assetManifest';
 import { FONT } from '../data/ui';
 
 /** Parallel HUD scene — health, the current area name, the Broken Memory
@@ -14,6 +15,7 @@ export class UIScene extends Phaser.Scene {
   private areaText!: Phaser.GameObjects.Text;
   private keyPip!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
+  private soulText!: Phaser.GameObjects.Text;
   private bossBar!: Phaser.GameObjects.Graphics;
   private bossName!: Phaser.GameObjects.Text;
   private bossMax = 1;
@@ -37,6 +39,13 @@ export class UIScene extends Phaser.Scene {
       .text(this.scale.width / 2, 4, __BUILD_ID__, { fontFamily: FONT, fontSize: '6px', color: '#7ef0ff' })
       .setOrigin(0.5, 0)
       .setAlpha(0.4);
+
+    // Soul counter (top-right) — a gem icon + tally.
+    const sx = this.scale.width - 8;
+    this.add.image(sx - 26, 11, Assets.soul.key).setBlendMode(Phaser.BlendModes.ADD).setScale(1);
+    this.soulText = this.add
+      .text(sx - 20, 11, '0', { fontFamily: FONT, fontSize: '8px', color: '#bfe8ff' })
+      .setOrigin(0, 0.5);
 
     // Broken Memory indicator — dim until found, then bright.
     this.keyPip = this.add
@@ -105,6 +114,10 @@ export class UIScene extends Phaser.Scene {
     game.events.on('room-name', (name: string) => this.areaText.setText(name));
     game.events.on('key-state', (has: boolean) => {
       this.keyPip.setText(has ? '◆ MEMORY' : '◇ MEMORY').setAlpha(has ? 0.9 : 0.25);
+    });
+    game.events.on('souls', (n: number) => {
+      this.soulText.setText(String(n));
+      this.tweens.add({ targets: this.soulText, scale: { from: 1.35, to: 1 }, duration: 220, ease: 'Quad.easeOut' });
     });
     game.events.on('hint', (msg: string) => this.showHint(msg));
     game.events.on('level-complete', () => {

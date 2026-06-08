@@ -14,6 +14,8 @@ export function crossroads(): RoomData {
   r.at('door', 29, 16, { id: 'cross-mem', to: 'memory', toEntry: 'from-cross' });
   r.at('torch', 6, 16);
   r.at('torch', 52, 16);
+  r.at('jar', 10, 16);
+  r.at('jar', 47, 16);
 
   r.link('west', 'descent');
   r.link('east', 'gate');

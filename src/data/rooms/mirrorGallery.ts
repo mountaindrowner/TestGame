@@ -28,6 +28,9 @@ export function mirrorGallery(): RoomData {
   r.at('mirrorDouble', 31, 16); // YOUR REFLECTION — it shadows you and leaps with your finisher
   r.at('torch', 6, 18);
   r.at('torch', 52, 18);
+  r.at('jar', 12, 18);
+  r.at('jar', 33, 18);
+  r.at('jar', 48, 18);
 
   r.link('west', 'mirror-hall');
   return r.build('mirror-gallery');

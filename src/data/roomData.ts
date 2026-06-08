@@ -10,6 +10,7 @@ export type SpawnType =
   | 'player'
   | 'door'
   | 'torch'
+  | 'jar' // a breakable urn that sheds souls / a life orb
   | 'mirror' // House of Mirrors: a decorative ornate broken-mirror pane on the wall
   | 'key' // the Broken Memory pickup
   | 'gate' // the locked exit gate (needs key + guardian down)

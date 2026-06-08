@@ -192,6 +192,28 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   player-reflection sprite. Build against the concept sheet + `docs/LEVEL_DESIGN.md`. Dev hooks
   `__setRun(partial)` / `__killBoss()` help test gated paths.
 
+## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
+- **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)
+  → GameScene. `TitleScene` drifts the depths parallax behind a glowing **REPENTANCE** title +
+  tagline, a keyboard/pointer menu (BEGIN / SOUND toggle) with **menu-move + select SFX**
+  (`Sfx.uiMove/uiSelect`), and a brief "ENTERING THE FALL…" loading beat; **BEGIN resets the run**.
+  `?play` skips straight to GameScene (the screenshot harness + `npm run shot` use it); `?edit` →
+  editor. The DOM `#boot` splash is cleared by whichever scene shows first (now TitleScene too).
+- **Tighter camera:** internal res is now **384×216** (was 480×270) — a ~1.25× zoom, framing the
+  action closer. Everything keys off `World.internal*` / `scene.scale.*`, so it was a one-spot change.
+- **Currency + breakables + healing** (a real reward loop): foes **drop souls** on death (the elite a
+  small fountain + a life orb; `Enemy` emits `enemy-killed` → `GameScene` spawns drops), which **magnet
+  to the player** and tally in a **HUD soul counter** (`RunState.souls`, top-right gem). Breakable
+  **urns** (`jar` spawn type; `GameScene.makeUrn`/`breakUrn`, shattered by the blade hitbox) shed souls
+  + sometimes a **life orb** (`Player.heal`). Prop art from `tools/gen_props.py` (soul/heal/urn). SFX:
+  `Sfx.pickup/heal/shatter`. Urns placed across mirror rooms + crossroads.
+- **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
+  *attack-only damage* (touch shouldn't hurt — only telegraphed attacks; needs pursuers to gain a
+  lunge + BIO-01 rebalance), *ledge-grab/climb* (player FSM), *dynamic lighting*, a *higher-res
+  player* sprite, a *catacomb* level grammar (connected architecture, no floating platforms, weaving
+  passages, deep-shadow/fog occlusion), little *critters/webs/surface-dust*, and *bomber/archer*
+  enemy archetypes. See the chat notes for the full list.
+
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
 tiles 16×16; player 48×44 feet-anchor; all feel constants in `src/data/Tunables.ts`;

@@ -7,6 +7,7 @@ import gen_tileset_mirrors
 import gen_backgrounds
 import gen_backgrounds_mirrors
 import gen_decor
+import gen_props
 
 if __name__ == "__main__":
     print("Generating REPENTANCE assets...")
@@ -24,4 +25,6 @@ if __name__ == "__main__":
     gen_backgrounds_mirrors.build()
     print("[decor]")
     gen_decor.build()
+    print("[props]")
+    gen_props.build()
     print("Done.")
