@@ -24,8 +24,8 @@ export function mirrorRise(): RoomData {
   r.at('mirror', 25, 22, { scale: 0.26 });
   r.at('mirror', 34, 16, { scale: 0.24 });
 
-  r.at('spark', 22, 17);
-  r.at('spark', 30, 11);
+  r.at('fractureWisp', 22, 17); // bursts into a swarm of shards when struck
+  r.at('glassWitch', 30, 11);
   r.at('torch', 6, 29);
   r.at('torch', 33, 5);
   return r.build('mirror-rise');

@@ -140,6 +140,7 @@ export class GameScene extends Phaser.Scene {
       this.events.on('guardian-defeated', this.onGuardianDefeated, this);
       this.events.on('boss-slam', this.onBossSlam, this);
       this.events.on('boss-stomp', this.onBossStomp, this);
+      this.events.on('enemy-split', this.onEnemySplit, this);
     }
 
     // Combat wiring
@@ -318,6 +319,14 @@ export class GameScene extends Phaser.Scene {
     return this.room.spawns.find(
       (s) => (s.type === 'guardian' || s.type === 'mirrorboss') && !this.eliteDefeated(s.type as EnemyKind),
     );
+  }
+
+  /** A Fracture Wisp dies → scatter its shards in a little upward burst. */
+  private onEnemySplit(kind: EnemyKind, count: number, x: number, y: number): void {
+    for (let i = 0; i < count; i++) {
+      const ox = (i - (count - 1) / 2) * 16;
+      this.spawnEnemy(kind, x + ox, y - 6);
+    }
   }
 
   private spawnEnemy(kind: EnemyKind, x: number, y: number): void {

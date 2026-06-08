@@ -110,6 +110,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         return this.fromBehind(attackerX);
       case 'heavy_telegraph':
         return this.mode === 'recover' || this.fromBehind(attackerX);
+      case 'mirror_double':
+        return this.mode === 'windup' || this.fromBehind(attackerX);
       default:
         return false;
     }
@@ -145,6 +147,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         break;
       case 'flyer_ranged':
         this.updateFlyer(time);
+        break;
+      case 'mirror_double':
+        this.updateMirror(time);
         break;
     }
 
@@ -327,6 +332,48 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  /** THE MIRROR DOUBLE — your reflection. Always facing you, it shadows you at a
+   *  punishing pace and, when it closes, leaps with your own finisher. Glass-frail. */
+  private updateMirror(time: number): void {
+    const onGround = this.body.blocked.down;
+    const p = this.deps.player;
+    const dx = p.x - this.x;
+    this.facing = dx < 0 ? -1 : 1;
+    const lungeRange = this.t.aggroRange * 0.34;
+
+    switch (this.mode) {
+      case 'patrol': // (for the Double, "patrol" = the relentless shadow chase)
+        if (onGround && !this.groundAhead()) this.body.setVelocityX(0);
+        else this.body.setVelocityX(this.facing * this.t.chaseSpeed);
+        if (this.anims.currentAnim?.key !== this.cfg.anims.run) this.play(this.cfg.anims.run, true);
+        if (Math.abs(dx) < lungeRange && Math.abs(p.y - this.y) < this.t.aggroVertical && time >= this.nextFireAt) {
+          this.mode = 'windup';
+          this.windupEndAt = time + this.t.windupMs;
+          this.body.setVelocityX(0);
+          this.play(this.cfg.anims.windup, true);
+          this.deps.sfx.telegraph();
+        }
+        break;
+      case 'windup':
+        this.body.setVelocityX(0);
+        if (time >= this.windupEndAt) {
+          this.mode = 'strike';
+          this.strikeEndAt = time + (this.t.strikeMs ?? 200);
+          this.body.setVelocity(this.facing * this.t.chaseSpeed * 1.5, -150); // a leaping lunge
+          this.play(this.cfg.anims.strike ?? this.cfg.anims.run, true);
+          this.deps.sfx.slam();
+        }
+        break;
+      case 'strike':
+        if (onGround && !this.groundAhead()) this.body.setVelocityX(0);
+        if (time >= this.strikeEndAt) {
+          this.mode = 'patrol';
+          this.nextFireAt = time + 650; // brief beat before the next leap
+        }
+        break;
+    }
+  }
+
   private fire(p: Player): void {
     const pr = this.t.projectile;
     if (!this.deps.fireProjectile || !pr) return;
@@ -376,6 +423,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(amount: number, fromX: number, core = false): void {
     if (this.mode === 'dead') return;
+    // Looking-Glass Sentinel: blades glance off its mirrored face. Its guard only
+    // drops when staggered (recover/hurt) — otherwise flank it (a hit from behind).
+    if (this.cfg.frontImmune && !core && this.mode !== 'recover' && this.mode !== 'hurt' && !this.fromBehind(fromX)) {
+      this.deps.particles.sparks(this.x + this.facing * 8, this.y - 16, 8);
+      this.setTintFill(0xcfe0ff);
+      this.scene.time.delayedCall(50, () => {
+        this.clearTint();
+        if (this.cfg.tint !== undefined) this.setTint(this.cfg.tint);
+      });
+      return;
+    }
     this.health -= amount * (1 - (this.t.damageReduction ?? 0));
     if (this.cfg.elite) this.scene.events.emit('boss-health', Math.max(0, this.health), this.cfg.tune.maxHealth);
     const dir = this.x < fromX ? -1 : 1;
@@ -401,9 +459,16 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
     this.deps.sfx.enemyDie();
     this.deps.particles.debris(this.x, this.y - 8, this.cfg.elite ? 30 : 16);
-    this.deps.juice.flash(Palette.molten, this.cfg.elite ? 120 : 60);
+    this.deps.juice.flash(this.cfg.shatter ? Palette.grace : Palette.molten, this.cfg.elite ? 120 : 60);
     this.body.setVelocity(0, 0);
     this.body.enable = false;
+
+    // Glass foes burst into a spray of shards (the Mirror Double, the Wisp).
+    if (this.cfg.shatter) this.deps.particles.sparks(this.x, this.y - 14, 22);
+    // The Fracture Wisp scatters into smaller foes the scene spawns around it.
+    if (this.cfg.splitInto) {
+      this.scene.events.emit('enemy-split', this.cfg.splitInto.kind, this.cfg.splitInto.count, this.x, this.y - 10);
+    }
     if (this.cfg.elite) {
       this.scene.events.emit('guardian-defeated', this.cfg.kind); // kind routes which elite fell
       this.scene.events.emit('boss-defeated');

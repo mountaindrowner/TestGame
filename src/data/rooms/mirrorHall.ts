@@ -20,8 +20,8 @@ export function mirrorHall(): RoomData {
   r.at('mirror', 34, 13, { scale: 0.3 });
   r.at('mirror', 44, 9, { scale: 0.2 });
 
-  r.at('runner', 22, 17);
-  r.at('runner', 31, 14);
+  r.at('reflectionHound', 22, 17); // a first taste — fast, relentless
+  r.at('reflectionHound', 31, 14);
   r.at('torch', 4, 18);
   r.at('torch', 31, 14);
 

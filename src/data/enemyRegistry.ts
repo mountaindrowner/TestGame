@@ -5,9 +5,23 @@ import { EnemyTune, CrawlerTune, SparkTune, StrikerTune, GuardianTune } from './
  *  level editor reads it to populate its palette — one registration per enemy,
  *  so adding a type never touches the spawn/scene code. This is the seam the
  *  future dev-kit reuses. */
-export type EnemyKind = 'runner' | 'crawler' | 'spark' | 'striker' | 'guardian' | 'mirrorboss';
+export type EnemyKind =
+  | 'runner'
+  | 'crawler'
+  | 'spark'
+  | 'striker'
+  | 'guardian'
+  | 'mirrorboss'
+  // BIO-02 House of Mirrors roster
+  | 'mirrorDouble'
+  | 'reflectionHound'
+  | 'glassWitch'
+  | 'falseFace'
+  | 'fractureWisp'
+  | 'fractureShard'
+  | 'lookingGlass';
 
-export type BehaviorTag = 'lunger' | 'pursuer' | 'flyer_ranged' | 'heavy_telegraph';
+export type BehaviorTag = 'lunger' | 'pursuer' | 'flyer_ranged' | 'heavy_telegraph' | 'mirror_double';
 
 /** The gameplay-number shape every enemy tune satisfies (behaviour-specific
  *  fields are optional and only read by the matching behaviour). */
@@ -60,9 +74,16 @@ export interface EnemyConfig {
   scale?: number;
   depth?: number;
   tint?: number; // interim visual identity while sharing placeholder art (P2 swaps real sheets)
+  // BIO-02 mechanics ---------------------------------------------------------
+  shatter?: boolean; // dies in a burst of glass shards (the Mirror Double)
+  frontImmune?: boolean; // blades glance off the front; flank or punish its recovery (the Sentinel)
+  splitInto?: { kind: EnemyKind; count: number }; // on death, fractures into smaller foes (the Wisp)
 }
 
-export const ENEMY_KINDS: EnemyKind[] = ['runner', 'crawler', 'spark', 'striker', 'guardian', 'mirrorboss'];
+export const ENEMY_KINDS: EnemyKind[] = [
+  'runner', 'crawler', 'spark', 'striker', 'guardian', 'mirrorboss',
+  'mirrorDouble', 'reflectionHound', 'glassWitch', 'falseFace', 'fractureWisp', 'fractureShard', 'lookingGlass',
+];
 
 export function isEnemyKind(t: string): t is EnemyKind {
   return (ENEMY_KINDS as string[]).includes(t);
@@ -172,5 +193,117 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     scale: 1.2,
     depth: 46,
     tint: 0x9fc0ff, // cold mirror-glass cast
+  },
+
+  // ── BIO-02 House of Mirrors roster ──────────────────────────────────────
+  // THE MIRROR DOUBLE — the signature. Your own reflection given chase: it wears
+  // the player sprite (icy), shadows you relentlessly and leaps with YOUR finisher,
+  // but it's glass — it shatters in a hit or two.
+  mirrorDouble: {
+    kind: 'mirrorDouble',
+    displayName: 'Mirror Double',
+    behavior: 'mirror_double',
+    spriteKey: Assets.player.key,
+    anims: { run: 'player-run', windup: 'player-attack1', strike: 'player-attack3', hurt: 'player-hurt' },
+    tune: { ...EnemyTune, maxHealth: 26, chaseSpeed: 162, aggroRange: 280, aggroVertical: 110, windupMs: 170, contactDamage: 16, knockbackTaken: 210, coreStunMs: 220, strikeMs: 200, edgeCheck: true },
+    body: { w: 12, h: 28, offX: 16, offY: 15 }, // the player's own body box (frame 45x43)
+    hasCore: false,
+    coreBonusMult: 1.6,
+    scale: 1,
+    depth: 47,
+    tint: 0x9fd8ff,
+    shatter: true,
+  },
+  // REFLECTION HOUND — a fast, relentless pursuer that runs you down.
+  reflectionHound: {
+    kind: 'reflectionHound',
+    displayName: 'Reflection Hound',
+    behavior: 'pursuer',
+    spriteKey: Assets.crawler.key,
+    anims: { run: 'crawler-run', windup: 'crawler-run', hurt: 'crawler-hurt' },
+    tune: { ...CrawlerTune, maxHealth: 40, chaseSpeed: 132, aggroRange: 220, aggroVertical: 60 },
+    body: { w: 24, h: 24, offX: 10, offY: 25 },
+    hasCore: false,
+    coreBonusMult: 2.0,
+    scale: 0.62,
+    tint: 0xc9a6ff,
+  },
+  // GLASS WITCH — a floating caster that hurls a fan of glass shards.
+  glassWitch: {
+    kind: 'glassWitch',
+    displayName: 'Glass Witch',
+    behavior: 'flyer_ranged',
+    spriteKey: Assets.spark.key,
+    anims: { run: 'spark-run', windup: 'spark-windup', hurt: 'spark-hurt', fire: 'spark-windup' },
+    tune: { ...SparkTune, maxHealth: 40, standoff: 150, hoverOffset: 72, fireEveryMs: 2100, windupMs: 360, projectile: { speed: 132, damage: 13, count: 3, spreadDeg: 42, lifespanMs: 2400 } },
+    body: { w: 16, h: 16, offX: 8, offY: 14 },
+    hasCore: false,
+    coreBonusMult: 1.0,
+    flying: true,
+    scale: 0.62,
+    tint: 0xb98cff,
+  },
+  // FALSE-FACE DUELIST — a quick telegraphing duelist; punish the recovery.
+  falseFace: {
+    kind: 'falseFace',
+    displayName: 'False-Face Duelist',
+    behavior: 'heavy_telegraph',
+    spriteKey: Assets.striker.key,
+    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', strike: 'striker-strike' },
+    tune: { ...StrikerTune, maxHealth: 72, windupMs: 360, strikeMs: 230, recoveryMs: 430, chaseSpeed: 172, damageReduction: 0.2 },
+    body: { w: 22, h: 40, offX: 16, offY: 13 },
+    hasCore: false,
+    coreBonusMult: 1.8,
+    scale: 0.9,
+    tint: 0x8fe0ff,
+  },
+  // FRACTURE WISP — a frail floater that bursts into shards when destroyed.
+  fractureWisp: {
+    kind: 'fractureWisp',
+    displayName: 'Fracture Wisp',
+    behavior: 'flyer_ranged',
+    spriteKey: Assets.spark.key,
+    anims: { run: 'spark-run', windup: 'spark-windup', hurt: 'spark-hurt', fire: 'spark-windup' },
+    tune: { ...SparkTune, maxHealth: 28, fireEveryMs: 1700, projectile: { speed: 140, damage: 10, count: 1, spreadDeg: 0, lifespanMs: 2200 } },
+    body: { w: 16, h: 16, offX: 8, offY: 14 },
+    hasCore: false,
+    coreBonusMult: 1.0,
+    flying: true,
+    scale: 0.7,
+    tint: 0xa6f0e0,
+    shatter: true,
+    splitInto: { kind: 'fractureShard', count: 3 },
+  },
+  // the Wisp's children — tiny, fast, weak; do not split again.
+  fractureShard: {
+    kind: 'fractureShard',
+    displayName: 'Fracture Shard',
+    behavior: 'flyer_ranged',
+    spriteKey: Assets.spark.key,
+    anims: { run: 'spark-run', windup: 'spark-windup', hurt: 'spark-hurt', fire: 'spark-windup' },
+    tune: { ...SparkTune, maxHealth: 8, chaseSpeed: 108, standoff: 70, hoverOffset: 40, fireEveryMs: 1300, windupMs: 200, projectile: { speed: 168, damage: 7, count: 1, spreadDeg: 0, lifespanMs: 1500 } },
+    body: { w: 16, h: 16, offX: 8, offY: 14 },
+    hasCore: false,
+    coreBonusMult: 1.0,
+    flying: true,
+    scale: 0.42,
+    tint: 0xd0fff0,
+    shatter: true,
+  },
+  // LOOKING-GLASS SENTINEL — armoured; blades glance off its face. Flank it, or
+  // punish its recovery — Grace Burst behind it is the answer.
+  lookingGlass: {
+    kind: 'lookingGlass',
+    displayName: 'Looking-Glass Sentinel',
+    behavior: 'heavy_telegraph',
+    spriteKey: Assets.striker.key,
+    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', strike: 'striker-strike' },
+    tune: { ...StrikerTune, maxHealth: 110, windupMs: 700, strikeMs: 280, recoveryMs: 560, chaseSpeed: 130, damageReduction: 0.4 },
+    body: { w: 22, h: 40, offX: 16, offY: 13 },
+    hasCore: false,
+    coreBonusMult: 2.0,
+    scale: 1.0,
+    tint: 0xcfd6ff,
+    frontImmune: true,
   },
 };

@@ -23,9 +23,9 @@ export function mirrorGallery(): RoomData {
   r.at('mirror', 41, 12, { scale: 0.32 });
   r.at('mirror', 50, 9, { scale: 0.26 });
 
-  r.at('crawler', 20, 17);
-  r.at('spark', 40, 8);
-  r.at('runner', 47, 13);
+  r.at('reflectionHound', 20, 17);
+  r.at('glassWitch', 41, 8); //   floating caster, fans glass shards
+  r.at('mirrorDouble', 31, 16); // YOUR REFLECTION — it shadows you and leaps with your finisher
   r.at('torch', 6, 18);
   r.at('torch', 52, 18);
 

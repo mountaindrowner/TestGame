@@ -18,7 +18,14 @@ export type SpawnType =
   | 'spark'
   | 'striker'
   | 'guardian'
-  | 'mirrorboss'; // THE UNTRUE IMAGE — the House of Mirrors mini-boss (elite)
+  | 'mirrorboss' // THE UNTRUE IMAGE — the House of Mirrors mini-boss (elite)
+  // BIO-02 House of Mirrors roster
+  | 'mirrorDouble'
+  | 'reflectionHound'
+  | 'glassWitch'
+  | 'falseFace'
+  | 'fractureWisp'
+  | 'lookingGlass';
 
 export interface Spawn {
   type: SpawnType;

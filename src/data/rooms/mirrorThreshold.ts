@@ -17,7 +17,8 @@ export function mirrorThreshold(): RoomData {
   r.at('mirror', 26, 8, { scale: 0.22 });
   r.at('mirror', 40, 12, { scale: 0.3 });
 
-  r.at('striker', 24, 15);
+  r.at('lookingGlass', 26, 15); // armoured — flank it or punish its recovery
+  r.at('falseFace', 15, 15); //    a quick duelist
   r.at('torch', 6, 16);
   r.at('torch', 40, 12);
   return r.build('mirror-threshold');

@@ -70,12 +70,14 @@ indigo palette, silver mirror sheen, cold glass light (vs the depths' warm flame
 - **Gimmicks (1–2 signature, rest as accents):** shattered mirrors (break → shards; spawn Doubles) ·
   reflective floors (enemies intangible on them) · upside-down/gravity arches · distortion fog
   (obscures, speeds enemies) · mirror obelisks (redirect projectiles) · hanging mirrors (swing/slash).
-- **Status:** **playable & beatable** — a 5-room area (hall → gallery → Grace-Burst climb →
-  threshold → the Untrue Image arena), entered when the BIO-01 gate opens; broken-mirror backdrop,
-  lavender-brick tileset, PixelLab wall mirrors, and the mini-boss → completion. **Next increments:**
-  the Mirror Double + rest of the roster, the mirror gimmicks (reflective floors, breakable mirrors,
-  gravity arches, distortion fog…), and a true reflection sprite for the boss. Greybox new rooms in
-  the editor and prove they're fun before art (LEVEL_DESIGN workflow).
+- **Status:** **playable & beatable, with the full 6-enemy roster** — a 5-room area (hall → gallery
+  → Grace-Burst climb → threshold → the Untrue Image arena), entered when the BIO-01 gate opens;
+  broken-mirror backdrop, lavender-brick tileset, PixelLab wall mirrors, the mini-boss → completion.
+  The roster (Mirror Double, Reflection Hound, Glass Witch, False-Face Duelist, Fracture Wisp,
+  Looking-Glass Sentinel) is in and placed — the **Mirror Double wears the player sprite** as your
+  reflection. **Next increments:** the mirror gimmicks (reflective floors, breakable mirrors, gravity
+  arches, distortion fog…), dedicated roster art (shared tinted placeholders today), and a true
+  reflection sprite for the boss. Greybox new rooms in the editor before art (LEVEL_DESIGN workflow).
 
 ## How to use this
 1. Before authoring/re-skinning a room, write its template line (above).
