@@ -543,6 +543,7 @@ export class EditorScene extends Phaser.Scene {
       #editor-panel label { display:block; margin-top:4px; color:#9fd9ec; }
       #editor-panel .st { margin-top:7px; padding-top:6px; border-top:1px solid rgba(126,240,255,.18); color:#9fd9ec; white-space:pre-line; }
       #editor-panel .warn { color:#ff9a9a; }
+      #editor-panel .note { color:#e8c98a; }
     `;
     document.head.appendChild(style);
 
@@ -670,6 +671,8 @@ export class EditorScene extends Phaser.Scene {
     document.body.appendChild(root);
     this.syncToolRows();
     this.refreshInspector();
+    this.refreshLinks();
+    this.refreshWarnings();
     this.updateStatus();
   }
 
@@ -778,13 +781,18 @@ export class EditorScene extends Phaser.Scene {
   private refreshWarnings(): void {
     const w = this.warnDiv;
     if (!w) return;
+    w.className = 'st';
+    w.innerHTML = '';
     const warns = validateRoom(this.room);
     if (warns.length === 0) {
-      w.className = 'st';
-      w.textContent = '✓ links valid';
-    } else {
-      w.className = 'st warn';
-      w.textContent = '⚠ ' + warns.join('\n⚠ ');
+      w.textContent = '✓ checks pass';
+      return;
+    }
+    for (const x of warns) {
+      const d = document.createElement('div');
+      d.className = x.level === 'error' ? 'warn' : 'note';
+      d.textContent = (x.level === 'error' ? '⚠ ' : '· ') + x.msg;
+      w.appendChild(d);
     }
   }
 

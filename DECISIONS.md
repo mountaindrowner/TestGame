@@ -39,6 +39,14 @@
 - Hitstop is a manual timer flag, not `physics.world.pause()`.
 - If a designer might tweak it per-room, it's **data** (room/level config), not code.
 
+## Doc authority split (which doc wins)
+- **Player experience / layout / fairness / flow / the map** → `docs/LEVEL_DESIGN.md` (our adapted
+  Level Design Bible — the authority for designing rooms/levels).
+- **Code / architecture / engine APIs / stack** → this file + the source.
+- **Asset placement / organic variation** → `docs/ART_VARIATION.md`.
+- **Game-feel constants & movement** → `docs/GAME_FEEL_RULES.md` + `src/data/Tunables.ts`.
+The map-integrity non-negotiables are machine-enforced in the editor via `src/data/roomValidate.ts`.
+
 ## Collision boxes & combat bias (three boxes per actor)
 Keep three boxes distinct (per the Phaser build guide):
 1. **Visual bounds** — the full sprite frame; display only.
