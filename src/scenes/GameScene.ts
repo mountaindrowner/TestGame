@@ -5,6 +5,7 @@ import { Assets, Vis, VIS_SOLID_MAX, biomeOf } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace } from '../data/Tunables';
 import { RunState } from '../data/RunState';
+import { FONT } from '../data/ui';
 import { ENEMY_REGISTRY, EnemyKind, isEnemyKind } from '../data/enemyRegistry';
 import { InputManager } from '../systems/InputManager';
 import { TouchControls } from '../systems/TouchControls';
@@ -61,7 +62,7 @@ export class GameScene extends Phaser.Scene {
   private entrySide?: 'east' | 'west';
   private interactArmed = false; // must leave an edge zone before it can fire
   private doors: DoorRef[] = [];
-  private gate?: { x: number; y: number; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle; to?: string; toEntry?: string };
+  private gate?: { x: number; y: number; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle; to?: string; toEntry?: string; prompt?: Phaser.GameObjects.Text };
   private transitioning = false;
   private interactReadyAt = 0;
   private won = false;
@@ -569,19 +570,32 @@ export class GameScene extends Phaser.Scene {
       .rectangle(x, y - 17, 16, 32, open ? Palette.grace : Palette.stoneHi, open ? 0.5 : 0.25)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(9);
-    this.gate = { x, y, visual, glow, to: s?.to, toEntry: s?.toEntry };
+    // A clear "↑ ASCEND" prompt above the gate — shown once it's open so it's
+    // obvious how to leave for the next area.
+    const prompt = this.add
+      .text(x, y - 44, '↑ ASCEND', { fontFamily: FONT, fontSize: '7px', color: '#7ef0ff' })
+      .setOrigin(0.5)
+      .setDepth(48)
+      .setAlpha(0);
+    this.gate = { x, y, visual, glow, to: s?.to, toEntry: s?.toEntry, prompt };
     this.drawGate();
     this.tweens.add({ targets: glow, alpha: open ? 0.85 : 0.4, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    if (open) this.tweens.add({ targets: prompt, alpha: 0.95, y: y - 48, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   private drawGate(): void {
     if (!this.gate) return;
-    const { x, y, visual } = this.gate;
+    const { x, y, visual, prompt } = this.gate;
     const open = this.run.hasBrokenMemory && this.run.guardianDefeated;
     visual.clear();
     visual.fillStyle(Palette.shadow, 1).fillRect(x - 11, y - 34, 22, 34);
     if (open) {
       visual.fillStyle(Palette.grace, 0.5).fillRect(x - 8, y - 31, 16, 31);
+      // Reveal the ascend prompt the moment it opens (e.g. right after the boss).
+      if (prompt && !this.tweens.isTweening(prompt)) {
+        prompt.setAlpha(0);
+        this.tweens.add({ targets: prompt, alpha: 0.95, y: y - 48, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      }
     } else {
       // bars
       visual.fillStyle(Palette.stoneHi, 1);
@@ -685,10 +699,10 @@ export class GameScene extends Phaser.Scene {
       else this.onLevelComplete();
     } else {
       const need = !this.run.hasBrokenMemory && !this.run.guardianDefeated
-        ? 'A MEMORY, AND THE GUARDIAN.'
+        ? 'SEALED — DEFEAT THE WARDEN AND BRING A BROKEN MEMORY.'
         : !this.run.hasBrokenMemory
-          ? 'A MEMORY IS MISSING.'
-          : 'THE GUARDIAN STILL STANDS.';
+          ? 'SEALED — A BROKEN MEMORY IS MISSING (↑ ABOVE THE CROSSROADS, TO THE WEST).'
+          : 'SEALED — THE WARDEN STILL STANDS.';
       this.events.emit('hint', need);
     }
   }
@@ -766,7 +780,11 @@ export class GameScene extends Phaser.Scene {
     this.juice.flash(Palette.grace, 140);
     if (this.gate) {
       this.drawGate();
-      this.events.emit('hint', this.run.hasBrokenMemory ? 'THE GATE OPENS.' : 'THE GUARDIAN FALLS. A MEMORY REMAINS.');
+      const msg = this.run.hasBrokenMemory
+        ? 'THE WAY OPENS ABOVE — REACH THE GATE (EAST) AND PRESS ↑'
+        : 'THE WARDEN FALLS — BUT THE GATE NEEDS A BROKEN MEMORY (BACK WEST).';
+      // Let the Grace Burst hint play first, then leave the directional one lingering.
+      this.time.delayedCall(2800, () => this.events.emit('hint', msg));
     }
   }
 
@@ -941,6 +959,7 @@ export class GameScene extends Phaser.Scene {
       const boss = this.enemies.getChildren().find((e) => (e as Enemy).cfg?.elite) as Enemy | undefined;
       boss?.takeDamage(99999, boss.x);
     };
+    window.__health = () => this.player.health;
   }
 
   private poseScene(pose: string, anim?: string, progress?: number): void {

@@ -44,7 +44,8 @@ export class CombatSystem {
 
   private onContact: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_p, enemyObj) => {
     const enemy = enemyObj as Enemy;
-    if (!enemy.isAlive()) return;
+    // Touch alone is harmless — only a committed attack (lunge/charge/strike) hurts.
+    if (!enemy.isAlive() || !enemy.isAttacking()) return;
     this.player.takeDamage(enemy.contactDamage, enemy.x);
   };
 }

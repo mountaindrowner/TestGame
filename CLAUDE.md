@@ -207,12 +207,19 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   **urns** (`jar` spawn type; `GameScene.makeUrn`/`breakUrn`, shattered by the blade hitbox) shed souls
   + sometimes a **life orb** (`Player.heal`). Prop art from `tools/gen_props.py` (soul/heal/urn). SFX:
   `Sfx.pickup/heal/shatter`. Urns placed across mirror rooms + crossroads.
+- **Attack-only damage (DONE):** touch no longer hurts — an enemy damages the player only during the
+  committed frames of an attack (`Enemy.isAttacking()`: lunger=chase, heavy=strike, mirror_double=leap,
+  flyers=projectiles only). `CombatSystem.onContact` gates on it. To keep chasers dangerous, the
+  **pursuer** (crawler / Reflection Hound) gained a telegraphed **lunge-bite** (windup→strike→recover;
+  `attackRange` in tune, defaults in code). Verified: idle/touch = 0 dmg; attacks still land.
+- **Boss → next area (DONE):** the opened gate now shows a bright grace doorway + a pulsing **"↑ ASCEND"**
+  prompt (`gate.prompt`), and the hints are directive ("THE WAY OPENS ABOVE — REACH THE GATE (EAST) AND
+  PRESS ↑"; locked: where to find the Broken Memory). The post-Warden gate hint is sequenced *after* the
+  Grace Burst hint so the directional one lingers. Dev hook `__health()` reads player HP.
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  *attack-only damage* (touch shouldn't hurt — only telegraphed attacks; needs pursuers to gain a
-  lunge + BIO-01 rebalance), *ledge-grab/climb* (player FSM), *dynamic lighting*, a *higher-res
-  player* sprite, a *catacomb* level grammar (connected architecture, no floating platforms, weaving
-  passages, deep-shadow/fog occlusion), little *critters/webs/surface-dust*, and *bomber/archer*
-  enemy archetypes. See the chat notes for the full list.
+  *ledge-grab/climb* (player FSM), *dynamic lighting*, a *higher-res player* sprite, a *catacomb* level
+  grammar (connected architecture, no floating platforms, weaving passages, deep-shadow/fog occlusion),
+  little *critters/webs/surface-dust*, and *bomber/archer* enemy archetypes.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

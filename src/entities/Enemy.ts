@@ -101,6 +101,24 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     return (this.facing === 1 && ax < this.x) || (this.facing === -1 && ax > this.x);
   }
 
+  /** Touch alone no longer hurts — an enemy only damages the player during the
+   *  active, committed frames of an attack (its lunge / charge / strike). Flyers
+   *  deal damage only through their projectiles. */
+  isAttacking(): boolean {
+    switch (this.cfg.behavior) {
+      case 'lunger':
+        return this.mode === 'chase'; // the committed lunge
+      case 'pursuer':
+        return this.mode === 'strike'; // the lunge-bite
+      case 'heavy_telegraph':
+        return this.mode === 'strike'; // the charge / slam swing
+      case 'mirror_double':
+        return this.mode === 'strike'; // the leap
+      default:
+        return false; // flyers: projectiles only
+    }
+  }
+
   /** Per-behaviour weak point: the high-reward punish window. See CombatSystem. */
   isCoreHit(attackerX: number): boolean {
     switch (this.cfg.behavior) {
@@ -140,7 +158,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.updateLunger(time);
         break;
       case 'pursuer':
-        this.updatePursuer();
+        this.updatePursuer(time);
         break;
       case 'heavy_telegraph':
         this.updateHeavy(time);
@@ -196,19 +214,58 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  private updatePursuer(): void {
+  private updatePursuer(time: number): void {
     const onGround = this.body.blocked.down;
     const p = this.deps.player;
     const dx = p.x - this.x;
     const dy = Math.abs(p.y - this.y);
     if (Math.abs(dx) < this.t.aggroRange && dy < this.t.aggroVertical) this.latched = true;
-
-    if (this.latched) {
-      this.facing = dx < 0 ? -1 : 1;
-      if (onGround && !this.groundAhead()) this.body.setVelocityX(0); // won't walk into the void
-      else this.body.setVelocityX(this.facing * this.t.chaseSpeed);
-    } else {
+    if (!this.latched) {
       this.patrol(onGround);
+      return;
+    }
+    this.facing = dx < 0 ? -1 : 1;
+    const biteRange = this.t.attackRange ?? 30;
+
+    switch (this.mode) {
+      case 'patrol': // relentless chase, with a telegraphed lunge-bite up close
+        if (Math.abs(dx) < biteRange && dy < 40 && time >= this.nextFireAt) {
+          this.mode = 'windup';
+          this.windupEndAt = time + (this.t.windupMs || 170);
+          this.body.setVelocityX(0);
+          this.play(this.cfg.anims.windup, true);
+          this.deps.sfx.telegraph();
+        } else if (onGround && !this.groundAhead()) {
+          this.body.setVelocityX(0); // won't walk into the void
+        } else {
+          this.body.setVelocityX(this.facing * this.t.chaseSpeed);
+        }
+        break;
+      case 'windup':
+        this.body.setVelocityX(0);
+        if (time >= this.windupEndAt) {
+          this.mode = 'strike';
+          this.strikeEndAt = time + (this.t.strikeMs ?? 150);
+          this.body.setVelocityX(this.facing * this.t.chaseSpeed * 1.7); // the bite-lunge
+          this.play(this.cfg.anims.strike ?? this.cfg.anims.run, true);
+          this.deps.sfx.slam();
+        }
+        break;
+      case 'strike':
+        if (onGround && !this.groundAhead()) this.body.setVelocityX(0);
+        if (time >= this.strikeEndAt) {
+          this.mode = 'recover';
+          this.recoverEndAt = time + (this.t.recoveryMs ?? 240);
+          this.body.setVelocityX(0);
+        }
+        break;
+      case 'recover':
+        this.body.setVelocityX(0);
+        if (time >= this.recoverEndAt) {
+          this.mode = 'patrol';
+          this.nextFireAt = time + 700; // beat before the next bite
+        }
+        break;
     }
   }
 
