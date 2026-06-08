@@ -607,8 +607,8 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Activate an unlocked gate: the portcullis lifts, then a stone lift carries the
-   *  figure up and out of frame into the next area. */
+  /** Activate an unlocked gate: the portcullis grinds up and a chain-hauled stone
+   *  lift carries the figure up and out of frame into the next area — with weight. */
   private rideLift(): void {
     if (this.transitioning || !this.gate || !this.gate.to) return;
     const g = this.gate;
@@ -619,36 +619,50 @@ export class GameScene extends Phaser.Scene {
     g.prompt?.setVisible(false);
     this.tweens.killTweensOf(g.glow);
     g.glow.setAlpha(0.9);
-    this.sfx.stomp();
-    this.juice.shake(280, 0.006);
+    this.sfx.grind(); // stone machinery under load
+    this.sfx.chain();
+    this.juice.shake(300, 0.007);
 
+    const slabY = this.player.y + 4;
+    const chainTopY = slabY - 240; // chains run up off-frame, reeling the lift in
     // 1) the bars grind upward and fade.
     this.tweens.add({ targets: g.visual, y: -34, alpha: 0, duration: 600, ease: 'Quad.easeOut' });
 
-    // 2) a stone lift slab (with a grace underglow) appears beneath the figure.
+    // 2) a stone lift slab (grace underglow) + a hauling chain on each side.
     const slab = this.add
-      .rectangle(g.x, this.player.y + 4, 30, 6, Palette.stoneHi)
+      .rectangle(g.x, slabY, 30, 6, Palette.stoneHi)
       .setStrokeStyle(1, Palette.grace, 0.7)
       .setDepth(40);
     const glow = this.add
-      .image(g.x, this.player.y + 2, Assets.dot.key)
+      .image(g.x, slabY - 2, Assets.dot.key)
       .setScale(9, 3)
       .setTint(Palette.grace)
       .setAlpha(0.0)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(39);
+    const mkChain = (dx: number) =>
+      this.add.tileSprite(g.x + dx, chainTopY, 6, slabY - chainTopY, Assets.chain.key).setOrigin(0.5, 0).setDepth(41);
+    const chainL = mkChain(-12);
+    const chainR = mkChain(12);
 
-    // 3) once the bars are clear, rise up and out, then travel to the next area.
+    // 3) once the bars are clear, the chains haul it up and out, then we travel on.
     this.time.delayedCall(480, () => {
       this.player.body.enable = false; // the tween drives position now
-      this.sfx.grace();
+      this.sfx.clank();
       this.particles.dust(g.x, this.player.y, 6);
       this.tweens.add({ targets: glow, alpha: 0.4, duration: 300 });
+      // rhythmic clanks as the links reel in — that's the weight.
+      this.time.addEvent({ delay: 220, repeat: 6, callback: () => this.sfx.chain() });
       this.tweens.add({
         targets: [this.player, slab, glow],
         y: '-=176',
-        duration: 1500,
+        duration: 1550,
         ease: 'Sine.easeIn',
+        onUpdate: () => {
+          const len = Math.max(0, slab.y - chainTopY);
+          chainL.height = len;
+          chainR.height = len;
+        },
         onComplete: () => {
           this.cameras.main.fadeOut(320, 0, 0, 0);
           this.run.health = this.player.health;
@@ -715,7 +729,7 @@ export class GameScene extends Phaser.Scene {
       for (const d of this.doors) {
         if (Math.abs(px - d.x) < 14 && Math.abs(py - d.y) < 30) return void this.transitionTo(d.to, { entryDoorId: d.toEntry });
       }
-      if (this.gate && Math.abs(px - this.gate.x) < 18 && Math.abs(py - this.gate.y) < 32) this.tryGate();
+      if (this.gate && Math.abs(px - this.gate.x) < 30 && Math.abs(py - this.gate.y) < 34) this.tryGate();
     }
   }
 

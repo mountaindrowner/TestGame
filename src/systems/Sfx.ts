@@ -145,6 +145,23 @@ export class Sfx {
     this.noise(0.14, 0.22, 1200);
     this.tone(240, 0.1, 'square', 0.14, 90);
   }
+  /** A heavy chain link clanking — metallic, with weight. */
+  chain(): void {
+    this.tone(196, 0.09, 'square', 0.16, 150);
+    this.tone(523, 0.06, 'square', 0.09, 660);
+    this.noise(0.06, 0.14, 2400);
+  }
+  /** Stone machinery grinding — the gate/lift moving under load. */
+  grind(): void {
+    this.tone(64, 0.55, 'sawtooth', 0.2, 50);
+    this.tone(96, 0.5, 'square', 0.1, 70);
+    this.noise(0.5, 0.12, 220);
+  }
+  /** A heavy mechanism locking home — a deep thunk. */
+  clank(): void {
+    this.tone(90, 0.18, 'square', 0.32, 44);
+    this.noise(0.1, 0.2, 320);
+  }
 
   // --- enemy vocabulary -------------------------------------------------
   /** Heavy enemy winding up a committed strike. */
