@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const EXE = process.env.CHROME_BIN || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const browser = await chromium.launch({ executablePath: EXE, args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+const errs=[]; page.on('pageerror',e=>errs.push(e.message)); page.on('console',m=>{if(m.type()==='error')errs.push(m.text());});
+const ready = async () => page.waitForFunction(()=>window.__GAME_READY===true,{timeout:15000});
+await page.goto('http://localhost:5173?play', { waitUntil:'load' }); await page.mouse.click(480,270); await ready(); await page.waitForTimeout(700);
+await page.screenshot({ path:'shots/inspect/lit_firstfall.png' });
+await page.evaluate(()=>window.__gotoRoom('mirror-gallery')); await ready(); await page.waitForTimeout(800);
+await page.screenshot({ path:'shots/inspect/lit_mirror.png' });
+await page.evaluate(()=>window.__gotoRoom('crossroads')); await ready(); await page.waitForTimeout(800);
+await page.screenshot({ path:'shots/inspect/lit_crossroads.png' });
+console.log('ERRORS:', errs.length?JSON.stringify(errs.slice(0,6)):'none');
+await browser.close();

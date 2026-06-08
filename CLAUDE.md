@@ -226,10 +226,15 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   ledges (deterministic per room, rest/dart states, clamped to their ledge span; depth 15, cosmetic).
   Created per room in `GameScene`; `ambience.update(time, delta)`. **Cobwebs** (`prop-cobweb`) hang in
   the two upper corners (Ambience scans an interior column for the ceiling underside; faint, depth 12).
+- **Lighting + deep shadow (DONE):** `src/systems/Lighting.ts` — a screen-space shadow layer
+  (a `RenderTexture`, depth 85, re-filled each frame, biome-tinted warm/cold) that light POOLS erase
+  back out of: the figure always carries a readable pool; torches + the gate are warm/static lights
+  (gentle flicker). So the near edges are lit and the depths recede into shadow. `lighting.update(cam,
+  px, py)` per frame, world→screen via `cam.scroll`. Cheap (one fill + a few erases).
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  *ledge-grab/climb* (player FSM), *dynamic lighting* + deep-shadow/fog occlusion (see-only-the-near-
-  edges), a *higher-res player* sprite, a *catacomb* level grammar (connected architecture, no floating
-  platforms, weaving passages), cobwebs, and *bomber/archer* enemy archetypes.
+  *ledge-grab/climb* (player FSM), a *higher-res player* sprite, a *catacomb* level grammar (connected
+  architecture, no floating platforms, weaving passages), *bomber/archer* enemy archetypes, and
+  crispening the opener Tutorial legend (still in-canvas pixel text).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
