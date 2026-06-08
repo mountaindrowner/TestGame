@@ -51,10 +51,28 @@ def urn():
     _save(im, "urn.png")
 
 
+def critter():
+    """A tiny scuttling beetle (faces +x; engine flips for the other way)."""
+    w, h = 8, 5
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    body = (38, 33, 52)
+    body_hi = (62, 56, 82)
+    d.ellipse([1, 1, 6, 3], fill=body)       # carapace
+    d.point((3, 1), fill=body_hi)             # back glint
+    d.point((6, 1), fill=(120, 200, 255))     # eye glint (cyan, catches the light)
+    for lx in (2, 4, 5):                       # legs
+        d.point((lx, 4), fill=body)
+    d.point((7, 2), fill=body)                 # antenna nub
+    im.save(os.path.join(OUT, "critter.png"))
+    print(f"  wrote sprites/props/critter.png  ({w}x{h})  [scuttling critter]")
+
+
 def build() -> None:
     gem((120, 220, 255), (40, 120, 210), "soul.png")  # cold cyan currency
     gem((150, 255, 170), (40, 170, 90), "heal.png")   # green life orb
     urn()
+    critter()
 
 
 if __name__ == "__main__":

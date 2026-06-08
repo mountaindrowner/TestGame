@@ -41,6 +41,7 @@ export const Assets = {
   soul: { key: 'prop-soul', path: 'assets/sprites/props/soul.png' },
   heal: { key: 'prop-heal', path: 'assets/sprites/props/heal.png' },
   urn: { key: 'prop-urn', path: 'assets/sprites/props/urn.png' },
+  critter: { key: 'prop-critter', path: 'assets/sprites/props/critter.png' },
 } as const;
 
 // Per-biome theme lookup: a room's `biome` resolves to its tileset + parallax

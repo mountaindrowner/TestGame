@@ -218,10 +218,14 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   of frame**, then it travels to the next area (a cinematic, not the instant fade). Hints are directive
   (post-Warden, sequenced after the Grace Burst hint; locked = where to find the Broken Memory).
   `__health()` dev hook reads HP.
+- **Ambient life (DONE, partial):** `src/systems/Ambience.ts` — a faint screen-fixed **surface-dust**
+  haze drifting up top + a few **critters** (a tiny beetle, `prop-critter`) scuttling along the lowest
+  ledges (deterministic per room, rest/dart states, clamped to their ledge span; depth 15, cosmetic).
+  Created per room in `GameScene`; `ambience.update(time, delta)`. Still to add: **cobwebs** in corners.
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  *ledge-grab/climb* (player FSM), *dynamic lighting*, a *higher-res player* sprite, a *catacomb* level
-  grammar (connected architecture, no floating platforms, weaving passages, deep-shadow/fog occlusion),
-  little *critters/webs/surface-dust*, and *bomber/archer* enemy archetypes.
+  *ledge-grab/climb* (player FSM), *dynamic lighting* + deep-shadow/fog occlusion (see-only-the-near-
+  edges), a *higher-res player* sprite, a *catacomb* level grammar (connected architecture, no floating
+  platforms, weaving passages), cobwebs, and *bomber/archer* enemy archetypes.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

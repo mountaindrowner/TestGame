@@ -18,6 +18,7 @@ import { ParallaxBackground } from '../systems/ParallaxBackground';
 import { CombatSystem } from '../systems/CombatSystem';
 import { autotile } from '../systems/Autotiler';
 import { Decorations } from '../systems/Decorations';
+import { Ambience } from '../systems/Ambience';
 import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { Projectile } from '../entities/Projectile';
@@ -46,6 +47,7 @@ export class GameScene extends Phaser.Scene {
   private room!: RoomData;
   private layer!: Phaser.Tilemaps.TilemapLayer;
   private decorations!: Decorations;
+  private ambience!: Ambience;
   private player!: Player;
   private enemies!: Phaser.GameObjects.Group;
   private enemyProjectiles!: Phaser.Physics.Arcade.Group;
@@ -117,6 +119,7 @@ export class GameScene extends Phaser.Scene {
 
     this.buildTilemap();
     this.decorations = new Decorations(this, this.room, this.room.biome);
+    this.ambience = new Ambience(this, this.room);
     this.physics.world.setBounds(0, 0, roomW, roomH);
 
     // Entities
@@ -679,6 +682,7 @@ export class GameScene extends Phaser.Scene {
     this.juice.update(time);
     this.parallax.update(this.cameras.main, time);
     this.decorations.update(time);
+    this.ambience.update(time, _delta);
     if (this.juice.frozen) return;
     if (this.transitioning) return; // riding the lift / mid-transition — freeze world checks
     this.checkHazards();
