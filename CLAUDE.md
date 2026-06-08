@@ -132,10 +132,14 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   grace-tinted). • **Biome theming system** — `RoomData.biome` + `Biomes` map in `assetManifest`
   (tileset + parallax per biome); `GameScene`/`EditorScene` pick the tileset, `ParallaxBackground`/
   `Decorations` theme by biome. Depths unchanged (default). • **Mirror art** — `mirrors` tileset
-  (`tools/gen_tileset_mirrors.py`, depths-reskin into the same 21-slot Vis contract; PixelLab
-  `create_sidescroller_tileset` id `74b2aad9` used as material reference — raw CDN not fetchable
-  here, matched by design) + mirror parallax (`gen_backgrounds_mirrors.py`, arched mirror-frames,
-  cold glass light). • **Preview sandbox** `mirror-preview` (`__gotoRoom`), grants Grace Burst, a
+  (`tools/gen_tileset_mirrors.py`, depths-reskin into the same 21-slot Vis contract) + mirror
+  parallax (`gen_backgrounds_mirrors.py`). **Look tuned to Mark's reference image**
+  (`art_src/ref/house_of_mirrors_vibe.png`): **lavender-purple BRICK masonry** + **electric-blue
+  mirror sheen** + blue diamond sparkles on near-black; bg = ornate arched framed mirrors with
+  contained blue glass streaks + a faint reflective floor band. (Palette sampled from the ref;
+  PixelLab `create_sidescroller_tileset` id `74b2aad9` was an earlier material reference — its raw
+  CDN isn't fetchable here anyway.) Overrides live inside each generator's `build()` so depths
+  regenerates byte-identical. • **Preview sandbox** `mirror-preview` (`__gotoRoom`), grants Grace Burst, a
   high ledge only reachable by air-dash. **Next:** real House-of-Mirrors room graph (bigger/vertical,
   Grace-Burst-gated) → Mirror Double + roster → gimmicks (reflective floors, shattered mirrors,
   gravity arches…) → mini-boss. Build each against the concept sheet + `docs/LEVEL_DESIGN.md`.
