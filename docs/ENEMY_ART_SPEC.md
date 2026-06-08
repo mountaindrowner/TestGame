@@ -16,6 +16,23 @@
 
 *(Ignore the failed first Warden `f85b3d4b…` — PixelLab heavy-load failure.)*
 
+## BIO-02 House of Mirrors roster (account 076c964e…) — DONE, integrated
+Generated as standard side-view PixelLab characters from the concept sheet, east frames only
+(`directions:['east']` keeps each animation at 1 generation). Packed sizes (union bbox) noted.
+| Kind | character_id | packed | east animations |
+|---|---|---|---|
+| `glassWitch` Glass Witch | `423c3c3b-1853-40c8-9ac5-01c03c2f81a0` | 48×52 | run(6), fire(6), hurt(6) |
+| `reflectionHound` (quadruped/lion) | `f350dea0-7783-4406-9cd8-1a0e93045d6c` | 65×35 | run(6), hurt(7) |
+| `falseFace` False-Face Duelist | `2fcfa995-7b17-4cbb-bd5d-3df471c75978` | 51×52 | run(6), strike(6), hurt(6) |
+| `fractureWisp` Fracture Wisp | `45e29f72-32a7-4418-8bbc-eb3139ee3bf3` | 34×44 | run(7), hurt(7) |
+| `lookingGlass` Sentinel | `5f852c46-54f5-4e44-9e0f-6c4e097273b6` | 62×65 | run(6), strike(6), hurt(6) |
+
+Animation source = template clips (walking-6-frames→`run`, cross-punch→`strike`, taking-punch→`hurt`,
+fireball→`fire`) + v3 custom (hound `flinching…`→hurt, wisp `drifting…`→run / `recoiling…`→hurt). The
+`fetch_enemy_art.py` keyword map matches the action-slug folder names. The Mirror Double reuses the
+**player** sheet (its whole point). *(First Fracture Wisp `559137a5…` + Sentinel `3eddb555…` were
+heavy-load failures — re-rolled to the ids above.)*
+
 ### How to pull them in (open-network machine)
 1. For each id, fetch the frames — either the zip
    `https://api.pixellab.ai/mcp/characters/<id>/download`, or via the PixelLab MCP

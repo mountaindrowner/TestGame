@@ -79,6 +79,32 @@ export const WardenAnims: AnimDef[] = [
   { key: 'warden-death', sheet: 'warden', start: 80, end: 96, frameRate: 16, repeat: 0 },
 ];
 
+// BIO-02 House of Mirrors roster (real PixelLab art). Ranges MUST match the strip
+// layout printed by tools/pack_enemy.py.
+export const GlassWitchAnims: AnimDef[] = [
+  { key: 'glassWitch-run', sheet: 'glassWitch', start: 0, end: 5, frameRate: 10, repeat: -1 },
+  { key: 'glassWitch-fire', sheet: 'glassWitch', start: 6, end: 11, frameRate: 12, repeat: 0 },
+  { key: 'glassWitch-hurt', sheet: 'glassWitch', start: 12, end: 17, frameRate: 16, repeat: 0 },
+];
+export const ReflectionHoundAnims: AnimDef[] = [
+  { key: 'reflectionHound-run', sheet: 'reflectionHound', start: 0, end: 5, frameRate: 13, repeat: -1 },
+  { key: 'reflectionHound-hurt', sheet: 'reflectionHound', start: 6, end: 12, frameRate: 16, repeat: 0 },
+];
+export const FalseFaceAnims: AnimDef[] = [
+  { key: 'falseFace-run', sheet: 'falseFace', start: 0, end: 5, frameRate: 11, repeat: -1 },
+  { key: 'falseFace-strike', sheet: 'falseFace', start: 6, end: 11, frameRate: 16, repeat: 0 },
+  { key: 'falseFace-hurt', sheet: 'falseFace', start: 12, end: 17, frameRate: 16, repeat: 0 },
+];
+export const FractureWispAnims: AnimDef[] = [
+  { key: 'fractureWisp-run', sheet: 'fractureWisp', start: 0, end: 6, frameRate: 10, repeat: -1 },
+  { key: 'fractureWisp-hurt', sheet: 'fractureWisp', start: 7, end: 13, frameRate: 14, repeat: 0 },
+];
+export const LookingGlassAnims: AnimDef[] = [
+  { key: 'lookingGlass-run', sheet: 'lookingGlass', start: 0, end: 5, frameRate: 9, repeat: -1 },
+  { key: 'lookingGlass-strike', sheet: 'lookingGlass', start: 6, end: 11, frameRate: 14, repeat: 0 },
+  { key: 'lookingGlass-hurt', sheet: 'lookingGlass', start: 12, end: 17, frameRate: 16, repeat: 0 },
+];
+
 export function registerAnims(scene: Phaser.Scene, defs: AnimDef[]): void {
   for (const d of defs) {
     if (scene.anims.exists(d.key)) continue;

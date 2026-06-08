@@ -8,6 +8,11 @@ import {
   SparkAnims,
   StrikerAnims,
   WardenAnims,
+  GlassWitchAnims,
+  ReflectionHoundAnims,
+  FalseFaceAnims,
+  FractureWispAnims,
+  LookingGlassAnims,
   registerAnims,
 } from '../data/Animations';
 import { FONT } from '../data/ui';
@@ -28,7 +33,10 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: Assets.runner.frameW,
       frameHeight: Assets.runner.frameH,
     });
-    for (const a of [Assets.crawler, Assets.spark, Assets.striker, Assets.warden]) {
+    for (const a of [
+      Assets.crawler, Assets.spark, Assets.striker, Assets.warden,
+      Assets.glassWitch, Assets.reflectionHound, Assets.falseFace, Assets.fractureWisp, Assets.lookingGlass,
+    ]) {
       this.load.spritesheet(a.key, a.path, { frameWidth: a.frameW, frameHeight: a.frameH });
     }
     for (const ts of [Assets.tileset, Assets.tilesetMirrors]) {
@@ -60,6 +68,11 @@ export class PreloadScene extends Phaser.Scene {
     registerAnims(this, SparkAnims);
     registerAnims(this, StrikerAnims);
     registerAnims(this, WardenAnims);
+    registerAnims(this, GlassWitchAnims);
+    registerAnims(this, ReflectionHoundAnims);
+    registerAnims(this, FalseFaceAnims);
+    registerAnims(this, FractureWispAnims);
+    registerAnims(this, LookingGlassAnims);
     // Make sure the display font is ready before any text is drawn (canvas text
     // bakes the font at creation; loading it late would show a fallback flash).
     const target = new URLSearchParams(location.search).has('edit') ? 'EditorScene' : 'GameScene';

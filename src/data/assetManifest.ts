@@ -9,6 +9,12 @@ export const Assets = {
   spark: { key: 'spark', path: 'assets/sprites/spark.png', frameW: 31, frameH: 45 },
   striker: { key: 'striker', path: 'assets/sprites/striker.png', frameW: 54, frameH: 53 },
   warden: { key: 'warden', path: 'assets/sprites/warden.png', frameW: 70, frameH: 71 },
+  // BIO-02 House of Mirrors roster — real PixelLab art (varied native frame sizes).
+  glassWitch: { key: 'glassWitch', path: 'assets/sprites/glassWitch.png', frameW: 48, frameH: 52 },
+  reflectionHound: { key: 'reflectionHound', path: 'assets/sprites/reflectionHound.png', frameW: 65, frameH: 35 },
+  falseFace: { key: 'falseFace', path: 'assets/sprites/falseFace.png', frameW: 51, frameH: 52 },
+  fractureWisp: { key: 'fractureWisp', path: 'assets/sprites/fractureWisp.png', frameW: 34, frameH: 44 },
+  lookingGlass: { key: 'lookingGlass', path: 'assets/sprites/lookingGlass.png', frameW: 62, frameH: 65 },
   tileset: { key: 'tileset', path: 'assets/tilesets/depths.png', frameW: 16, frameH: 16 },
   bgFar: { key: 'bg-far', path: 'assets/backgrounds/far.png' },
   bgMid: { key: 'bg-mid', path: 'assets/backgrounds/mid.png' },

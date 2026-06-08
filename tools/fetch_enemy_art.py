@@ -35,6 +35,12 @@ ENEMIES = {
         # new boss animations (v3, east):
         "idle": "breathing", "taunt": "roaring", "slam": "smashing", "death": "collapsing",
     }),
+    # BIO-02 House of Mirrors roster (standard side-view characters; east frames).
+    "glassWitch": ("423c3c3b-1853-40c8-9ac5-01c03c2f81a0", {"run": "animating", "fire": "casting", "hurt": "taking"}),
+    "reflectionHound": ("f350dea0-7783-4406-9cd8-1a0e93045d6c", {"run": "running", "hurt": "flinching"}),
+    "falseFace": ("2fcfa995-7b17-4cbb-bd5d-3df471c75978", {"run": "animating", "strike": "cross", "hurt": "taking"}),
+    "fractureWisp": ("45e29f72-32a7-4418-8bbc-eb3139ee3bf3", {"run": "drifting", "hurt": "recoiling"}),
+    "lookingGlass": ("5f852c46-54f5-4e44-9e0f-6c4e097273b6", {"run": "animating", "strike": "cross", "hurt": "taking"}),
 }
 
 

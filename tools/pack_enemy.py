@@ -93,6 +93,12 @@ def build() -> None:
     pack_bbox("spark", ["run", "windup", "hurt"])
     pack_bbox("striker", ["run", "windup", "strike", "hurt"])
     pack_bbox("warden", ["run", "windup", "strike", "recovery", "hurt", "idle", "taunt", "slam", "death"])
+    # BIO-02 House of Mirrors roster (real PixelLab art)
+    pack_bbox("glassWitch", ["run", "fire", "hurt"])
+    pack_bbox("reflectionHound", ["run", "hurt"])
+    pack_bbox("falseFace", ["run", "strike", "hurt"])
+    pack_bbox("fractureWisp", ["run", "hurt"])
+    pack_bbox("lookingGlass", ["run", "strike", "hurt"])
 
 
 if __name__ == "__main__":

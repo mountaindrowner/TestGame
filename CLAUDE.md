@@ -175,14 +175,22 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   the `enemy-split` event). • **Looking-Glass Sentinel** (`heavy_telegraph`, `frontImmune` — blades
   glance off its face unless you flank it or catch its recovery; Grace-Burst-behind is the answer).
   New `EnemyConfig` flags `shatter`/`frontImmune`/`splitInto` + the `mirror_double` behavior in
-  `Enemy.ts`; the non-headliner roster shares the existing PixelLab sheets (crawler/spark/striker)
-  tinted per the documented placeholder approach — **distinct mechanics, shared art for now**.
+  `Enemy.ts`.
+- **Roster art is now REAL PixelLab art** (no longer tinted placeholders) — each of the five
+  non-headliner enemies is its own side-view PixelLab character baked from the concept sheet, packed
+  by `pack_enemy.py` like the BIO-01 family: **glassWitch** (48×52: run/fire/hurt — a hooded violet
+  caster with a glowing-blue cast), **reflectionHound** (65×35 quadruped: run/hurt — a spiked
+  crystalline beast), **falseFace** (51×52: run/strike/hurt — bladed duelist), **fractureWisp**
+  (34×44: run/hurt — pale teal spirit; its `fractureShard` children reuse this sheet, paler+tiny),
+  **lookingGlass** (62×65: run/strike/hurt — bulky **mirror-shield** sentinel). IDs in
+  `docs/ENEMY_ART_SPEC.md`; pulled by `fetch_enemy_art.py` (east frames), sizes in `assetManifest`,
+  ranges in `Animations.ts`, wired in `enemyRegistry` (tints dropped). The Mirror Double still wears
+  the player sprite (its identity).
 - **Preview sandbox** `mirror-preview` (`__gotoRoom`) still grants Grace Burst over an air-dash gap.
   **Next:** the mirror **gimmicks** (reflective floors, breakable/shattered mirrors, gravity arches,
-  distortion fog, obelisks, hanging mirrors); dedicated **art sheets** for the roster (they share
-  tinted placeholders today); and reskinning The Untrue Image to a true player-reflection sprite.
-  Build against the concept sheet + `docs/LEVEL_DESIGN.md`. Dev hooks `__setRun(partial)` /
-  `__killBoss()` help test gated paths.
+  distortion fog, obelisks, hanging mirrors); and reskinning The Untrue Image to a true
+  player-reflection sprite. Build against the concept sheet + `docs/LEVEL_DESIGN.md`. Dev hooks
+  `__setRun(partial)` / `__killBoss()` help test gated paths.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
