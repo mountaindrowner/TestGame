@@ -1,6 +1,7 @@
 """Regenerate every PNG asset. Run: `npm run assets` (or `python3 tools/gen_all.py`)."""
 import pack_player
 import pack_enemy
+import pack_mirror
 import gen_tileset
 import gen_tileset_mirrors
 import gen_backgrounds
@@ -13,6 +14,8 @@ if __name__ == "__main__":
     pack_player.build()
     print("[enemy] (packed from PixelLab art_src)")
     pack_enemy.build()
+    print("[mirror decor] (PixelLab pane)")
+    pack_mirror.build()
     print("[tileset]")
     gen_tileset.build()
     gen_tileset_mirrors.build()

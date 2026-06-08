@@ -59,7 +59,7 @@ export class GameScene extends Phaser.Scene {
   private entrySide?: 'east' | 'west';
   private interactArmed = false; // must leave an edge zone before it can fire
   private doors: DoorRef[] = [];
-  private gate?: { x: number; y: number; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle };
+  private gate?: { x: number; y: number; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle; to?: string; toEntry?: string };
   private transitioning = false;
   private interactReadyAt = 0;
   private won = false;
@@ -124,6 +124,9 @@ export class GameScene extends Phaser.Scene {
 
     // Restore carried-over health and persist changes back to the run.
     this.player.health = this.run.health;
+    // The House of Mirrors is only ever reached after the Warden grants Grace Burst;
+    // guarantee it here so the biome is never soft-locked (and is jumpable via __gotoRoom).
+    if (this.room.biome === 'mirrors' && !this.run.graceBurst) this.run.graceBurst = true;
     this.player.graceBurst = this.run.graceBurst || this.room.id === 'mirror-preview'; // preview grants it
 
     this.events.emit('player-health', this.player.health, this.run.data.maxHealth);
@@ -156,8 +159,8 @@ export class GameScene extends Phaser.Scene {
     cam.startFollow(this.player, true, 0.12, 0.12);
     cam.setDeadzone(64, 44);
 
-    // The gate room is the Warden's arena — lock in + intro on arrival.
-    if (this.room.id === 'gate' && !this.run.guardianDefeated) this.armBoss(true);
+    // A room holding an undefeated elite is its arena — lock in + intro on arrival.
+    if (this.undefeatedEliteSpawn()) this.armBoss(true);
 
     // Death/transition fade overlay (screen-fixed, above world, below HUD)
     this.fadeRect = this.add
@@ -289,19 +292,36 @@ export class GameScene extends Phaser.Scene {
       case 'torch':
         this.makeTorch(x, y - 8);
         break;
+      case 'mirror':
+        this.makeMirror(x, y, s.scale ?? 0.28);
+        break;
       case 'key':
         if (!this.run.hasBrokenMemory) this.makeKey(x, y - 12);
         break;
       case 'gate':
-        this.makeGate(x, y);
+        this.makeGate(x, y, s);
         break;
       default:
         if (isEnemyKind(s.type)) this.spawnEnemy(s.type, x, y);
     }
   }
 
+  /** True once the elite of this kind has been beaten this run (stays dead). */
+  private eliteDefeated(kind: EnemyKind): boolean {
+    if (kind === 'guardian') return this.run.guardianDefeated;
+    if (kind === 'mirrorboss') return this.run.untrueImageDefeated;
+    return false;
+  }
+
+  /** The room's arena elite (Warden or Untrue Image) if it hasn't been beaten. */
+  private undefeatedEliteSpawn(): Spawn | undefined {
+    return this.room.spawns.find(
+      (s) => (s.type === 'guardian' || s.type === 'mirrorboss') && !this.eliteDefeated(s.type as EnemyKind),
+    );
+  }
+
   private spawnEnemy(kind: EnemyKind, x: number, y: number): void {
-    if (kind === 'guardian' && this.run.guardianDefeated) return; // stays dead
+    if (this.eliteDefeated(kind)) return; // a beaten elite stays dead
     this.enemies.add(
       new Enemy(
         this,
@@ -399,6 +419,24 @@ export class GameScene extends Phaser.Scene {
     this.doors.push({ x, y, to: _s.to ?? START_ROOM, toEntry: _s.toEntry });
   }
 
+  /** An ornate broken-mirror pane set into the back wall (PixelLab art). Decorative;
+   *  its glass catches a faint cold shimmer. Anchored bottom-center on the tile. */
+  private makeMirror(x: number, y: number, scale: number): void {
+    const mirror = this.add
+      .image(x, y, Assets.mirror.key)
+      .setOrigin(0.5, 1)
+      .setScale(scale)
+      .setDepth(8);
+    const shimmer = this.add
+      .image(x, y - mirror.displayHeight * 0.5, Assets.dot.key)
+      .setScale(mirror.displayWidth * 0.06, mirror.displayHeight * 0.07)
+      .setTint(0x9fc0ff)
+      .setAlpha(0.0)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(9);
+    this.tweens.add({ targets: shimmer, alpha: 0.18, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
   private makeTorch(x: number, y: number): void {
     const flame = this.add
       .image(x, y, Assets.dot.key)
@@ -444,14 +482,14 @@ export class GameScene extends Phaser.Scene {
     this.keyObj = undefined;
   }
 
-  private makeGate(x: number, y: number): void {
+  private makeGate(x: number, y: number, s?: Spawn): void {
     const open = this.run.hasBrokenMemory && this.run.guardianDefeated;
     const visual = this.add.graphics().setDepth(9);
     const glow = this.add
       .rectangle(x, y - 17, 16, 32, open ? Palette.grace : Palette.stoneHi, open ? 0.5 : 0.25)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(9);
-    this.gate = { x, y, visual, glow };
+    this.gate = { x, y, visual, glow, to: s?.to, toEntry: s?.toEntry };
     this.drawGate();
     this.tweens.add({ targets: glow, alpha: open ? 0.85 : 0.4, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
@@ -510,8 +548,8 @@ export class GameScene extends Phaser.Scene {
       if (L.west && px < 24 && ax < 0) return void this.transitionTo(L.west, { entrySide: 'east' });
     }
 
-    // Side doors + the gate are deliberate — press ↑.
-    if (this.actions.justPressed('up')) {
+    // Side doors + the gate are deliberate — press ↑. (Sealed while the arena boss lives.)
+    if (!this.bossActive && this.actions.justPressed('up')) {
       for (const d of this.doors) {
         if (Math.abs(px - d.x) < 14 && Math.abs(py - d.y) < 30) return void this.transitionTo(d.to, { entryDoorId: d.toEntry });
       }
@@ -548,7 +586,10 @@ export class GameScene extends Phaser.Scene {
 
   private tryGate(): void {
     if (this.run.hasBrokenMemory && this.run.guardianDefeated) {
-      this.onLevelComplete();
+      // An opened gate that leads somewhere (BIO-01 → House of Mirrors) travels there;
+      // otherwise it's the end of the line (level complete).
+      if (this.gate?.to) this.transitionTo(this.gate.to, { entryDoorId: this.gate.toEntry });
+      else this.onLevelComplete();
     } else {
       const need = !this.run.hasBrokenMemory && !this.run.guardianDefeated
         ? 'A MEMORY, AND THE GUARDIAN.'
@@ -603,15 +644,20 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private onGuardianDefeated(): void {
-    this.run.guardianDefeated = true;
+  private onGuardianDefeated(kind?: EnemyKind): void {
     this.bossActive = false;
+    const mirror = kind === 'mirrorboss';
+    if (mirror) this.run.untrueImageDefeated = true;
+    else this.run.guardianDefeated = true;
+
     // The Warden's fall grants Grace Burst — grace gives movement (DESIGN.md).
-    if (!this.run.graceBurst) {
+    if (!mirror && !this.run.graceBurst) {
       this.run.graceBurst = true;
       this.player.graceBurst = true;
       this.time.delayedCall(900, () => this.events.emit('hint', 'GRACE BURST — dash through the air (in the air)'));
     }
+    // The Untrue Image is the end of the House of Mirrors — its fall completes the area.
+    if (mirror) this.time.delayedCall(1200, () => this.onLevelComplete());
     if (this.bossBarrier) {
       this.tweens.killTweensOf(this.bossBarrier);
       this.tweens.add({
@@ -661,8 +707,8 @@ export class GameScene extends Phaser.Scene {
         #${id} button:hover{background:rgba(126,240,255,0.25);}
       </style>
       <div>
-        <div class="ttl">THE FIRST FALL — COMPLETE</div>
-        <div class="sub">YOU GOT BACK UP. &nbsp;·&nbsp; TO BE CONTINUED</div>
+        <div class="ttl">${this.room.biome === 'mirrors' ? 'THE HOUSE OF MIRRORS — COMPLETE' : 'THE FIRST FALL — COMPLETE'}</div>
+        <div class="sub">${this.room.biome === 'mirrors' ? 'YOU FACED THE UNTRUE IMAGE.' : 'YOU GOT BACK UP.'} &nbsp;·&nbsp; TO BE CONTINUED</div>
         <button id="${id}-again">RETURN TO THE FALL</button>
       </div>`;
     document.body.appendChild(el);
@@ -771,8 +817,8 @@ export class GameScene extends Phaser.Scene {
     }
     this.physics.add.collider(this.enemies, this.layer);
     new CombatSystem(this, this.player, this.enemies, this.sfx, this.juice, this.particles);
-    // Re-seal the arena after a grace-respawn in the gate room (quick, no taunt).
-    if (this.room.id === 'gate' && !this.run.guardianDefeated) this.armBoss(false);
+    // Re-seal the arena after a grace-respawn while an elite still lives (no taunt).
+    if (this.undefeatedEliteSpawn()) this.armBoss(false);
   }
 
   // ----------------------------------------------------------------------
@@ -793,6 +839,14 @@ export class GameScene extends Phaser.Scene {
     window.__debug = (on?: boolean) => {
       this.debug.setEnabled(on ?? !this.debug.enabled);
       this.registry.set('debug', this.debug.enabled);
+    };
+    window.__setRun = (partial) => {
+      Object.assign(this.run.data, partial);
+      this.scene.restart({ roomId: this.room.id });
+    };
+    window.__killBoss = () => {
+      const boss = this.enemies.getChildren().find((e) => (e as Enemy).cfg?.elite) as Enemy | undefined;
+      boss?.takeDamage(99999, boss.x);
     };
   }
 

@@ -5,7 +5,7 @@ import { EnemyTune, CrawlerTune, SparkTune, StrikerTune, GuardianTune } from './
  *  level editor reads it to populate its palette — one registration per enemy,
  *  so adding a type never touches the spawn/scene code. This is the seam the
  *  future dev-kit reuses. */
-export type EnemyKind = 'runner' | 'crawler' | 'spark' | 'striker' | 'guardian';
+export type EnemyKind = 'runner' | 'crawler' | 'spark' | 'striker' | 'guardian' | 'mirrorboss';
 
 export type BehaviorTag = 'lunger' | 'pursuer' | 'flyer_ranged' | 'heavy_telegraph';
 
@@ -62,7 +62,7 @@ export interface EnemyConfig {
   tint?: number; // interim visual identity while sharing placeholder art (P2 swaps real sheets)
 }
 
-export const ENEMY_KINDS: EnemyKind[] = ['runner', 'crawler', 'spark', 'striker', 'guardian'];
+export const ENEMY_KINDS: EnemyKind[] = ['runner', 'crawler', 'spark', 'striker', 'guardian', 'mirrorboss'];
 
 export function isEnemyKind(t: string): t is EnemyKind {
   return (ENEMY_KINDS as string[]).includes(t);
@@ -144,5 +144,33 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     elite: true,
     scale: 1.2,
     depth: 46,
+  },
+  // BIO-02 mini-boss — your reflection at its worst. Reuses the Warden's armored
+  // telegraph kit (charge / overhead slam / punishable recovery) themed as a cold
+  // mirror-image (icy tint); its own RunState flag so it's independent of the Warden.
+  mirrorboss: {
+    kind: 'mirrorboss',
+    displayName: 'THE UNTRUE IMAGE',
+    behavior: 'heavy_telegraph',
+    spriteKey: Assets.warden.key,
+    anims: {
+      run: 'warden-run',
+      windup: 'warden-windup',
+      hurt: 'warden-hurt',
+      strike: 'warden-strike',
+      recovery: 'warden-recovery',
+      idle: 'warden-idle',
+      taunt: 'warden-taunt',
+      slam: 'warden-slam',
+      death: 'warden-death',
+    },
+    tune: GuardianTune,
+    body: { w: 28, h: 52, offX: 21, offY: 19 },
+    hasCore: false,
+    coreBonusMult: 2.0,
+    elite: true,
+    scale: 1.2,
+    depth: 46,
+    tint: 0x9fc0ff, // cold mirror-glass cast
   },
 };

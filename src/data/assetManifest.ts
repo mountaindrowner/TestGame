@@ -29,6 +29,8 @@ export const Assets = {
   moss: { key: 'decor-moss', path: 'assets/sprites/decor/moss.png' },
   fern: { key: 'decor-fern', path: 'assets/sprites/decor/fern.png' },
   stalactite: { key: 'decor-stalactite', path: 'assets/sprites/decor/stalactite.png' },
+  // House of Mirrors — an ornate broken mirror pane (PixelLab), placed as wall decor.
+  mirror: { key: 'decor-mirror', path: 'assets/sprites/decor/mirror.png' },
 } as const;
 
 // Per-biome theme lookup: a room's `biome` resolves to its tileset + parallax

@@ -10,21 +10,24 @@ export type SpawnType =
   | 'player'
   | 'door'
   | 'torch'
+  | 'mirror' // House of Mirrors: a decorative ornate broken-mirror pane on the wall
   | 'key' // the Broken Memory pickup
   | 'gate' // the locked exit gate (needs key + guardian down)
   | 'runner'
   | 'crawler'
   | 'spark'
   | 'striker'
-  | 'guardian';
+  | 'guardian'
+  | 'mirrorboss'; // THE UNTRUE IMAGE — the House of Mirrors mini-boss (elite)
 
 export interface Spawn {
   type: SpawnType;
   tx: number;
   ty: number;
   id?: string; // door/gate identity within this room
-  to?: string; // door: destination room id
-  toEntry?: string; // door: id of the door to arrive at in the destination room
+  to?: string; // door/gate: destination room id
+  toEntry?: string; // door/gate: id of the door to arrive at in the destination room
+  scale?: number; // decor (mirror): render scale
 }
 
 export interface RoomData {

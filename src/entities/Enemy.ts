@@ -405,7 +405,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocity(0, 0);
     this.body.enable = false;
     if (this.cfg.elite) {
-      this.scene.events.emit('guardian-defeated');
+      this.scene.events.emit('guardian-defeated', this.cfg.kind); // kind routes which elite fell
       this.scene.events.emit('boss-defeated');
     }
 

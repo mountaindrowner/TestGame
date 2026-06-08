@@ -70,9 +70,12 @@ indigo palette, silver mirror sheen, cold glass light (vs the depths' warm flame
 - **Gimmicks (1–2 signature, rest as accents):** shattered mirrors (break → shards; spawn Doubles) ·
   reflective floors (enemies intangible on them) · upside-down/gravity arches · distortion fog
   (obscures, speeds enemies) · mirror obelisks (redirect projectiles) · hanging mirrors (swing/slash).
-- **Status:** mechanic + look landed (Grace Burst, `mirrors` biome tileset/bg, `mirror-preview`
-  sandbox). Room graph, enemies, gimmicks, and the mini-boss are the next increments. Greybox each
-  in the editor and prove it fun before art (LEVEL_DESIGN workflow).
+- **Status:** **playable & beatable** — a 5-room area (hall → gallery → Grace-Burst climb →
+  threshold → the Untrue Image arena), entered when the BIO-01 gate opens; broken-mirror backdrop,
+  lavender-brick tileset, PixelLab wall mirrors, and the mini-boss → completion. **Next increments:**
+  the Mirror Double + rest of the roster, the mirror gimmicks (reflective floors, breakable mirrors,
+  gravity arches, distortion fog…), and a true reflection sprite for the boss. Greybox new rooms in
+  the editor and prove they're fun before art (LEVEL_DESIGN workflow).
 
 ## How to use this
 1. Before authoring/re-skinning a room, write its template line (above).

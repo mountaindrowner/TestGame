@@ -4,6 +4,11 @@ import { crossroads } from './rooms/crossroads';
 import { memory } from './rooms/memory';
 import { gate } from './rooms/gate';
 import { mirrorPreview } from './rooms/mirrorPreview';
+import { mirrorHall } from './rooms/mirrorHall';
+import { mirrorGallery } from './rooms/mirrorGallery';
+import { mirrorRise } from './rooms/mirrorRise';
+import { mirrorThreshold } from './rooms/mirrorThreshold';
+import { untrueImage } from './rooms/untrueImage';
 import { loadRoomOverride, listOverrideRooms } from './roomStore';
 
 /** BIO-01 "The First Fall" as a small connected level. Rooms are linked by their
@@ -17,6 +22,12 @@ const BUILDERS: Record<string, () => RoomData> = {
   memory,
   gate,
   'mirror-preview': mirrorPreview,
+  // BIO-02 — the House of Mirrors (entered when the BIO-01 gate opens).
+  'mirror-hall': mirrorHall,
+  'mirror-gallery': mirrorGallery,
+  'mirror-rise': mirrorRise,
+  'mirror-threshold': mirrorThreshold,
+  'untrue-image': untrueImage,
 };
 
 /** Built-in (code-authored) room ids. */

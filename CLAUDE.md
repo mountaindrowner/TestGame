@@ -143,10 +143,33 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   clean out (transparent) so the cold glass-light bleeds through the breaks; mid = drifting cold
   light-shafts + sparkles, near = foreground corner shards + a hard fracture + reflective floor
   band. Frame mullions sit on the x/y seams so it tiles as a TileSprite. (Continuity with the
-  previous look = same lavender/electric-blue/near-black palette + the same cold central light.) • **Preview sandbox** `mirror-preview` (`__gotoRoom`), grants Grace Burst, a
-  high ledge only reachable by air-dash. **Next:** real House-of-Mirrors room graph (bigger/vertical,
-  Grace-Burst-gated) → Mirror Double + roster → gimmicks (reflective floors, shattered mirrors,
-  gravity arches…) → mini-boss. Build each against the concept sheet + `docs/LEVEL_DESIGN.md`.
+  previous look = same lavender/electric-blue/near-black palette + the same cold central light.)
+- **BIO-02 is now a PLAYABLE, BEATABLE 5-room area** (entered when the BIO-01 gate opens — the
+  Warden's gate `to:'mirror-hall'`; opening it no longer ends the game, it climbs into the House of
+  Mirrors). The chain: **mirror-hall** (HALL OF FIRST REFLECTIONS, entry) → east → **mirror-gallery**
+  (THE GALLERY OF FALSE FACES) → ↑ → **mirror-rise** (THE ASCENDING GLASS — a vertical climb with a
+  **Grace-Burst-required gap**) → ↑ → **mirror-threshold** (a Hollow Striker) → ↑ → **untrue-image**
+  (HALL OF THE UNTRUE IMAGE — the mini-boss arena). Rooms in `src/data/rooms/mirror*.ts` +
+  `untrueImage.ts`, registered in `levelGraph`. Grace Burst is force-granted on entering any `mirrors`
+  room (`GameScene.create`) so the biome can never soft-lock + is jumpable via `__gotoRoom`.
+- **Mini-boss "THE UNTRUE IMAGE"** (`enemyRegistry` kind `mirrorboss`, elite) — your reflection at
+  its worst; reuses the Warden's armored telegraph kit (charge / overhead slam / punishable recovery)
+  with an icy tint, but its **own** `RunState.untrueImageDefeated` flag so it's independent of the
+  Warden. Felling it → the **"THE HOUSE OF MIRRORS — COMPLETE"** overlay (area-aware in
+  `showWinOverlay`). The arena seal/intro generalized from `room.id==='gate'` to "any room with an
+  undefeated elite" (`undefeatedEliteSpawn`); doors are sealed while `bossActive`; `Enemy` emits its
+  `kind` with `guardian-defeated` so `onGuardianDefeated(kind)` routes Warden-vs-UntrueImage.
+- **Wall mirrors are real PixelLab art** — an ornate gothic broken-mirror pane generated via
+  `mcp__pixellab__create_1_direction_object` (id `20749124`, downloaded through the reachable
+  `api.pixellab.ai/mcp/objects/<id>/download`), trimmed by `tools/pack_mirror.py` → `decor/mirror.png`,
+  placed via a new decorative `mirror` spawn type (`Spawn.scale`; `GameScene.makeMirror`, depth 8 set
+  into the back wall, faint shimmer). Source kept in `art_src/mirror/pane.png`. **PixelLab makes the
+  mirror OBJECT; it can't make the parallax scene** — that stays procedural.
+- **Preview sandbox** `mirror-preview` (`__gotoRoom`) still grants Grace Burst over an air-dash gap.
+  **Next:** the **Mirror Double** + rest of the 6-enemy roster; the mirror **gimmicks** (reflective
+  floors, breakable/shattered mirrors, gravity arches, distortion fog, obelisks, hanging mirrors); and
+  reskinning The Untrue Image to a true player-reflection sprite. Build each against the concept sheet
+  + `docs/LEVEL_DESIGN.md`. Dev hooks `__setRun(partial)` / `__killBoss()` help test gated paths.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

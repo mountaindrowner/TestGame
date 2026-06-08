@@ -10,6 +10,7 @@ export interface RunStateData {
   maxHealth: number;
   hasBrokenMemory: boolean; // the key found in a branch
   guardianDefeated: boolean; // the gate guardian beaten
+  untrueImageDefeated: boolean; // BIO-02 mini-boss (THE UNTRUE IMAGE) beaten
   graceBurst: boolean; // Grace Burst air-dash unlocked (earned from the Warden)
   currentRoomId: string;
   entryDoorId?: string; // which door we entered the current room from
@@ -43,6 +44,7 @@ export class RunState {
       maxHealth: PlayerTune.maxHealth,
       hasBrokenMemory: false,
       guardianDefeated: false,
+      untrueImageDefeated: false,
       graceBurst: false,
       currentRoomId: roomId,
     };
@@ -70,6 +72,12 @@ export class RunState {
   }
   set guardianDefeated(v: boolean) {
     this.data.guardianDefeated = v;
+  }
+  get untrueImageDefeated(): boolean {
+    return this.data.untrueImageDefeated;
+  }
+  set untrueImageDefeated(v: boolean) {
+    this.data.untrueImageDefeated = v;
   }
   get graceBurst(): boolean {
     return this.data.graceBurst;

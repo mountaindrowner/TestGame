@@ -9,10 +9,13 @@ export function gate(): RoomData {
   r.platform(34, 13, 6);
 
   r.at('guardian', 28, 16);
-  r.at('gate', 50, 16, { id: 'final' });
+  // Opened (Warden down + Memory), the gate no longer ends the game — it climbs UP
+  // into BIO-02, the House of Mirrors (the Shame route).
+  r.at('gate', 50, 16, { id: 'final', to: 'mirror-hall', toEntry: 'from-gate' });
   r.at('torch', 6, 16);
   r.at('torch', 50, 8);
 
   r.link('west', 'crossroads');
+  r.link('up', 'mirror-hall'); // reciprocal with mirror-hall's down-link (the gate climbs into BIO-02)
   return r.build('gate');
 }
