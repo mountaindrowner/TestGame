@@ -133,13 +133,17 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   (tileset + parallax per biome); `GameScene`/`EditorScene` pick the tileset, `ParallaxBackground`/
   `Decorations` theme by biome. Depths unchanged (default). • **Mirror art** — `mirrors` tileset
   (`tools/gen_tileset_mirrors.py`, depths-reskin into the same 21-slot Vis contract) + mirror
-  parallax (`gen_backgrounds_mirrors.py`). **Look tuned to Mark's reference image**
+  parallax (`gen_backgrounds_mirrors.py`). **Tileset tuned to Mark's reference image**
   (`art_src/ref/house_of_mirrors_vibe.png`): **lavender-purple BRICK masonry** + **electric-blue
-  mirror sheen** + blue diamond sparkles on near-black; bg = ornate arched framed mirrors with
-  contained blue glass streaks + a faint reflective floor band. (Palette sampled from the ref;
-  PixelLab `create_sidescroller_tileset` id `74b2aad9` was an earlier material reference — its raw
-  CDN isn't fetchable here anyway.) Overrides live inside each generator's `build()` so depths
-  regenerates byte-identical. • **Preview sandbox** `mirror-preview` (`__gotoRoom`), grants Grace Burst, a
+  mirror sheen** + blue diamond sparkles on near-black. (Palette sampled from the ref; tileset
+  overrides live inside `gen_tileset_mirrors.build()` so depths regenerates byte-identical.) The
+  **background is GIANT PANES OF BROKEN MIRROR** (`gen_backgrounds_mirrors.py`, full rewrite): a
+  seamless (both-axes) wall of two enormous shattered panes — reflective glass with a bright
+  specular sweep, lavender frames, spiderweb fracture cracks lit electric-blue, and shards punched
+  clean out (transparent) so the cold glass-light bleeds through the breaks; mid = drifting cold
+  light-shafts + sparkles, near = foreground corner shards + a hard fracture + reflective floor
+  band. Frame mullions sit on the x/y seams so it tiles as a TileSprite. (Continuity with the
+  previous look = same lavender/electric-blue/near-black palette + the same cold central light.) • **Preview sandbox** `mirror-preview` (`__gotoRoom`), grants Grace Burst, a
   high ledge only reachable by air-dash. **Next:** real House-of-Mirrors room graph (bigger/vertical,
   Grace-Burst-gated) → Mirror Double + roster → gimmicks (reflective floors, shattered mirrors,
   gravity arches…) → mini-boss. Build each against the concept sheet + `docs/LEVEL_DESIGN.md`.
