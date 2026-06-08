@@ -88,8 +88,11 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   `ANIMATION_UPDATE` footfall hook emits `boss-stomp` on the planted-foot frames → GameScene gives
   a small stage **shake + dust + `Sfx.stomp()`**. Within `attackRange` it commits (charge, or slam
   inside `slamRange`). Generic heavy foes (striker) keep the old immediate-windup patrol.
-- **HUD health:** neon **rune-block** glyphs (≈1 per 20 HP) that color-shift blood→molten→grace
-  with current life (`UIScene.drawHealth`), replacing the old bar.
+- **HUD is a crisp DOM/CSS overlay** (`UIScene` builds `#hud`, not drawn in the pixel canvas, so text
+  is sharp + cohesive): a health bar that color-shifts blood→molten→grace, a souls gem + tally, the
+  area name + Broken Memory pip, a centered boss bar + name, transient hints (pill), the defiant death
+  line, and a tiny build stamp. Driven by the same GameScene events (which survive `scene.restart`);
+  removed on UIScene shutdown. (The in-canvas Tutorial legend is still pixel-art — opener only.)
 - **Enemy art:** ALL now real PixelLab art — runner (`art_src/enemy/`) + crawler/spark/striker/
   warden (`art_src/<kind>/`, varied native frame sizes). Pulled via `tools/fetch_enemy_art.py`
   (NOTE: the `api.pixellab.ai` per-character **download zip endpoint IS reachable** from this
@@ -221,7 +224,8 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
 - **Ambient life (DONE, partial):** `src/systems/Ambience.ts` — a faint screen-fixed **surface-dust**
   haze drifting up top + a few **critters** (a tiny beetle, `prop-critter`) scuttling along the lowest
   ledges (deterministic per room, rest/dart states, clamped to their ledge span; depth 15, cosmetic).
-  Created per room in `GameScene`; `ambience.update(time, delta)`. Still to add: **cobwebs** in corners.
+  Created per room in `GameScene`; `ambience.update(time, delta)`. **Cobwebs** (`prop-cobweb`) hang in
+  the two upper corners (Ambience scans an interior column for the ceiling underside; faint, depth 12).
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
   *ledge-grab/climb* (player FSM), *dynamic lighting* + deep-shadow/fog occlusion (see-only-the-near-
   edges), a *higher-res player* sprite, a *catacomb* level grammar (connected architecture, no floating

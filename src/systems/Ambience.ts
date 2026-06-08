@@ -38,8 +38,24 @@ export class Ambience {
       .setScrollFactor(0)
       .setDepth(110);
 
-    // Critters: pick a few of the LOWEST flat surfaces and set a beetle scuttling.
+    // Cobwebs strung in the upper corners (where the side walls meet the ceiling).
     const { w, h, tiles } = room;
+    const solidC = (c: number | undefined) => c === Sem.SOLID || c === Sem.CRACKED;
+    const corner = (col: number, anchorX: number, flip: boolean) => {
+      // scan an interior column for the ceiling's underside, hang the web there
+      let cy = 1;
+      while (cy < h - 6 && solidC(tiles[cy]?.[col])) cy++;
+      scene.add
+        .image(anchorX, cy * World.tile, Assets.cobweb.key)
+        .setOrigin(flip ? 1 : 0, 0)
+        .setFlipX(flip)
+        .setDepth(12)
+        .setAlpha(0.5);
+    };
+    corner(2, 2 * World.tile, false); // top-left — fans down-right from the corner
+    corner(w - 3, (w - 2) * World.tile, true); // top-right (flipped)
+
+    // Critters: pick a few of the LOWEST flat surfaces and set a beetle scuttling.
     const rng = new Phaser.Math.RandomDataGenerator([`ambience-${room.id ?? 'x'}`]);
     const solid = (c: number) => c === Sem.SOLID || c === Sem.CRACKED || c === Sem.PLATFORM;
     const surfaces: { x: number; y: number }[] = [];

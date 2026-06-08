@@ -1,215 +1,169 @@
 import Phaser from 'phaser';
-import { Palette } from '../data/palette';
-import { PlayerTune } from '../data/Tunables';
-import { Assets } from '../data/assetManifest';
-import { FONT } from '../data/ui';
 
-/** Parallel HUD scene — health, the current area name, the Broken Memory
- *  indicator, transient hints, and the defiant line on death. Runs above
- *  GameScene so it never scrolls or shakes with the world camera. */
+/** Parallel HUD scene. The HUD is a crisp DOM/CSS overlay (not drawn into the
+ *  pixel canvas), so text is sharp and the styling is cohesive — health, souls,
+ *  area + Broken Memory, transient hints, the boss bar, and the defiant death line.
+ *  It listens to GameScene events (that emitter survives scene.restart). */
 export class UIScene extends Phaser.Scene {
-  private bar!: Phaser.GameObjects.Graphics;
-  private health = PlayerTune.maxHealth;
-  private maxHealth = PlayerTune.maxHealth;
-  private defiant!: Phaser.GameObjects.Text;
-  private areaText!: Phaser.GameObjects.Text;
-  private keyPip!: Phaser.GameObjects.Text;
-  private hintText!: Phaser.GameObjects.Text;
-  private soulText!: Phaser.GameObjects.Text;
-  private bossBar!: Phaser.GameObjects.Graphics;
-  private bossName!: Phaser.GameObjects.Text;
-  private bossMax = 1;
-  private bossDisp = 0;
-  private bossShown = false;
+  private root!: HTMLDivElement;
+  private hpFill!: HTMLDivElement;
+  private soulNum!: HTMLSpanElement;
+  private areaEl!: HTMLDivElement;
+  private memEl!: HTMLSpanElement;
+  private hintEl!: HTMLDivElement;
+  private defiantEl!: HTMLDivElement;
+  private bossWrap!: HTMLDivElement;
+  private bossNameEl!: HTMLDivElement;
+  private bossFill!: HTMLDivElement;
+  private hintTimer = 0;
 
   constructor() {
     super('UIScene');
   }
 
   create(): void {
-    this.bar = this.add.graphics();
-    this.drawHealth();
+    this.injectStyle();
+    document.getElementById('hud')?.remove();
+    const root = document.createElement('div');
+    root.id = 'hud';
+    root.innerHTML = `
+      <div class="hud-tl">
+        <div class="hp-track"><div class="hp-fill"></div></div>
+        <div class="hud-area"><span class="area">THE FIRST FALL</span><span class="mem">◇ MEMORY</span></div>
+      </div>
+      <div class="hud-souls"><span class="gem"></span><span class="soul-num">0</span></div>
+      <div class="hud-boss"><div class="boss-name"></div><div class="boss-track"><div class="boss-fill"></div></div></div>
+      <div class="hud-hint"></div>
+      <div class="hud-defiant"></div>
+      <div class="hud-build">${__BUILD_ID__}</div>`;
+    document.body.appendChild(root);
+    this.root = root;
+    const q = <T extends HTMLElement>(s: string) => root.querySelector(s) as T;
+    this.hpFill = q('.hp-fill');
+    this.soulNum = q('.soul-num');
+    this.areaEl = q('.area');
+    this.memEl = q('.mem');
+    this.hintEl = q('.hud-hint');
+    this.defiantEl = q('.hud-defiant');
+    this.bossWrap = q('.hud-boss');
+    this.bossNameEl = q('.boss-name');
+    this.bossFill = q('.boss-fill');
 
-    this.areaText = this.add
-      .text(8, 18, 'THE FIRST FALL', { fontFamily: FONT, fontSize: '7px', color: '#7ef0ff' })
-      .setAlpha(0.55);
-
-    // Build stamp, top-center — tiny, so we know which build is live.
-    this.add
-      .text(this.scale.width / 2, 4, __BUILD_ID__, { fontFamily: FONT, fontSize: '6px', color: '#7ef0ff' })
-      .setOrigin(0.5, 0)
-      .setAlpha(0.4);
-
-    // Soul counter (top-right) — a gem icon + tally.
-    const sx = this.scale.width - 8;
-    this.add.image(sx - 26, 11, Assets.soul.key).setBlendMode(Phaser.BlendModes.ADD).setScale(1);
-    this.soulText = this.add
-      .text(sx - 20, 11, '0', { fontFamily: FONT, fontSize: '8px', color: '#bfe8ff' })
-      .setOrigin(0, 0.5);
-
-    // Broken Memory indicator — dim until found, then bright.
-    this.keyPip = this.add
-      .text(8, 30, '◇ MEMORY', { fontFamily: FONT, fontSize: '7px', color: '#7ef0ff' })
-      .setAlpha(0.25);
-
-    // Transient contextual hint (e.g. at the sealed gate).
-    this.hintText = this.add
-      .text(this.scale.width / 2, this.scale.height - 24, '', {
-        fontFamily: FONT,
-        fontSize: '8px',
-        color: '#eaf7ff',
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setAlpha(0);
-
-    // The world says you failed; the game says get back up.
-    this.defiant = this.add
-      .text(this.scale.width / 2, this.scale.height / 2, '', {
-        fontFamily: FONT,
-        fontSize: '11px',
-        color: '#eaf7ff',
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setDepth(10);
-
-    // Boss health bar (top-center) + name — revealed Mega-Man-style on intro.
-    this.bossBar = this.add.graphics().setScrollFactor(0).setDepth(11).setAlpha(0);
-    this.bossName = this.add
-      .text(this.scale.width / 2, 24, '', { fontFamily: FONT, fontSize: '8px', color: '#ffd0d8' })
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setDepth(11);
-
-    const game = this.scene.get('GameScene');
-    game.events.on('boss-spawn', (_name: string, _hp: number, max: number) => {
-      this.bossMax = max;
-    });
-    game.events.on('boss-intro', (name: string) => {
-      this.bossShown = true;
-      this.bossName.setText(name).setAlpha(0);
-      this.bossBar.setAlpha(1);
-      this.tweens.add({ targets: this.bossName, alpha: 0.95, duration: 300 });
-      this.bossDisp = 0;
-      this.tweens.add({ targets: this, bossDisp: this.bossMax, duration: 700, ease: 'Quad.easeOut', onUpdate: () => this.drawBossBar() });
-    });
-    game.events.on('boss-health', (hp: number, max: number) => {
-      this.bossMax = max;
-      this.bossDisp = hp;
-      this.drawBossBar();
-    });
-    game.events.on('boss-defeated', () => {
-      this.bossShown = false;
-      this.tweens.add({ targets: [this.bossBar, this.bossName], alpha: 0, duration: 500 });
-    });
-    game.events.on('player-health', (h: number, max: number) => {
-      this.health = h;
-      this.maxHealth = max;
-      this.drawHealth();
-    });
-    game.events.on('player-died', () => this.showDefiant());
-    game.events.on('player-reborn', () => this.defiant.setAlpha(0));
-    game.events.on('room-name', (name: string) => this.areaText.setText(name));
-    game.events.on('key-state', (has: boolean) => {
-      this.keyPip.setText(has ? '◆ MEMORY' : '◇ MEMORY').setAlpha(has ? 0.9 : 0.25);
-    });
-    game.events.on('souls', (n: number) => {
-      this.soulText.setText(String(n));
-      this.tweens.add({ targets: this.soulText, scale: { from: 1.35, to: 1 }, duration: 220, ease: 'Quad.easeOut' });
-    });
-    game.events.on('hint', (msg: string) => this.showHint(msg));
-    game.events.on('level-complete', () => {
-      this.hintText.setAlpha(0);
-      this.defiant.setAlpha(0);
-    });
+    this.wire();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.root.remove());
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.root.remove());
   }
 
-  private drawBossBar(): void {
-    const w = 200;
-    const h = 7;
-    const x = (this.scale.width - w) / 2;
-    const y = 14;
-    this.bossBar.clear();
-    if (!this.bossShown) return;
-    const pct = Phaser.Math.Clamp(this.bossDisp / this.bossMax, 0, 1);
-    this.bossBar.fillStyle(Palette.shadow, 0.85).fillRect(x - 2, y - 2, w + 4, h + 4);
-    this.bossBar.fillStyle(Palette.stoneHi, 0.4).fillRect(x, y, w, h);
-    this.bossBar.fillStyle(Palette.blood, 1).fillRect(x, y, w * pct, h);
-    this.bossBar.fillStyle(Palette.moltenHi, 0.7).fillRect(x, y, w * pct, 1);
-    this.bossBar.lineStyle(1, Palette.blood, 0.6).strokeRect(x - 2, y - 2, w + 4, h + 4);
+  private wire(): void {
+    const game = this.scene.get('GameScene');
+    game.events.on('player-health', (h: number, max: number) => this.setHealth(h, max));
+    game.events.on('souls', (n: number) => {
+      this.soulNum.textContent = String(n);
+      this.soulNum.classList.remove('pop');
+      void this.soulNum.offsetWidth; // restart the animation
+      this.soulNum.classList.add('pop');
+    });
+    game.events.on('room-name', (name: string) => (this.areaEl.textContent = name));
+    game.events.on('key-state', (has: boolean) => {
+      this.memEl.textContent = has ? '◆ MEMORY' : '◇ MEMORY';
+      this.memEl.classList.toggle('on', has);
+    });
+    game.events.on('hint', (msg: string) => this.showHint(msg));
+    game.events.on('player-died', () => this.showDefiant());
+    game.events.on('player-reborn', () => this.defiantEl.classList.remove('show'));
+    game.events.on('level-complete', () => {
+      this.hintEl.classList.remove('show');
+      this.defiantEl.classList.remove('show');
+    });
+    // Boss bar — revealed Mega-Man-style on intro, drains with health.
+    game.events.on('boss-intro', (name: string) => {
+      this.bossNameEl.textContent = name;
+      this.bossWrap.classList.add('show');
+      this.bossFill.style.transition = 'none';
+      this.bossFill.style.width = '0%';
+      requestAnimationFrame(() => {
+        this.bossFill.style.transition = 'width 0.7s ease-out';
+        this.bossFill.style.width = '100%';
+      });
+    });
+    game.events.on('boss-health', (hp: number, max: number) => {
+      this.bossFill.style.width = `${Phaser.Math.Clamp((hp / max) * 100, 0, 100)}%`;
+    });
+    game.events.on('boss-defeated', () => this.bossWrap.classList.remove('show'));
+  }
+
+  private setHealth(h: number, max: number): void {
+    const pct = Phaser.Math.Clamp(h / max, 0, 1);
+    this.hpFill.style.width = `${pct * 100}%`;
+    // blood -> molten -> grace as life rises
+    const lo = [0xe8, 0x3a, 0x4a];
+    const mid = [0xff, 0x8a, 0x3a];
+    const hi = [0x7e, 0xf0, 0xff];
+    const lerp = (a: number[], b: number[], t: number) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const c = pct < 0.5 ? lerp(lo, mid, pct * 2) : lerp(mid, hi, (pct - 0.5) * 2);
+    const css = `rgb(${c[0]},${c[1]},${c[2]})`;
+    this.hpFill.style.background = `linear-gradient(180deg, ${css}, rgba(${c[0]},${c[1]},${c[2]},0.7))`;
+    this.hpFill.style.boxShadow = `0 0 8px rgba(${c[0]},${c[1]},${c[2]},0.6)`;
   }
 
   private showHint(msg: string): void {
-    this.hintText.setText(msg).setAlpha(0);
-    this.tweens.killTweensOf(this.hintText);
-    this.tweens.add({ targets: this.hintText, alpha: 0.95, duration: 220, yoyo: true, hold: 1300 });
-  }
-
-  // Health as a row of neon rune-blocks (each ≈ a fifth of max), color-shifting
-  // from blood → molten → grace as you carry more life.
-  private drawHealth(): void {
-    const runeVal = 20;
-    const maxRunes = Math.max(1, Math.round(this.maxHealth / runeVal));
-    const pct = Phaser.Math.Clamp(this.health / this.maxHealth, 0, 1);
-    const col = this.healthColor(pct);
-    const cw = 12;
-    this.bar.clear();
-    for (let i = 0; i < maxRunes; i++) {
-      const f = Phaser.Math.Clamp(this.health / runeVal - i, 0, 1);
-      this.drawRune(8 + i * cw, 8, i, f, col);
-    }
-  }
-
-  private healthColor(pct: number): number {
-    const toC = Phaser.Display.Color.IntegerToColor;
-    const seg =
-      pct < 0.5
-        ? Phaser.Display.Color.Interpolate.ColorWithColor(toC(Palette.blood), toC(Palette.molten), 100, pct * 200)
-        : Phaser.Display.Color.Interpolate.ColorWithColor(toC(Palette.molten), toC(Palette.grace), 100, (pct - 0.5) * 200);
-    return Phaser.Display.Color.GetColor(seg.r, seg.g, seg.b);
-  }
-
-  /** A small abstract rune glyph (varies by index — like bundled runes). `f` = fill 0..1. */
-  private drawRune(x: number, y: number, i: number, f: number, col: number): void {
-    const g = this.bar;
-    if (f > 0.05) g.fillStyle(col, 0.22 * f).fillRect(x - 1, y - 1, 10, 12); // neon halo
-    const c = f > 0.05 ? col : Palette.stoneHi;
-    g.lineStyle(2, c, f > 0.05 ? 0.5 + 0.5 * f : 0.22);
-    const seg = (x1: number, y1: number, x2: number, y2: number) => {
-      g.beginPath();
-      g.moveTo(x + x1, y + y1);
-      g.lineTo(x + x2, y + y2);
-      g.strokePath();
-    };
-    switch (i % 4) {
-      case 0:
-        seg(4, 0, 4, 9);
-        seg(2, 1, 6, 1);
-        seg(4, 4, 6, 4);
-        break;
-      case 1:
-        seg(3, 0, 3, 9);
-        seg(3, 3, 6, 6);
-        seg(3, 9, 6, 9);
-        break;
-      case 2: // two strokes bound together
-        seg(2, 1, 2, 9);
-        seg(6, 1, 6, 9);
-        seg(2, 4, 6, 4);
-        break;
-      default:
-        seg(4, 0, 4, 9);
-        seg(2, 0, 4, 3);
-        seg(6, 0, 4, 3);
-        seg(2, 9, 6, 9);
-    }
+    this.hintEl.textContent = msg;
+    this.hintEl.classList.add('show');
+    window.clearTimeout(this.hintTimer);
+    this.hintTimer = window.setTimeout(() => this.hintEl.classList.remove('show'), 2600);
   }
 
   private showDefiant(): void {
-    const lines = ['THE WORLD SAYS YOU FAILED.', 'GET BACK UP.'];
-    this.defiant.setText(lines).setAlpha(0);
-    this.tweens.add({ targets: this.defiant, alpha: 0.9, duration: 500, yoyo: true, hold: 900 });
+    this.defiantEl.innerHTML = '<div class="d1">THE WORLD SAYS YOU FAILED.</div><div class="d2">GET BACK UP.</div>';
+    this.defiantEl.classList.add('show');
+  }
+
+  private injectStyle(): void {
+    if (document.getElementById('hud-style')) return;
+    const s = document.createElement('style');
+    s.id = 'hud-style';
+    s.textContent = `
+      #hud{position:fixed;inset:0;z-index:60;pointer-events:none;
+        font-family:'Dash Horizon',ui-monospace,monospace;color:#eaf7ff;
+        --cyan:#7ef0ff;--ink:rgba(8,12,20,.62);}
+      #hud .hud-tl{position:absolute;top:16px;left:18px;}
+      #hud .hp-track{width:172px;height:11px;background:var(--ink);
+        border:1px solid rgba(126,240,255,.35);border-radius:6px;overflow:hidden;
+        box-shadow:0 1px 3px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);}
+      #hud .hp-fill{height:100%;width:100%;border-radius:5px;
+        background:linear-gradient(180deg,#7ef0ff,rgba(126,240,255,.7));transition:width .25s ease,background .3s;}
+      #hud .hud-area{margin-top:7px;font-size:11px;letter-spacing:.22em;display:flex;gap:12px;align-items:center;}
+      #hud .area{color:var(--cyan);opacity:.78;}
+      #hud .mem{font-size:10px;letter-spacing:.18em;opacity:.32;color:var(--cyan);transition:opacity .3s;}
+      #hud .mem.on{opacity:.95;text-shadow:0 0 8px rgba(126,240,255,.7);}
+      #hud .hud-souls{position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:8px;}
+      #hud .gem{width:12px;height:12px;border-radius:2px;transform:rotate(45deg);
+        background:linear-gradient(135deg,#cdf3ff,#2f78d2);box-shadow:0 0 7px rgba(126,240,255,.75);}
+      #hud .soul-num{font-size:15px;letter-spacing:.06em;min-width:14px;text-align:right;
+        text-shadow:0 0 6px rgba(126,240,255,.5);display:inline-block;}
+      #hud .soul-num.pop{animation:soulpop .24s ease-out;}
+      @keyframes soulpop{from{transform:scale(1.45);color:#fff;}to{transform:scale(1);}}
+      #hud .hud-boss{position:absolute;top:16px;left:50%;transform:translateX(-50%);
+        width:260px;text-align:center;opacity:0;transition:opacity .4s;}
+      #hud .hud-boss.show{opacity:1;}
+      #hud .boss-name{font-size:11px;letter-spacing:.26em;color:#ffd0d8;margin-bottom:5px;
+        text-shadow:0 0 10px rgba(255,90,120,.6);}
+      #hud .boss-track{height:9px;background:var(--ink);border:1px solid rgba(255,120,140,.5);
+        border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.5);}
+      #hud .boss-fill{height:100%;width:100%;background:linear-gradient(180deg,#ff8aa0,#d23b54);
+        box-shadow:0 0 9px rgba(255,80,110,.6);}
+      #hud .hud-hint{position:absolute;bottom:12%;left:50%;transform:translate(-50%,8px);
+        font-size:12px;letter-spacing:.12em;text-align:center;max-width:80%;
+        padding:7px 16px;border-radius:999px;background:rgba(8,12,20,.6);
+        border:1px solid rgba(126,240,255,.25);opacity:0;transition:opacity .25s,transform .25s;}
+      #hud .hud-hint.show{opacity:.96;transform:translate(-50%,0);}
+      #hud .hud-defiant{position:absolute;top:42%;left:50%;transform:translateX(-50%);
+        text-align:center;opacity:0;transition:opacity .5s;}
+      #hud .hud-defiant.show{opacity:.95;}
+      #hud .hud-defiant .d1{font-size:13px;letter-spacing:.2em;opacity:.8;margin-bottom:8px;}
+      #hud .hud-defiant .d2{font-size:20px;letter-spacing:.3em;color:var(--cyan);text-shadow:0 0 14px rgba(126,240,255,.6);}
+      #hud .hud-build{position:absolute;left:8px;bottom:6px;font-size:9px;letter-spacing:.1em;color:var(--cyan);opacity:.28;}
+    `;
+    document.head.appendChild(s);
   }
 }

@@ -63,6 +63,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(Assets.heal.key, Assets.heal.path);
     this.load.image(Assets.urn.key, Assets.urn.path);
     this.load.image(Assets.critter.key, Assets.critter.path);
+    this.load.image(Assets.cobweb.key, Assets.cobweb.path);
   }
 
   create(): void {

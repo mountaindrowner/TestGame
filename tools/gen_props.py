@@ -68,11 +68,32 @@ def critter():
     print(f"  wrote sprites/props/critter.png  ({w}x{h})  [scuttling critter]")
 
 
+def cobweb():
+    """A faint corner web (anchored at the top-left corner; engine flips for the
+    right). Radial threads + a few connecting strands."""
+    import math
+    s = 26
+    im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    col = (176, 200, 220, 70)
+    hi = (210, 232, 245, 110)
+    angs = [math.radians(a) for a in (8, 26, 45, 64, 82)]
+    ends = [(math.cos(a) * (s - 2), math.sin(a) * (s - 2)) for a in angs]
+    for ex, ey in ends:                       # radial spokes from the corner
+        d.line([(0, 0), (ex, ey)], fill=col)
+    for r in (0.34, 0.62, 0.9):               # connecting strands between spokes
+        pts = [(ex * r, ey * r) for ex, ey in ends]
+        d.line(pts, fill=hi if r < 0.5 else col)
+    im.save(os.path.join(OUT, "cobweb.png"))
+    print(f"  wrote sprites/props/cobweb.png  ({s}x{s})  [corner cobweb]")
+
+
 def build() -> None:
     gem((120, 220, 255), (40, 120, 210), "soul.png")  # cold cyan currency
     gem((150, 255, 170), (40, 170, 90), "heal.png")   # green life orb
     urn()
     critter()
+    cobweb()
 
 
 if __name__ == "__main__":
