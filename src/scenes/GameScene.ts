@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { RoomData, Spawn } from '../data/roomData';
 import { buildRoom, START_ROOM } from '../data/levelGraph';
-import { Assets, Vis, VIS_SOLID_MAX } from '../data/assetManifest';
+import { Assets, Vis, VIS_SOLID_MAX, biomeOf } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace } from '../data/Tunables';
 import { RunState } from '../data/RunState';
@@ -105,7 +105,7 @@ export class GameScene extends Phaser.Scene {
     this.sfx = getSfx(); // shared singleton (one AudioContext across room reloads)
     this.sfx.startMusic();
     this.juice = new JuiceSystem(this);
-    this.parallax = new ParallaxBackground(this);
+    this.parallax = new ParallaxBackground(this, this.room.biome);
     this.particles = new ParticleSystem(this);
     this.particles.startAmbient(roomW, roomH);
     this.actions = new InputManager(this);
@@ -113,7 +113,7 @@ export class GameScene extends Phaser.Scene {
     new Tutorial(this, this.actions, roomId === START_ROOM); // onboarding in the opener only
 
     this.buildTilemap();
-    this.decorations = new Decorations(this, this.room);
+    this.decorations = new Decorations(this, this.room, this.room.biome);
     this.physics.world.setBounds(0, 0, roomW, roomH);
 
     // Entities
@@ -124,6 +124,8 @@ export class GameScene extends Phaser.Scene {
 
     // Restore carried-over health and persist changes back to the run.
     this.player.health = this.run.health;
+    this.player.graceBurst = this.run.graceBurst || this.room.id === 'mirror-preview'; // preview grants it
+
     this.events.emit('player-health', this.player.health, this.run.data.maxHealth);
     // The scene's event emitter survives scene.restart, so bind these exactly once.
     if (!this.bound) {
@@ -230,7 +232,8 @@ export class GameScene extends Phaser.Scene {
       tileWidth: World.tile,
       tileHeight: World.tile,
     });
-    const tileset = map.addTilesetImage('depths', Assets.tileset.key, World.tile, World.tile, 0, 0)!;
+    const biome = this.room.biome ?? 'depths';
+    const tileset = map.addTilesetImage(biome, biomeOf(biome).tilesetKey, World.tile, World.tile, 0, 0)!;
     this.layer = map.createLayer(0, tileset, 0, 0)!;
     this.layer.setDepth(10);
 
@@ -603,6 +606,12 @@ export class GameScene extends Phaser.Scene {
   private onGuardianDefeated(): void {
     this.run.guardianDefeated = true;
     this.bossActive = false;
+    // The Warden's fall grants Grace Burst — grace gives movement (DESIGN.md).
+    if (!this.run.graceBurst) {
+      this.run.graceBurst = true;
+      this.player.graceBurst = true;
+      this.time.delayedCall(900, () => this.events.emit('hint', 'GRACE BURST — dash through the air (in the air)'));
+    }
     if (this.bossBarrier) {
       this.tweens.killTweensOf(this.bossBarrier);
       this.tweens.add({

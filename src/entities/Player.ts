@@ -33,6 +33,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private mode: State = 'idle';
   private lastGroundedAt = 0;
   private airJumpsUsed = 0;
+  private airDashUsed = false; // one Grace Burst air-dash per airtime
+  public graceBurst = false; // Grace Burst air-dash unlocked (set from RunState)
   private wasOnGround = false;
 
   // dash
@@ -99,6 +101,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (onGround) {
       this.lastGroundedAt = time;
       this.airJumpsUsed = 0;
+      this.airDashUsed = false; // refresh the Grace Burst on landing
       if (!this.wasOnGround && this.body.velocity.y >= 0) this.onLand();
     }
     this.wasOnGround = onGround;
@@ -185,6 +188,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private handleDash(time: number): void {
     if (this.dashing) return;
     if (this.controls.justPressed('dash') && time >= this.dashReadyAt) {
+      const onGround = this.body.blocked.down;
+      if (!onGround) {
+        // Air-dash is the Grace Burst — locked until earned, one per airtime.
+        if (!this.graceBurst || this.airDashUsed) return;
+        this.airDashUsed = true;
+        this.juice.flash(Palette.grace, 60);
+        this.particles.graceMotes?.(this.x, this.y - 14, 10);
+      }
       this.dashing = true;
       this.attacking = false; // dash cancels a swing
       this.hitbox.disable();

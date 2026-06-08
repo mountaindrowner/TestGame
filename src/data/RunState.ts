@@ -10,6 +10,7 @@ export interface RunStateData {
   maxHealth: number;
   hasBrokenMemory: boolean; // the key found in a branch
   guardianDefeated: boolean; // the gate guardian beaten
+  graceBurst: boolean; // Grace Burst air-dash unlocked (earned from the Warden)
   currentRoomId: string;
   entryDoorId?: string; // which door we entered the current room from
 }
@@ -42,6 +43,7 @@ export class RunState {
       maxHealth: PlayerTune.maxHealth,
       hasBrokenMemory: false,
       guardianDefeated: false,
+      graceBurst: false,
       currentRoomId: roomId,
     };
   }
@@ -68,5 +70,11 @@ export class RunState {
   }
   set guardianDefeated(v: boolean) {
     this.data.guardianDefeated = v;
+  }
+  get graceBurst(): boolean {
+    return this.data.graceBurst;
+  }
+  set graceBurst(v: boolean) {
+    this.data.graceBurst = v;
   }
 }

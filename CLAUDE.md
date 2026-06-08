@@ -124,10 +124,21 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   link targets in red. **🗺 Map view** — rooms laid out spatially by their edge-link directions
   (BFS), cyan link edges + orange door edges, current room highlighted; click a node to jump there.
   `fitTo()` reserves the left strip for the panel (free-pan camera, no bounds clamp).
-- **Next milestone:** **BIO-02** — a second biome via PixelLab's `create_sidescroller_tileset`
-  (slice→quantize→remap into the 21-slot Vis contract; see DECISIONS.md "Environment art").
-  Mockup-first (reference a target-scene image before generating). The editor now makes authoring
-  BIO-02's rooms fast.
+- **BIO-02 "House of Mirrors" (in progress):** the next area (Shame route; gate exits up into it).
+  Concept sheet: `docs/Repentance_HouseOfMirrors_concept.md`-equiv (Mark's image) — 6-enemy roster,
+  mini-boss "The Untrue Image", 6 mirror gimmicks, violet palette. **Landed so far (mechanic + look):**
+  • **Grace Burst** air-dash — the air-dash is now the unlockable (ground dash unchanged); one per
+  airtime, earned on Warden defeat (`RunState.graceBurst`, granted in `onGuardianDefeated`,
+  grace-tinted). • **Biome theming system** — `RoomData.biome` + `Biomes` map in `assetManifest`
+  (tileset + parallax per biome); `GameScene`/`EditorScene` pick the tileset, `ParallaxBackground`/
+  `Decorations` theme by biome. Depths unchanged (default). • **Mirror art** — `mirrors` tileset
+  (`tools/gen_tileset_mirrors.py`, depths-reskin into the same 21-slot Vis contract; PixelLab
+  `create_sidescroller_tileset` id `74b2aad9` used as material reference — raw CDN not fetchable
+  here, matched by design) + mirror parallax (`gen_backgrounds_mirrors.py`, arched mirror-frames,
+  cold glass light). • **Preview sandbox** `mirror-preview` (`__gotoRoom`), grants Grace Burst, a
+  high ledge only reachable by air-dash. **Next:** real House-of-Mirrors room graph (bigger/vertical,
+  Grace-Burst-gated) → Mirror Double + roster → gimmicks (reflective floors, shattered mirrors,
+  gravity arches…) → mini-boss. Build each against the concept sheet + `docs/LEVEL_DESIGN.md`.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

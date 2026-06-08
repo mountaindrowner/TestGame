@@ -2,7 +2,9 @@
 import pack_player
 import pack_enemy
 import gen_tileset
+import gen_tileset_mirrors
 import gen_backgrounds
+import gen_backgrounds_mirrors
 import gen_decor
 
 if __name__ == "__main__":
@@ -13,8 +15,10 @@ if __name__ == "__main__":
     pack_enemy.build()
     print("[tileset]")
     gen_tileset.build()
+    gen_tileset_mirrors.build()
     print("[backgrounds]")
     gen_backgrounds.build()
+    gen_backgrounds_mirrors.build()
     print("[decor]")
     gen_decor.build()
     print("Done.")

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { World } from '../data/Tunables';
 import { Palette } from '../data/palette';
 import { FONT } from '../data/ui';
-import { Assets, Sem } from '../data/assetManifest';
+import { Assets, Sem, biomeOf } from '../data/assetManifest';
 import { autotile } from '../systems/Autotiler';
 import { ENEMY_REGISTRY, isEnemyKind } from '../data/enemyRegistry';
 import type { RoomData, Spawn, SpawnType } from '../data/roomData';
@@ -126,7 +126,8 @@ export class EditorScene extends Phaser.Scene {
     this.map?.destroy();
     const visual = autotile(this.room);
     this.map = this.make.tilemap({ data: visual, tileWidth: World.tile, tileHeight: World.tile });
-    const tileset = this.map.addTilesetImage('depths', Assets.tileset.key, World.tile, World.tile, 0, 0)!;
+    const biome = this.room.biome ?? 'depths';
+    const tileset = this.map.addTilesetImage(biome, biomeOf(biome).tilesetKey, World.tile, World.tile, 0, 0)!;
     this.layer = this.map.createLayer(0, tileset, 0, 0)!;
     this.layer.setDepth(10);
   }

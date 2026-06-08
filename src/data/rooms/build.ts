@@ -12,6 +12,7 @@ export class Room {
   private t: number[][];
   private spawns: Spawn[] = [];
   private _links: Partial<Record<Dir, string>> = {};
+  private _biome?: string;
 
   constructor(private name: string, private w: number, private h: number) {
     this.t = Array.from({ length: h }, () => Array.from({ length: w }, () => Sem.EMPTY as number));
@@ -64,11 +65,15 @@ export class Room {
     this._links[dir] = to;
     return this;
   }
+  biome(name: string): this {
+    this._biome = name;
+    return this;
+  }
   at(type: SpawnType, tx: number, ty: number, extra: Partial<Spawn> = {}): this {
     this.spawns.push({ type, tx, ty, ...extra });
     return this;
   }
   build(id: string): RoomData {
-    return { name: this.name, id, w: this.w, h: this.h, tiles: this.t, spawns: this.spawns, links: this._links };
+    return { name: this.name, id, w: this.w, h: this.h, tiles: this.t, spawns: this.spawns, links: this._links, biome: this._biome };
   }
 }

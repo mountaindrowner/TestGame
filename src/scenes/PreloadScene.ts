@@ -31,14 +31,17 @@ export class PreloadScene extends Phaser.Scene {
     for (const a of [Assets.crawler, Assets.spark, Assets.striker, Assets.warden]) {
       this.load.spritesheet(a.key, a.path, { frameWidth: a.frameW, frameHeight: a.frameH });
     }
-    this.load.spritesheet(Assets.tileset.key, Assets.tileset.path, {
-      frameWidth: Assets.tileset.frameW,
-      frameHeight: Assets.tileset.frameH,
-    });
+    for (const ts of [Assets.tileset, Assets.tilesetMirrors]) {
+      this.load.spritesheet(ts.key, ts.path, { frameWidth: ts.frameW, frameHeight: ts.frameH });
+    }
     this.load.image(Assets.bgFar.key, Assets.bgFar.path);
     this.load.image(Assets.bgMid.key, Assets.bgMid.path);
     this.load.image(Assets.bgNear.key, Assets.bgNear.path);
     this.load.image(Assets.fog.key, Assets.fog.path);
+    this.load.image(Assets.bgFarMirror.key, Assets.bgFarMirror.path);
+    this.load.image(Assets.bgMidMirror.key, Assets.bgMidMirror.path);
+    this.load.image(Assets.bgNearMirror.key, Assets.bgNearMirror.path);
+    this.load.image(Assets.fogMirror.key, Assets.fogMirror.path);
     this.load.image(Assets.dot.key, Assets.dot.path);
     this.load.image(Assets.chain.key, Assets.chain.path);
     this.load.image(Assets.vine.key, Assets.vine.path);

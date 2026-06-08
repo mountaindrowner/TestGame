@@ -36,6 +36,7 @@ export interface RoomData {
   spawns: Spawn[];
   // Edge links: walking off this side enters the named room (seamless-ish travel).
   links?: { east?: string; west?: string; up?: string; down?: string };
+  biome?: string; // tileset/background theme ('depths' default; 'mirrors' = House of Mirrors)
 }
 
 const W = 54;

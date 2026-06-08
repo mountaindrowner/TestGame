@@ -14,6 +14,12 @@ export const Assets = {
   bgMid: { key: 'bg-mid', path: 'assets/backgrounds/mid.png' },
   bgNear: { key: 'bg-near', path: 'assets/backgrounds/near.png' },
   fog: { key: 'fog', path: 'assets/backgrounds/fog.png' },
+  // House of Mirrors (BIO-02) theme — tileset + parallax (same 21-slot Vis contract).
+  tilesetMirrors: { key: 'tileset-mirrors', path: 'assets/tilesets/mirrors.png', frameW: 16, frameH: 16 },
+  bgFarMirror: { key: 'bg-far-m', path: 'assets/backgrounds/mirror-far.png' },
+  bgMidMirror: { key: 'bg-mid-m', path: 'assets/backgrounds/mirror-mid.png' },
+  bgNearMirror: { key: 'bg-near-m', path: 'assets/backgrounds/mirror-near.png' },
+  fogMirror: { key: 'fog-m', path: 'assets/backgrounds/mirror-fog.png' },
   dot: { key: 'dot', path: 'assets/sprites/dot.png' },
   // Aesthetic hanging decorations (origin top-center; swayed in the engine).
   chain: { key: 'decor-chain', path: 'assets/sprites/decor/chain.png' },
@@ -24,6 +30,23 @@ export const Assets = {
   fern: { key: 'decor-fern', path: 'assets/sprites/decor/fern.png' },
   stalactite: { key: 'decor-stalactite', path: 'assets/sprites/decor/stalactite.png' },
 } as const;
+
+// Per-biome theme lookup: a room's `biome` resolves to its tileset + parallax
+// layers here. Same autotiler/Vis contract for every biome — only the art differs.
+export const Biomes: Record<string, { tilesetKey: string; bg: { far: string; mid: string; near: string; fog: string } }> = {
+  depths: {
+    tilesetKey: Assets.tileset.key,
+    bg: { far: Assets.bgFar.key, mid: Assets.bgMid.key, near: Assets.bgNear.key, fog: Assets.fog.key },
+  },
+  mirrors: {
+    tilesetKey: Assets.tilesetMirrors.key,
+    bg: { far: Assets.bgFarMirror.key, mid: Assets.bgMidMirror.key, near: Assets.bgNearMirror.key, fog: Assets.fogMirror.key },
+  },
+};
+
+export function biomeOf(id?: string) {
+  return Biomes[id ?? 'depths'] ?? Biomes.depths;
+}
 
 // SEMANTIC tile codes — what a room cell *means* (used by roomData).
 export const Sem = {

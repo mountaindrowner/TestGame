@@ -107,12 +107,17 @@ the following — do NOT "correct" these toward a generic guide:
   reuse the one slash clip for now. TODO (cheap, 1 PixelLab gen each): bespoke dash + 2nd
   combo swing if the feel wants them.
 
-## Environment art — second biome (planned)
-- **BIO-02 will use PixelLab's `create_sidescroller_tileset`** rather than a new procedural
-  palette. Plan: prompt the terrain look, then a build step slices to 16×16, quantizes to
-  our locked palette, and remaps into the 21-slot Vis contract; the Autotiler, one-way
-  platform / molten / cracked specials, and `gen_decor` props stay as-is. BIO-01 (depths)
-  remains the procedural `gen_tileset.py`.
+## Biome theming system (built for BIO-02)
+- A room declares `biome` (`RoomData.biome`, default `'depths'`). `assetManifest.Biomes` maps each
+  biome → its tileset key + parallax layer keys; `biomeOf(id)` resolves it. `GameScene.buildTilemap`
+  + `EditorScene.buildLayer` pick the tileset by biome; `ParallaxBackground`/`Decorations` take a
+  biome arg. **The Autotiler/Vis 21-slot contract is shared across all biomes — only the art differs.**
+- **BIO-02 "House of Mirrors" tileset:** `create_sidescroller_tileset` (PixelLab) is used as the
+  *material reference* only — its raw CDN image isn't fetchable from this sandbox, and its output
+  doesn't match our 16-edge-mask contract anyway. So the mirror tileset is a **palette-reskin of the
+  depths generator** into the same 21 slots (`tools/gen_tileset_mirrors.py` overrides gen_tileset's
+  palette *inside build()* so depths is untouched; same for `gen_backgrounds_mirrors.py`). This is
+  the reliable path; revisit a direct remap only if PixelLab gains an edge-mask tileset mode.
 
 ## Future-milestone notes (capture now; build when we get there)
 - **Minimap / fog-of-war** (when the world grows past BIO-01): give each room a dedicated

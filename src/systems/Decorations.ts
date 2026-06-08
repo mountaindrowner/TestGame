@@ -25,7 +25,10 @@ const KINDS = [
 export class Decorations {
   private items: Deco[] = [];
 
-  constructor(scene: Phaser.Scene, room: RoomData) {
+  constructor(scene: Phaser.Scene, room: RoomData, biome?: string) {
+    // The organic depths props (moss/vines/roots) would read wrong in a glass
+    // biome; House of Mirrors gets its own props (hanging mirrors/obelisks) later.
+    if (biome && biome !== 'depths') return;
     const rng = new Phaser.Math.RandomDataGenerator(['repentance-first-fall']);
     const { w, h, tiles } = room;
     const solidish = (c: number) => c === Sem.SOLID || c === Sem.CRACKED || c === Sem.PLATFORM;

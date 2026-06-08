@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
-import { Assets } from '../data/assetManifest';
+import { Assets, biomeOf } from '../data/assetManifest';
 import { Palette } from '../data/palette';
+
+// Per-biome sky gradient + far "light" tints (depths = warm flame; mirrors = cold glass).
+const THEME: Record<string, { sky: [number, number, number]; light: [number, number, number] }> = {
+  depths: { sky: [0x07070d, Palette.bgDeep, 0x1a0f1c], light: [Palette.molten, Palette.moltenHi, Palette.bloom] },
+  mirrors: { sky: [0x05060f, 0x0d0a1e, 0x160a26], light: [0x6a4fff, 0xb9a8ff, 0xffffff] },
+};
 
 interface Layer {
   ts: Phaser.GameObjects.TileSprite;
@@ -18,32 +24,33 @@ export class ParallaxBackground {
   private vh: number;
   private flame: Phaser.GameObjects.Image[] = []; // [wide glow, inner glow, core]
 
-  constructor(private scene: Phaser.Scene) {
+  constructor(private scene: Phaser.Scene, biome?: string) {
     this.vw = scene.scale.width;
     this.vh = scene.scale.height;
+    const theme = THEME[biome ?? 'depths'] ?? THEME.depths;
+    const bg = biomeOf(biome).bg;
 
-    // Sky gradient: a deep void fading to a barely-warm dark at the crypt floor.
+    // Sky gradient: a deep void fading to a faint themed glow at the floor.
     const sky = scene.add.graphics().setScrollFactor(0).setDepth(0);
-    const top = Phaser.Display.Color.IntegerToColor(0x07070d); // near-black void
-    const mid = Phaser.Display.Color.IntegerToColor(Palette.bgDeep);
-    const bot = Phaser.Display.Color.IntegerToColor(0x1a0f1c); // faint warm deep
+    const top = Phaser.Display.Color.IntegerToColor(theme.sky[0]); // near-black void
+    const mid = Phaser.Display.Color.IntegerToColor(theme.sky[1]);
+    const bot = Phaser.Display.Color.IntegerToColor(theme.sky[2]);
     sky.fillGradientStyle(top.color, top.color, mid.color, mid.color, 1);
     sky.fillRect(0, 0, this.vw, this.vh * 0.6);
     sky.fillGradientStyle(mid.color, mid.color, bot.color, bot.color, 1);
     sky.fillRect(0, this.vh * 0.6, this.vw, this.vh * 0.4);
 
-    // The one far light: a tiny flame at the very end of the dark, its glow the
-    // only illumination down here. Screen-fixed (infinitely distant), behind the
-    // far graves so they silhouette against it; flickers in update().
-    this.makeFlame(this.vw / 2, this.vh * 0.44);
+    // The one far light at the end of the dark — a warm flame in the depths, a
+    // cold pale glass-light in the House of Mirrors. Flickers in update().
+    this.makeFlame(this.vw / 2, this.vh * 0.44, theme.light);
 
-    this.addLayer(Assets.bgFar.key, 2, 0.1, 0.05);
-    this.addLayer(Assets.bgMid.key, 4, 0.28, 0.12);
-    this.addLayer(Assets.bgNear.key, 6, 0.55, 0.28);
+    this.addLayer(bg.far, 2, 0.1, 0.05);
+    this.addLayer(bg.mid, 4, 0.28, 0.12);
+    this.addLayer(bg.near, 6, 0.55, 0.28);
 
     // Foreground fog drifting in front of the world.
     this.fog = scene.add
-      .tileSprite(0, 0, this.vw, this.vh, Assets.fog.key)
+      .tileSprite(0, 0, this.vw, this.vh, bg.fog)
       .setOrigin(0, 0)
       .setScrollFactor(0)
       .setDepth(115)
@@ -51,7 +58,7 @@ export class ParallaxBackground {
       .setBlendMode(Phaser.BlendModes.SCREEN);
   }
 
-  private makeFlame(x: number, y: number): void {
+  private makeFlame(x: number, y: number, light: [number, number, number]): void {
     const mk = (tint: number, alpha: number, sx: number, sy: number, dy = 0) =>
       this.scene.add
         .image(x, y + dy, Assets.dot.key)
@@ -62,9 +69,9 @@ export class ParallaxBackground {
         .setAlpha(alpha)
         .setScale(sx, sy);
     this.flame = [
-      mk(Palette.molten, 0.2, 30, 22), // wide warm halo
-      mk(Palette.moltenHi, 0.5, 9, 9), // inner glow
-      mk(Palette.bloom, 0.9, 1.6, 2.4, -1), // the flame core
+      mk(light[0], 0.2, 30, 22), // wide halo
+      mk(light[1], 0.5, 9, 9), // inner glow
+      mk(light[2], 0.9, 1.6, 2.4, -1), // the core
     ];
   }
 

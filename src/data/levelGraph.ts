@@ -3,6 +3,7 @@ import { descent } from './rooms/descent';
 import { crossroads } from './rooms/crossroads';
 import { memory } from './rooms/memory';
 import { gate } from './rooms/gate';
+import { mirrorPreview } from './rooms/mirrorPreview';
 import { loadRoomOverride, listOverrideRooms } from './roomStore';
 
 /** BIO-01 "The First Fall" as a small connected level. Rooms are linked by their
@@ -15,6 +16,7 @@ const BUILDERS: Record<string, () => RoomData> = {
   crossroads,
   memory,
   gate,
+  'mirror-preview': mirrorPreview,
 };
 
 /** Built-in (code-authored) room ids. */

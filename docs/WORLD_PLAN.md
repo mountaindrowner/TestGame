@@ -55,6 +55,25 @@ a key+guardian finale. Deepest, dampest, most overgrown biome in the route.
 **Onward:** the gate exits the biome upward — next Shame biome is **House of Mirrors**
 (per DESIGN.md). Each subsequent biome gets its own table like this before we build it.
 
+## BIO-02 — "House of Mirrors" (Shame route, second) — from Mark's concept sheet
+"Identity distortion. Confront the lie." A shattered reflection of self; the architecture bends,
+doubles, deceives. **Signature ability of the area: Grace Burst** (air-dash, earned from the Warden)
+— rooms are bigger/taller and built around it (lock-and-key per `docs/LEVEL_DESIGN.md`). Violet/
+indigo palette, silver mirror sheen, cold glass light (vs the depths' warm flame).
+- **Roster (6):** Mirror Double (clone that mimics your last action, shatters when hit) · Glass
+  Witch (caster; reflective zones redirect projectiles) · Reflection Hound (fast; intangible on
+  mirrored surfaces) · False-Face Duelist (parries/counters; uses hanging mirrors) · Fracture Wisp
+  (splits into shards when hit) · Looking-Glass Sentinel (immune from the front; flank/reflect).
+- **Mini-boss — "The Untrue Image":** your reflection at its worst; copies your weapon + movement,
+  punishes aggression. States: idle/stalk · mirror dash · weapon copy · aggression punish · shatter
+  phase · defeated. Mirror form takes reduced damage; break the core, not the illusion.
+- **Gimmicks (1–2 signature, rest as accents):** shattered mirrors (break → shards; spawn Doubles) ·
+  reflective floors (enemies intangible on them) · upside-down/gravity arches · distortion fog
+  (obscures, speeds enemies) · mirror obelisks (redirect projectiles) · hanging mirrors (swing/slash).
+- **Status:** mechanic + look landed (Grace Burst, `mirrors` biome tileset/bg, `mirror-preview`
+  sandbox). Room graph, enemies, gimmicks, and the mini-boss are the next increments. Greybox each
+  in the editor and prove it fun before art (LEVEL_DESIGN workflow).
+
 ## How to use this
 1. Before authoring/re-skinning a room, write its template line (above).
 2. Place assets to satisfy **role + mood + gradients** (elevation/decay/light), then
