@@ -295,6 +295,11 @@ export class GameScene extends Phaser.Scene {
       sfx: this.sfx,
       juice: this.juice,
       particles: this.particles,
+      // solid WALLS only (≤ VIS_SOLID_MAX) — one-way platforms aren't grabbable.
+      solidAt: (x, y) => {
+        const t = this.layer.getTileAtWorldXY(x, y);
+        return !!t && t.index >= 0 && t.index <= VIS_SOLID_MAX;
+      },
     });
 
     // 2) Everything else.
@@ -1037,6 +1042,7 @@ export class GameScene extends Phaser.Scene {
       boss?.takeDamage(99999, boss.x);
     };
     window.__health = () => this.player.health;
+    window.__ppos = () => ({ x: Math.round(this.player.x), y: Math.round(this.player.y) });
   }
 
   private poseScene(pose: string, anim?: string, progress?: number): void {

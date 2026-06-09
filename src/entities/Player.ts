@@ -13,6 +13,7 @@ export interface PlayerDeps {
   sfx: Sfx;
   juice: JuiceSystem;
   particles: ParticleSystem;
+  solidAt: (x: number, y: number) => boolean; // world-space solid-wall query (for ledge grabs)
 }
 
 type State = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'attack' | 'hurt' | 'dead' | 'reborn';
@@ -28,6 +29,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private sfx: Sfx;
   private juice: JuiceSystem;
   private particles: ParticleSystem;
+  private solidAt: (x: number, y: number) => boolean;
 
   private facing = 1;
   private mode: State = 'idle';
@@ -62,6 +64,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private lastRunDustAt = 0;
   private jumpAnim = 'player-jump'; // 'player-runjump' when leaping while moving
   private idleSince = 0; // when the figure last started standing still (-> long idle)
+  // ledge grab / climb
+  private climbing = false;
+  private climbReadyAt = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, deps: PlayerDeps) {
     super(scene, x, y, Assets.player.key, 0);
@@ -69,6 +74,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.sfx = deps.sfx;
     this.juice = deps.juice;
     this.particles = deps.particles;
+    this.solidAt = deps.solidAt;
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -96,6 +102,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
     if (this.juice.frozen) return; // hitstop: hold the pose
+    if (this.climbing) return; // the mantle tween drives position + pose
 
     const onGround = this.body.blocked.down;
     if (onGround) {
@@ -112,16 +119,83 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.controllable && !stunned) {
       this.handleDash(time);
       if (!this.dashing) {
-        this.handleAttack(time);
-        this.handleMovement(time, delta, onGround);
-        this.handleJump(time, onGround);
+        this.handleLedge(time); // grab a ledge before anything else this frame
+        if (!this.climbing) {
+          this.handleAttack(time);
+          this.handleMovement(time, delta, onGround);
+          this.handleJump(time, onGround);
+        }
       }
     }
 
     this.updateDash(time);
     this.updateAttack(time);
     this.clampFall();
-    this.updateAnimation(onGround);
+    if (!this.climbing) this.updateAnimation(onGround);
+  }
+
+  /** Ledge grab → auto-mantle: airborne beside a solid ledge and moving toward it,
+   *  the figure grabs the edge and climbs up onto it. Forgiving (a small grab band),
+   *  matching coyote-time's spirit. Solid ledges only — one-way platforms you land on. */
+  private handleLedge(time: number): void {
+    if (this.climbing || time < this.climbReadyAt) return;
+    if (this.body.blocked.down) return; // grounded
+    if (this.body.velocity.y < -40) return; // only while falling / near the apex (not a strong rise)
+    const d = this.facing;
+    const axis = this.controls.axisX();
+    const blocked = d > 0 ? this.body.blocked.right : this.body.blocked.left;
+    if (axis !== d && !blocked) return; // must be pressing toward, or flush against, the wall
+    const frontX = this.x + d * 9;
+    // scan a small band of hand heights for the ledge LIP (solid at hand, open just above)
+    for (let hy = 14; hy <= 30; hy += 4) {
+      if (!this.solidAt(frontX, this.y - hy)) continue;
+      if (this.solidAt(frontX, this.y - hy - 16)) continue; // not an edge (wall continues up)
+      const ledgeTopY = Math.floor((this.y - hy) / 16) * 16; // top of that ledge tile
+      const targetX = this.x + d * 12;
+      if (this.solidAt(targetX, ledgeTopY - 8) || this.solidAt(targetX, ledgeTopY - 24)) return; // landing blocked
+      this.beginClimb(d, targetX, ledgeTopY);
+      return;
+    }
+  }
+
+  private beginClimb(d: number, targetX: number, ledgeTopY: number): void {
+    this.climbing = true;
+    this.facing = (d > 0 ? 1 : -1) as 1 | -1;
+    this.setFlipX(d < 0);
+    this.attacking = false;
+    this.dashing = false;
+    this.hitbox.disable();
+    this.resetSquash();
+    this.setRotation(0);
+    this.body.setVelocity(0, 0);
+    this.body.enable = false; // the tween drives position now
+    this.mode = 'jump';
+    this.play('player-runjump', true);
+    this.anims.timeScale = 1;
+    this.sfx.land(); // a grab scuff
+    this.particles.dust(this.x + d * 6, ledgeTopY, 3);
+    this.scene.tweens.add({
+      targets: this,
+      x: targetX,
+      y: ledgeTopY,
+      duration: 240,
+      delay: 110, // a beat of "grab" before the pull-up
+      ease: 'Quad.easeOut',
+      onComplete: () => this.finishClimb(),
+    });
+  }
+
+  private finishClimb(): void {
+    this.climbing = false;
+    this.body.enable = true;
+    this.body.reset(this.x, this.y);
+    this.body.setVelocity(0, 0);
+    this.lastGroundedAt = this.scene.time.now;
+    this.airJumpsUsed = 0;
+    this.airDashUsed = false;
+    this.climbReadyAt = this.scene.time.now + 240;
+    this.mode = 'idle';
+    this.play('player-idle', true);
   }
 
   private handleMovement(time: number, delta: number, onGround: boolean): void {

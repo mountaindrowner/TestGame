@@ -13,6 +13,7 @@ declare global {
     __setRun?: (partial: Record<string, unknown>) => void; // dev: patch run state (testing gated paths)
     __killBoss?: () => void; // dev: instantly fell the arena elite (verify boss→completion)
     __health?: () => number; // dev: read current player health (verification)
+    __ppos?: () => { x: number; y: number }; // dev: read player position (verification)
     __debug?: (on?: boolean) => void; // dev: toggle the collision/zone x-ray overlay
   }
 }

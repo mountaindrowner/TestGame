@@ -231,10 +231,18 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   back out of: the figure always carries a readable pool; torches + the gate are warm/static lights
   (gentle flicker). So the near edges are lit and the depths recede into shadow. `lighting.update(cam,
   px, py)` per frame, world→screen via `cam.scroll`. Cheap (one fill + a few erases).
+- **Ledge-grab / auto-mantle (DONE):** airborne + falling beside a solid ledge lip (pressing toward,
+  or flush against, the wall), the figure grabs the edge and climbs up onto it (`Player.handleLedge`
+  scans a small hand-height band for a lip = solid at hand + open just above + clear landing;
+  `beginClimb` disables the body and tweens a grab→pull-up; `solidAt` query from GameScene, solid
+  WALLS only — one-way platforms you land on). It fires wherever a wall/ledge top is at the edge of a
+  jump; it'll shine once the **catacomb** grammar gives grab-height architecture. `mirror-preview` has
+  a grab-test wall; dev hook `__ppos()` reads player position. NOTE: variable jump height means a
+  *tapped* jump barely rises (cut short) — hold jump to reach a lip.
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  *ledge-grab/climb* (player FSM), a *higher-res player* sprite, a *catacomb* level grammar (connected
-  architecture, no floating platforms, weaving passages), *bomber/archer* enemy archetypes, and
-  crispening the opener Tutorial legend (still in-canvas pixel text).
+  a *higher-res player* sprite, a *catacomb* level grammar (connected architecture, no floating
+  platforms, weaving passages), *bomber/archer* enemy archetypes, and crispening the opener Tutorial
+  legend (still in-canvas pixel text).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

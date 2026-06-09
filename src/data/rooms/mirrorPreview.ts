@@ -11,6 +11,7 @@ export function mirrorPreview(): RoomData {
   const r = new Room('HOUSE OF MIRRORS — PREVIEW', W, H).biome('mirrors').frame();
 
   r.solid(2, H - 6, 11, 2); //  start ledge (player spawns here)
+  r.solid(13, 19, 2, 6); //      LEDGE-GRAB test wall — its lip sits a hair above a jump; grab + climb
   r.solid(17, H - 11, 7, 2); //  mid platform — a normal jump up-and-across
   r.platform(28, H - 16, 4); //  a one-way glass step higher
   r.solid(36, H - 22, 8, 2); //  HIGH ledge — the gap to it needs the air-dash
