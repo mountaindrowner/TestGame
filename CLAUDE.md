@@ -239,10 +239,17 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   jump; it'll shine once the **catacomb** grammar gives grab-height architecture. `mirror-preview` has
   a grab-test wall; dev hook `__ppos()` reads player position. NOTE: variable jump height means a
   *tapped* jump barely rises (cut short) — hold jump to reach a lip.
+- **Catacomb level grammar (PROOF done; rollout pending):** the Room builder gained `fill()` +
+  `carve(x,y,w,h)` — a room starts as **solid rock** and the path is **carved** out, so every ledge is
+  part of the wall mass (no floating islands). The proof room `catacombs` (`src/data/rooms/catacombs.ts`,
+  `__gotoRoom('catacombs')`) is a weaving **switchback climb**: a carved vertical chamber with shelves
+  attached to alternating walls (~3 rows apart, overlapping past centre for short up-and-across hops).
+  Verified traversable (bot climbed floor→mid) and it shows off the lighting + ledge-grab + tight camera.
+  **Next:** roll the grammar into the real BIO-01/BIO-02 path rooms (replace the floating-platform
+  layouts), per `docs/LEVEL_DESIGN.md` / `WORLD_PLAN.md`.
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  a *higher-res player* sprite, a *catacomb* level grammar (connected architecture, no floating
-  platforms, weaving passages), *bomber/archer* enemy archetypes, and crispening the opener Tutorial
-  legend (still in-canvas pixel text).
+  rolling the catacomb grammar across the path, a *higher-res player* sprite, *bomber/archer* enemy
+  archetypes, and crispening the opener Tutorial legend (still in-canvas pixel text).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

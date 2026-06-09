@@ -34,6 +34,18 @@ export class Room {
     for (let i = x; i < x + w; i++) if (this.inb(i, y)) this.t[y][i] = Sem.MOLTEN;
     return this;
   }
+  /** Fill the whole room with solid rock — the catacomb grammar starts solid and
+   *  CARVES the walkable negative space out (so every ledge/passage is part of the
+   *  rock mass, never a floating island). */
+  fill(code: number = Sem.SOLID): this {
+    for (let j = 0; j < this.h; j++) for (let i = 0; i < this.w; i++) this.t[j][i] = code;
+    return this;
+  }
+  /** Dig a rectangular passage/chamber out of the rock (sets cells empty). */
+  carve(x: number, y: number, w: number, h: number): this {
+    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (this.inb(i, j)) this.t[j][i] = Sem.EMPTY;
+    return this;
+  }
   /** Ceiling (organic cave roof) + bedrock floor (3) always; side walls unless open. */
   frame(open: { left?: boolean; right?: boolean } = {}): this {
     this.caveCeiling();

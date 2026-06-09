@@ -4,6 +4,7 @@ import { crossroads } from './rooms/crossroads';
 import { memory } from './rooms/memory';
 import { gate } from './rooms/gate';
 import { mirrorPreview } from './rooms/mirrorPreview';
+import { catacombs } from './rooms/catacombs';
 import { mirrorHall } from './rooms/mirrorHall';
 import { mirrorGallery } from './rooms/mirrorGallery';
 import { mirrorRise } from './rooms/mirrorRise';
@@ -22,6 +23,7 @@ const BUILDERS: Record<string, () => RoomData> = {
   memory,
   gate,
   'mirror-preview': mirrorPreview,
+  catacombs,
   // BIO-02 — the House of Mirrors (entered when the BIO-01 gate opens).
   'mirror-hall': mirrorHall,
   'mirror-gallery': mirrorGallery,
