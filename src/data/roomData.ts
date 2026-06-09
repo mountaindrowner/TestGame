@@ -26,7 +26,9 @@ export type SpawnType =
   | 'glassWitch'
   | 'falseFace'
   | 'fractureWisp'
-  | 'lookingGlass';
+  | 'lookingGlass'
+  | 'archer'
+  | 'bomber';
 
 export interface Spawn {
   type: SpawnType;

@@ -38,6 +38,7 @@ export function catacombs(): RoomData {
   r.at('jar', 32, 33);
   r.at('jar', 8, 6); // tucked in the alcove
   r.at('crawler', 28, 27);
-  r.at('spark', 18, 20);
+  r.at('archer', 8, 24); //   looses bolts across the shaft from a shelf
+  r.at('bomber', 30, 15); //  lobs bombs onto the climbing route
   return r.build('catacombs');
 }

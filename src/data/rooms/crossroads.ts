@@ -11,6 +11,7 @@ export function crossroads(): RoomData {
 
   r.at('spark', 28, 8); // airborne harasser
   r.at('runner', 16, 16);
+  r.at('archer', 48, 16); // ranged: looses bolts down the spine — close the gap or weave
   r.at('door', 29, 16, { id: 'cross-mem', to: 'memory', toEntry: 'from-cross' });
   r.at('torch', 6, 16);
   r.at('torch', 52, 16);

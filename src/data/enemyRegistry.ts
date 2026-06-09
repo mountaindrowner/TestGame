@@ -19,9 +19,12 @@ export type EnemyKind =
   | 'falseFace'
   | 'fractureWisp'
   | 'fractureShard'
-  | 'lookingGlass';
+  | 'lookingGlass'
+  // ranged archetypes (general)
+  | 'archer'
+  | 'bomber';
 
-export type BehaviorTag = 'lunger' | 'pursuer' | 'flyer_ranged' | 'heavy_telegraph' | 'mirror_double';
+export type BehaviorTag = 'lunger' | 'pursuer' | 'flyer_ranged' | 'heavy_telegraph' | 'mirror_double' | 'archer' | 'bomber';
 
 /** The gameplay-number shape every enemy tune satisfies (behaviour-specific
  *  fields are optional and only read by the matching behaviour). */
@@ -83,6 +86,7 @@ export interface EnemyConfig {
 export const ENEMY_KINDS: EnemyKind[] = [
   'runner', 'crawler', 'spark', 'striker', 'guardian', 'mirrorboss',
   'mirrorDouble', 'reflectionHound', 'glassWitch', 'falseFace', 'fractureWisp', 'fractureShard', 'lookingGlass',
+  'archer', 'bomber',
 ];
 
 export function isEnemyKind(t: string): t is EnemyKind {
@@ -300,5 +304,35 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     coreBonusMult: 2.0,
     scale: 1.0,
     frontImmune: true,
+  },
+
+  // ── Ranged archetypes (share the striker sheet, tinted, for now) ────────
+  // BONE ARCHER — grounded; kites to a standoff and looses a fast straight bolt.
+  archer: {
+    kind: 'archer',
+    displayName: 'Bone Archer',
+    behavior: 'archer',
+    spriteKey: Assets.striker.key,
+    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', fire: 'striker-windup', strike: 'striker-strike' },
+    tune: { ...StrikerTune, maxHealth: 46, patrolSpeed: 52, aggroRange: 240, aggroVertical: 80, windupMs: 420, standoff: 150, fireEveryMs: 1700, damageReduction: 0, projectile: { speed: 250, damage: 14, count: 1, spreadDeg: 0, lifespanMs: 1800 } },
+    body: { w: 22, h: 40, offX: 16, offY: 13 },
+    hasCore: false,
+    coreBonusMult: 1.6,
+    scale: 0.9,
+    tint: 0x9fe6c0, // pale bone-green
+  },
+  // CINDER BOMBER — grounded; lobs an arcing timed bomb that bursts in a blast.
+  bomber: {
+    kind: 'bomber',
+    displayName: 'Cinder Bomber',
+    behavior: 'bomber',
+    spriteKey: Assets.striker.key,
+    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', fire: 'striker-windup', strike: 'striker-strike' },
+    tune: { ...StrikerTune, maxHealth: 60, patrolSpeed: 46, aggroRange: 230, aggroVertical: 96, windupMs: 520, standoff: 175, fireEveryMs: 2300, damageReduction: 0, projectile: { speed: 0, damage: 26, count: 1, spreadDeg: 0, lifespanMs: 0 } },
+    body: { w: 22, h: 40, offX: 16, offY: 13 },
+    hasCore: false,
+    coreBonusMult: 1.6,
+    scale: 0.95,
+    tint: 0xffae6a, // hot amber
   },
 };

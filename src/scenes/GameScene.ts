@@ -56,6 +56,7 @@ export class GameScene extends Phaser.Scene {
   private bossHazards!: Phaser.Physics.Arcade.Group; // ground shockwaves from the slam
   private pickups!: Phaser.Physics.Arcade.Group; // dropped souls / life orbs
   private urns!: Phaser.Physics.Arcade.Group; // breakable scenery
+  private bombs!: Phaser.Physics.Arcade.Group; // lobbed timed bombs (bomber enemy)
   private graceSpawn = new Phaser.Math.Vector2();
   private respawning = false;
   private fadeRect!: Phaser.GameObjects.Rectangle;
@@ -131,6 +132,7 @@ export class GameScene extends Phaser.Scene {
     this.bossHazards = this.physics.add.group();
     this.pickups = this.physics.add.group();
     this.urns = this.physics.add.group();
+    this.bombs = this.physics.add.group();
     this.spawnFromData();
     this.events.emit('souls', this.run.souls);
 
@@ -168,6 +170,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.urns, this.layer);
     this.physics.add.overlap(this.player, this.pickups, (_p, obj) => this.collectPickup(obj as Phaser.Physics.Arcade.Image));
     this.physics.add.overlap(this.player.hitbox, this.urns, (_h, obj) => this.breakUrn(obj as Phaser.Physics.Arcade.Image));
+    this.physics.add.collider(this.bombs, this.layer);
     this.physics.add.overlap(this.player, this.bossHazards, (_p, hz) => {
       const h = hz as Phaser.Physics.Arcade.Image;
       if (h.active) this.player.takeDamage((h.getData('dmg') as number) ?? 20, h.x);
@@ -404,6 +407,55 @@ export class GameScene extends Phaser.Scene {
     u.destroy();
   }
 
+  // ── Bomber: a lobbed timed bomb that arcs in and bursts ───────────────
+  private lobBomb(x: number, y: number, vx: number, vy: number, damage: number): void {
+    const bomb = this.bombs.create(x, y, Assets.dot.key) as Phaser.Physics.Arcade.Image;
+    bomb.setScale(2.6).setTint(0x2a2030).setDepth(44).setData('dmg', damage).setData('fuseAt', this.time.now + 1500);
+    const b = bomb.body as Phaser.Physics.Arcade.Body;
+    b.setCircle(4);
+    b.setVelocity(vx, vy);
+    b.setBounce(0.35);
+    b.setCollideWorldBounds(true);
+    // a sputtering fuse glow that quickens as it nears the blast
+    const spark = this.add.image(x, y, Assets.dot.key).setScale(1).setTint(Palette.moltenHi).setBlendMode(Phaser.BlendModes.ADD).setDepth(45);
+    bomb.setData('spark', spark);
+    this.tweens.add({ targets: spark, scale: 1.7, alpha: 0.5, duration: 180, yoyo: true, repeat: -1 });
+  }
+
+  private updateBombs(time: number): void {
+    for (const obj of this.bombs.getChildren()) {
+      const bomb = obj as Phaser.Physics.Arcade.Image;
+      if (!bomb.active) continue;
+      const spark = bomb.getData('spark') as Phaser.GameObjects.Image | undefined;
+      if (spark) spark.setPosition(bomb.x, bomb.y - 4);
+      if (time >= (bomb.getData('fuseAt') as number)) this.explodeBomb(bomb);
+    }
+  }
+
+  private explodeBomb(bomb: Phaser.Physics.Arcade.Image): void {
+    const x = bomb.x;
+    const y = bomb.y;
+    const dmg = bomb.getData('dmg') as number;
+    (bomb.getData('spark') as Phaser.GameObjects.Image | undefined)?.destroy();
+    bomb.destroy();
+    this.sfx.slam();
+    this.juice.shake(220, 0.012);
+    this.particles.debris(x, y, 20);
+    // a brief expanding blast that hurts on contact (reuses the boss-hazard overlap)
+    const blast = this.bossHazards.create(x, y, Assets.dot.key) as Phaser.Physics.Arcade.Image;
+    blast.setTint(Palette.molten).setBlendMode(Phaser.BlendModes.ADD).setDepth(56).setScale(2).setData('dmg', dmg);
+    (blast.body as Phaser.Physics.Arcade.Body).setAllowGravity(false).setCircle(16);
+    this.tweens.add({
+      targets: blast,
+      scaleX: 7,
+      scaleY: 7,
+      alpha: 0,
+      duration: 260,
+      ease: 'Quad.easeOut',
+      onComplete: () => blast.destroy(),
+    });
+  }
+
   /** A Fracture Wisp dies → scatter its shards in a little upward burst. */
   private onEnemySplit(kind: EnemyKind, count: number, x: number, y: number): void {
     for (let i = 0; i < count; i++) {
@@ -432,6 +484,7 @@ export class GameScene extends Phaser.Scene {
             const pr = this.enemyProjectiles.get() as Projectile | null;
             if (pr) pr.fire(px, py, vx, vy, dmg, life);
           },
+          lobBomb: (px, py, vx, vy, dmg) => this.lobBomb(px, py, vx, vy, dmg),
         },
         ENEMY_REGISTRY[kind],
       ),
@@ -696,6 +749,7 @@ export class GameScene extends Phaser.Scene {
     if (this.transitioning) return; // riding the lift / mid-transition — freeze world checks
     this.checkHazards();
     this.checkPickups();
+    this.updateBombs(time);
     this.checkInteractions(time);
   }
 

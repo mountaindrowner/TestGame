@@ -247,9 +247,17 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   Verified traversable (bot climbed floor→mid) and it shows off the lighting + ledge-grab + tight camera.
   **Next:** roll the grammar into the real BIO-01/BIO-02 path rooms (replace the floating-platform
   layouts), per `docs/LEVEL_DESIGN.md` / `WORLD_PLAN.md`.
+- **Ranged enemy archetypes (DONE):** two grounded ranged foes that kite to a standoff, telegraph,
+  then strike (both share the striker sheet, tinted, for now). **Bone Archer** (`archer` behavior,
+  pale-green) looses a fast straight bolt (reuses `fireProjectile` → `enemyProjectiles`). **Cinder
+  Bomber** (`bomber` behavior, amber) **lobs an arcing timed bomb** (`EnemyDeps.lobBomb` → `GameScene`
+  spawns a gravity bomb with a ~1.5s fuse → `explodeBomb` fires an expanding blast into `bossHazards`,
+  which already damages the player). Both are attack-only (no contact dmg). `updateRangedGround(time,
+  bomb)` drives both; `groundAtDir` keeps them from kiting off a ledge. Placed in `catacombs` (test) +
+  an archer on the crossroads spine. Real PixelLab sheets are the follow-up (like the mirror roster).
 - **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  rolling the catacomb grammar across the path, a *higher-res player* sprite, *bomber/archer* enemy
-  archetypes, and crispening the opener Tutorial legend (still in-canvas pixel text).
+  rolling the catacomb grammar across the path, a *higher-res player* sprite, dedicated art for the
+  archer/bomber, and crispening the opener Tutorial legend (still in-canvas pixel text).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

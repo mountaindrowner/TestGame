@@ -14,6 +14,7 @@ export interface EnemyDeps {
   particles: ParticleSystem;
   groundCheck: (x: number, y: number) => boolean; // solid tile present?
   fireProjectile?: (x: number, y: number, vx: number, vy: number, damage: number, lifespanMs: number) => void;
+  lobBomb?: (x: number, y: number, vx: number, vy: number, damage: number) => void; // arcing timed bomb
 }
 
 type State = 'patrol' | 'windup' | 'chase' | 'strike' | 'recover' | 'hurt' | 'dead';
@@ -168,6 +169,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         break;
       case 'mirror_double':
         this.updateMirror(time);
+        break;
+      case 'archer':
+        this.updateRangedGround(time, false);
+        break;
+      case 'bomber':
+        this.updateRangedGround(time, true);
         break;
     }
 
@@ -429,6 +436,65 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
         break;
     }
+  }
+
+  /** Grounded ranged foe: holds a standoff distance, faces you, telegraphs, then
+   *  either looses a fast arrow (archer) or lobs an arcing timed bomb (bomber). */
+  private updateRangedGround(time: number, bomb: boolean): void {
+    const onGround = this.body.blocked.down;
+    const p = this.deps.player;
+    const dx = p.x - this.x;
+    const dy = Math.abs(p.y - this.y);
+    const inRange = Math.abs(dx) < this.t.aggroRange && dy < this.t.aggroVertical;
+
+    switch (this.mode) {
+      case 'patrol': {
+        if (!inRange) {
+          this.patrol(onGround);
+          break;
+        }
+        this.facing = dx < 0 ? -1 : 1;
+        const dist = Math.abs(dx);
+        const stand = this.t.standoff ?? 130;
+        let vx = 0;
+        if (dist < stand * 0.7) vx = -this.facing * this.t.patrolSpeed; // back away (kite)
+        else if (dist > stand * 1.4) vx = this.facing * this.t.patrolSpeed; // close in
+        if (vx !== 0 && onGround && !this.groundAtDir(Math.sign(vx))) vx = 0; // never kite off a ledge
+        this.body.setVelocityX(vx);
+        if (this.anims.currentAnim?.key !== this.cfg.anims.run) this.play(this.cfg.anims.run, true);
+        if (time >= this.nextFireAt) {
+          this.mode = 'windup';
+          this.windupEndAt = time + this.t.windupMs;
+          this.body.setVelocityX(0);
+          this.play(this.cfg.anims.fire ?? this.cfg.anims.windup, true);
+          this.deps.sfx.telegraph();
+        }
+        break;
+      }
+      case 'windup':
+        this.body.setVelocityX(0);
+        this.facing = dx < 0 ? -1 : 1;
+        if (time >= this.windupEndAt) {
+          if (bomb) this.lobBomb(p);
+          else this.fire(p);
+          this.mode = 'patrol';
+          this.nextFireAt = time + (this.t.fireEveryMs ?? 1800);
+          this.play(this.cfg.anims.run, true);
+        }
+        break;
+    }
+  }
+
+  private lobBomb(p: Player): void {
+    if (!this.deps.lobBomb) return;
+    const dx = p.x - this.x;
+    const vx = Phaser.Math.Clamp(dx * 1.15, -210, 210); // arc toward where you are
+    this.deps.lobBomb(this.x + this.facing * 8, this.y - 18, vx, -270, this.t.projectile?.damage ?? 24);
+    this.deps.sfx.slam();
+  }
+
+  private groundAtDir(dir: number): boolean {
+    return this.deps.groundCheck(this.x + dir * (this.cfg.body.w / 2 + 3), this.y + 4);
   }
 
   private fire(p: Player): void {
