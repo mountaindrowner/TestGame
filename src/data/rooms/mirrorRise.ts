@@ -8,6 +8,8 @@ export function mirrorRise(): RoomData {
   const r = new Room('THE ASCENDING GLASS', 40, 34).biome('mirrors').fill();
   r.carve(2, 3, 36, 28); //  carved vertical shaft (closed; rock walls/floor/ceiling)
 
+  // ── seamless entrance: a hole in the floor you climb UP out of the gallery into ──
+  r.carve(5, 31, 3, 3); //   bottom-edge hole (x5-7), flanked by floor to land on
   r.solid(5, 26, 7, 2); //   top 26
   r.platform(14, 23, 5); //  23
   r.solid(21, 20, 7, 2); //  top 20
@@ -17,6 +19,8 @@ export function mirrorRise(): RoomData {
   r.solid(20, 12, 8, 2); //  top 12
   r.platform(30, 9, 5); //   9
   r.solid(28, 6, 9, 2); //   top 6 — the exit ledge
+  // ── seamless exit UP into the Threshold (carves through the ceiling) ──
+  r.climbShaft(32, 0, 5); //  ladders rows 0..5 above the exit ledge → open top edge
 
   r.at('door', 6, 30, { id: 'from-gallery', to: 'mirror-gallery', toEntry: 'gallery-up' });
   r.at('door', 32, 5, { id: 'rise-up', to: 'mirror-threshold', toEntry: 'from-rise' });
@@ -29,5 +33,7 @@ export function mirrorRise(): RoomData {
   r.at('glassWitch', 30, 11);
   r.at('torch', 6, 29);
   r.at('torch', 33, 5);
+  r.link('down', 'mirror-gallery'); // seamless stack: climb up FROM the gallery
+  r.link('up', 'mirror-threshold'); // …and UP into the threshold
   return r.build('mirror-rise');
 }

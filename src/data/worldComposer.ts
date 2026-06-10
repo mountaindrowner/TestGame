@@ -97,7 +97,7 @@ export function composeWorld(startId: string): WorldData {
       if (dir === 'east') ox = p.ox + room.w;
       if (dir === 'west') ox = p.ox - nb.w;
       if (dir === 'up') oy = p.oy - nb.h;
-      if (dir === 'down') oy = p.oy + nb.h;
+      if (dir === 'down') oy = p.oy + room.h; // place neighbour below by THIS room's height
       if (dx !== 0) {
         // horizontal seam → align the floor (row below each opening) in world space
         const aFloor = p.oy + a.hi + 1;
@@ -149,7 +149,9 @@ export function composeWorld(startId: string): WorldData {
   const entries: Record<string, { tx: number; ty: number }> = {};
   for (const q of placements) {
     const r = rooms.get(q.id)!;
-    const ps = r.spawns.find((s) => s.type === 'player') ?? r.spawns.find((s) => s.type === 'door');
+    // Prefer the room's player spawn; else just-inside-the-floor on the west side
+    // (NOT a door — door entries now sit in climb-up holes you'd fall through).
+    const ps = r.spawns.find((s) => s.type === 'player');
     const local = ps ? { tx: ps.tx, ty: ps.ty } : { tx: 3, ty: r.h - 4 };
     entries[q.id] = { tx: local.tx + q.ox, ty: local.ty + q.oy };
   }

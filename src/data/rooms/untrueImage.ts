@@ -8,6 +8,7 @@ import { Room } from './build';
 export function untrueImage(): RoomData {
   const r = new Room('HALL OF THE UNTRUE IMAGE', 48, 18).biome('mirrors').fill();
   r.carve(2, 3, 44, 12); // carved boss hall (closed; rock walls/floor/ceiling)
+  r.carve(5, 15, 3, 3); //  seamless entrance: a hole you climb up into (sealed while the boss lives)
 
   r.platform(13, 10, 6);
   r.platform(29, 10, 6);
@@ -24,5 +25,6 @@ export function untrueImage(): RoomData {
 
   r.at('torch', 6, 14);
   r.at('torch', 44, 8);
+  r.link('down', 'mirror-threshold'); // seamless stack: climb up from the threshold
   return r.build('untrue-image');
 }

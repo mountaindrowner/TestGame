@@ -46,6 +46,23 @@ export class Room {
     for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (this.inb(i, j)) this.t[j][i] = Sem.EMPTY;
     return this;
   }
+  /** Carve a vertical CLIMB shaft from row `yTop` to row `yBottom` (inclusive),
+   *  width `w` centred at `cx`, laddered with alternating 2-wide foothold nubs every
+   *  3 rows — so a single base jump (~3.4 tiles) clears each hop. The shaft's top/
+   *  bottom rows are left clear (footholds stay off the edges) so the compositor can
+   *  read the opening and stack the next room onto it. This is how stacked rooms
+   *  become one seamless vertical climb (no door, no fade). */
+  climbShaft(cx: number, yTop: number, yBottom: number, w = 5): this {
+    const x0 = cx - Math.floor(w / 2);
+    this.carve(x0, yTop, w, yBottom - yTop + 1);
+    let side = 0;
+    for (let y = yBottom - 3; y >= yTop + 2; y -= 3) {
+      const fx = side ? x0 : x0 + w - 2; // 2-wide nub, alternating side, middle stays open
+      this.solid(fx, y, 2, 1);
+      side ^= 1;
+    }
+    return this;
+  }
   /** Ceiling (organic cave roof) + bedrock floor (3) always; side walls unless open. */
   frame(open: { left?: boolean; right?: boolean } = {}): this {
     this.caveCeiling();

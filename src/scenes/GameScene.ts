@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { RoomData, Spawn } from '../data/roomData';
 import { buildRoom, START_ROOM } from '../data/levelGraph';
 import { composeWorld, Placement } from '../data/worldComposer';
-import { Assets, Vis, VIS_SOLID_MAX, biomeOf } from '../data/assetManifest';
+import { Assets, Vis, VIS_SOLID_MAX, biomeOf, Sem } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace, Skill, Ember } from '../data/Tunables';
 import { RunState } from '../data/RunState';
@@ -54,7 +54,7 @@ export class GameScene extends Phaser.Scene {
   private placements: Placement[] = [];
   private worldEntries: Record<string, { tx: number; ty: number }> = {};
   private requestedRoomId = START_ROOM;
-  private arenaWall?: Phaser.Physics.Arcade.Image; // physical seal at the arena's edge while a boss lives
+  private arenaSeals: Phaser.Physics.Arcade.Image[] = []; // physical seals on the arena's open edges while a boss lives
   private pendingArena?: Placement; // an undefeated elite's region; arms when the figure enters it
   private currentSubRoom = ''; // which composed sub-region the figure is in (for per-region HUD name)
   private layer!: Phaser.Tilemaps.TilemapLayer;
@@ -1056,35 +1056,76 @@ export class GameScene extends Phaser.Scene {
     return this.placements.find((p) => tx >= p.ox && tx < p.ox + p.w && ty >= p.oy && ty < p.oy + p.h);
   }
 
+  /** Largest contiguous open (EMPTY) run along a row of the merged grid, in [x0,x1). */
+  private openSpanRow(row: number, x0: number, x1: number): { lo: number; hi: number } | null {
+    let best: { lo: number; hi: number } | null = null;
+    let cur: { lo: number; hi: number } | null = null;
+    for (let x = x0; x < x1; x++) {
+      if (this.room.tiles[row]?.[x] === Sem.EMPTY) cur = cur ? { lo: cur.lo, hi: x } : { lo: x, hi: x };
+      else cur = null;
+      if (cur && (!best || cur.hi - cur.lo > best.hi - best.lo)) best = cur;
+    }
+    return best;
+  }
+
+  /** Largest contiguous open run down a column of the merged grid, in [y0,y1). */
+  private openSpanCol(col: number, y0: number, y1: number): { lo: number; hi: number } | null {
+    let best: { lo: number; hi: number } | null = null;
+    let cur: { lo: number; hi: number } | null = null;
+    for (let y = y0; y < y1; y++) {
+      if (this.room.tiles[y]?.[col] === Sem.EMPTY) cur = cur ? { lo: cur.lo, hi: y } : { lo: y, hi: y };
+      else cur = null;
+      if (cur && (!best || cur.hi - cur.lo > best.hi - best.lo)) best = cur;
+    }
+    return best;
+  }
+
+  /** Drop invisible static walls across the arena's open edges so the figure can't
+   *  retreat out — a vertical wall at an open WEST edge, a floor across an open
+   *  BOTTOM edge (the climb-up entrance). Lifted by unsealArena on the kill. */
+  private sealArena(a: Placement): void {
+    const T = World.tile;
+    const addSeal = (cx: number, cy: number, w: number, h: number) => {
+      const seal = this.physics.add.staticImage(cx, cy, Assets.dot.key).setVisible(false);
+      const body = seal.body as Phaser.Physics.Arcade.StaticBody;
+      body.setSize(w, h);
+      body.updateFromGameObject();
+      this.physics.add.collider(this.player, seal);
+      this.arenaSeals.push(seal);
+    };
+    // West edge open (walked-in arena, e.g. the gate) → a tall wall just inside it.
+    const west = this.openSpanCol(a.ox, a.oy, a.oy + a.h);
+    if (west) addSeal((a.ox + 0.5) * T, ((west.lo + west.hi + 1) / 2) * T, 6, (west.hi - west.lo + 1) * T);
+    // Bottom edge open (climbed-up arena, e.g. untrue-image) → a floor over the hole
+    // at the arena's standing level so you can't drop back down the shaft.
+    const bottom = this.openSpanRow(a.oy + a.h - 1, a.ox, a.ox + a.w);
+    if (bottom) addSeal(((bottom.lo + bottom.hi + 1) / 2) * T, (a.oy + a.h - 4) * T, (bottom.hi - bottom.lo + 1) * T, 6);
+    // The pulsing red barrier line marks the seal (west wall if any, else the floor).
+    if (!this.bossBarrier) {
+      const bx = west ? (a.ox + 0.5) * T : ((bottom?.lo ?? a.ox) + (bottom?.hi ?? a.ox + a.w) + 1) / 2 * T;
+      const by = west ? a.oy * T : (a.oy + a.h - 4) * T;
+      const bw = west ? 4 : (bottom ? (bottom.hi - bottom.lo + 1) * T : 4);
+      const bh = west ? a.h * T : 4;
+      this.bossBarrier = this.add
+        .rectangle(bx, by, bw, bh, Palette.blood, 0.0)
+        .setOrigin(west ? 0.5 : 0.5, west ? 0 : 0.5)
+        .setDepth(60)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: this.bossBarrier, fillAlpha: 0.5, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+  }
+
   /** Seal the arena and (first time) play the Mega-Man-style intro. In a composed
    *  world the arena is one sub-room of the big map, so the seal is a PHYSICAL wall
-   *  at that sub-room's western edge (the crossroads side) — you can't walk out. */
+   *  across whichever edge the figure entered through — the open WEST edge (gate,
+   *  walked in) or the BOTTOM hole (untrue-image, climbed up into). */
   private armBoss(cinematic: boolean): void {
     const guardian = this.enemies.getChildren().find((e) => (e as Enemy).cfg?.elite) as Enemy | undefined;
     if (!guardian) return;
     this.bossActive = true;
     this.guardianRef = guardian;
     const arena = this.placementAt(guardian.x, guardian.y) ?? this.placements[0];
-    const wallX = (arena?.ox ?? 0) * World.tile;
-    const wallY = (arena?.oy ?? 0) * World.tile;
-    const wallH = (arena?.h ?? this.room.h) * World.tile;
-    if (!this.bossBarrier) {
-      this.bossBarrier = this.add
-        .rectangle(wallX + 2, wallY, 4, wallH, Palette.blood, 0.0)
-        .setOrigin(0.5, 0)
-        .setDepth(60)
-        .setBlendMode(Phaser.BlendModes.ADD);
-      this.tweens.add({ targets: this.bossBarrier, fillAlpha: 0.5, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    }
-    // A solid invisible wall so the figure can't retreat out of the open arena edge.
-    if (!this.arenaWall && arena && arena.ox > 0) {
-      const wall = this.physics.add.staticImage(wallX + 2, wallY + wallH / 2, Assets.dot.key).setVisible(false);
-      const body = wall.body as Phaser.Physics.Arcade.StaticBody;
-      body.setSize(6, wallH);
-      body.updateFromGameObject();
-      this.physics.add.collider(this.player, wall);
-      this.arenaWall = wall;
-    }
+    if (arena) this.sealArena(arena);
     if (cinematic && !this.bossIntroPlayed) {
       this.bossIntroPlayed = true;
       this.bossIntro(guardian);
@@ -1140,8 +1181,8 @@ export class GameScene extends Phaser.Scene {
         },
       });
     }
-    this.arenaWall?.destroy(); // lift the physical seal — you may leave the arena
-    this.arenaWall = undefined;
+    this.arenaSeals.forEach((s) => s.destroy()); // lift the physical seal(s) — you may leave
+    this.arenaSeals = [];
     this.juice.flash(Palette.grace, 140);
     if (this.gate) {
       this.drawGate();

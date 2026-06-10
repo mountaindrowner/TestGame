@@ -8,12 +8,14 @@ export function mirrorGallery(): RoomData {
   const r = new Room('THE GALLERY OF FALSE FACES', 56, 22).biome('mirrors').fill();
   r.carve(0, 3, 54, 16); // carved gallery: open west edge, right wall + rock floor/ceiling
 
-  // a stepped climb to the central up-door
+  // a stepped climb to the central up-shaft
   r.platform(10, 15, 5);
   r.solid(17, 14, 6, 2); //  top 14
-  r.solid(25, 12, 9, 2); //  top 12 — the up-door ledge
+  r.solid(25, 12, 9, 2); //  top 12 — the climb ledge into the shaft
   r.platform(38, 15, 5); //  right-side wing
   r.solid(44, 14, 6, 2);
+  // ── seamless climb UP into The Ascending Glass (carves through the ceiling) ──
+  r.climbShaft(29, 0, 11); // ladders rows 0..11 above the row-12 ledge → open top edge
 
   r.at('door', 29, 11, { id: 'gallery-up', to: 'mirror-rise', toEntry: 'from-gallery' });
 
@@ -34,5 +36,6 @@ export function mirrorGallery(): RoomData {
   r.at('jar', 48, 18);
 
   r.link('west', 'mirror-hall');
+  r.link('up', 'mirror-rise'); // composes into one seamless map (climb the shaft up)
   return r.build('mirror-gallery');
 }
