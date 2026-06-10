@@ -306,33 +306,33 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     frontImmune: true,
   },
 
-  // ── Ranged archetypes (share the striker sheet, tinted, for now) ────────
+  // ── Ranged archetypes — real PixelLab side-view art ─────────────────────
   // BONE ARCHER — grounded; kites to a standoff and looses a fast straight bolt.
+  // The `fire` clip draws and releases a bow (the ranged-ground telegraph).
   archer: {
     kind: 'archer',
     displayName: 'Bone Archer',
     behavior: 'archer',
-    spriteKey: Assets.striker.key,
-    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', fire: 'striker-windup', strike: 'striker-strike' },
+    spriteKey: Assets.archer.key,
+    anims: { run: 'archer-run', windup: 'archer-fire', hurt: 'archer-hurt', fire: 'archer-fire' },
     tune: { ...StrikerTune, maxHealth: 46, patrolSpeed: 52, aggroRange: 240, aggroVertical: 80, windupMs: 420, standoff: 150, fireEveryMs: 1700, damageReduction: 0, projectile: { speed: 250, damage: 14, count: 1, spreadDeg: 0, lifespanMs: 1800 } },
-    body: { w: 22, h: 40, offX: 16, offY: 13 },
+    body: { w: 18, h: 44, offX: 11, offY: 8 }, // slim undead archer (frame 47x52)
     hasCore: false,
     coreBonusMult: 1.6,
     scale: 0.9,
-    tint: 0x9fe6c0, // pale bone-green
   },
   // CINDER BOMBER — grounded; lobs an arcing timed bomb that bursts in a blast.
+  // The `fire` clip winds up and hurls the bomb (the ranged-ground telegraph).
   bomber: {
     kind: 'bomber',
     displayName: 'Cinder Bomber',
     behavior: 'bomber',
-    spriteKey: Assets.striker.key,
-    anims: { run: 'striker-run', windup: 'striker-windup', hurt: 'striker-hurt', fire: 'striker-windup', strike: 'striker-strike' },
+    spriteKey: Assets.bomber.key,
+    anims: { run: 'bomber-run', windup: 'bomber-fire', hurt: 'bomber-hurt', fire: 'bomber-fire' },
     tune: { ...StrikerTune, maxHealth: 60, patrolSpeed: 46, aggroRange: 230, aggroVertical: 96, windupMs: 520, standoff: 175, fireEveryMs: 2300, damageReduction: 0, projectile: { speed: 0, damage: 26, count: 1, spreadDeg: 0, lifespanMs: 0 } },
-    body: { w: 22, h: 40, offX: 16, offY: 13 },
+    body: { w: 18, h: 48, offX: 18, offY: 9 }, // flame-wreathed bomber (frame 53x57)
     hasCore: false,
     coreBonusMult: 1.6,
-    scale: 0.95,
-    tint: 0xffae6a, // hot amber
+    scale: 0.85,
   },
 };

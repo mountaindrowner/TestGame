@@ -31,6 +31,7 @@ export class SanctuaryScene extends Phaser.Scene {
 
     this.parallax = new ParallaxBackground(this, 'depths');
     new ParticleSystem(this).startAmbient(this.scale.width * 2, this.scale.height * 2);
+    this.addStranger();
     this.cameras.main.fadeIn(450, 0, 0, 0);
 
     this.injectStyle();
@@ -45,6 +46,36 @@ export class SanctuaryScene extends Phaser.Scene {
 
   private souls(): number {
     return this.run.souls;
+  }
+
+  /** The pact-giver in the flesh: a hooded figure who stands to one side of the
+   *  altar panel, breathing quietly. Screen-fixed (scrollFactor 0) so the drifting
+   *  backdrop moves behind it; a soft violet aura marks its presence. */
+  private addStranger(): void {
+    const w = this.scale.width;
+    const h = this.scale.height;
+    const sx = Math.round(w * 0.1); // clear of the centred altar panel
+    const sy = Math.round(h * 0.86);
+    // a soft violet backlight makes the dark figure read against the dark backdrop
+    const halo = this.add
+      .ellipse(sx, sy - 22, 64, 84, 0x6a4cff, 0.14)
+      .setScrollFactor(0)
+      .setDepth(7)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const glow = this.add
+      .ellipse(sx, sy - 20, 34, 58, 0x9a7cff, 0.22)
+      .setScrollFactor(0)
+      .setDepth(8)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const s = this.add
+      .sprite(sx, sy, 'stranger')
+      .setOrigin(0.5, 1)
+      .setScrollFactor(0)
+      .setDepth(9)
+      .setScale(1.5);
+    if (this.anims.exists('stranger-idle')) s.play('stranger-idle');
+    // a slow breath of the aura, in sympathy with the idle
+    this.tweens.add({ targets: [halo, glow], scaleX: 1.08, scaleY: 1.04, alpha: '+=0.06', duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   }
 
   private render(): void {

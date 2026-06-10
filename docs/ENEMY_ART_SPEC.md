@@ -27,6 +27,22 @@ Generated as standard side-view PixelLab characters from the concept sheet, east
 | `fractureWisp` Fracture Wisp | `45e29f72-32a7-4418-8bbc-eb3139ee3bf3` | 34×44 | run(7), hurt(7) |
 | `lookingGlass` Sentinel | `5f852c46-54f5-4e44-9e0f-6c4e097273b6` | 62×65 | run(6), strike(6), hurt(6) |
 
+## Ranged archetypes + the Sanctuary's Stranger (account 076c964e…) — DONE, integrated
+Standard side-view PixelLab characters, east frames only. The two ranged foes replace the
+tinted-striker placeholders (tints dropped). The Stranger is a non-combat figure shown in
+`SanctuaryScene`. Packed sizes (union bbox) noted.
+| Kind | character_id | packed | east animations |
+|---|---|---|---|
+| `archer` Bone Archer | `39c2b805-956c-41d3-b4a4-9e64c23fd240` | 47×52 | run(6), fire(9, draw-and-loose), hurt(6) |
+| `bomber` Cinder Bomber | `bcd1d41b-a249-4e59-8fef-1da8f3bf766f` | 53×57 | run(6), fire(9, wind-up-and-hurl), hurt(6) |
+| `stranger` The Stranger | `3eb3aa7a-cc4c-40a8-90d0-e39738e82b81` | 16×50 | idle(4) |
+
+Animation source = template clips (running-6-frames→`run`, taking-punch→`hurt`, breathing-idle→
+stranger idle) + v3 custom for the `fire` telegraphs ("drawing back a bow and loosing an arrow" /
+"hurling a bomb overhand forward"). The ranged-ground behaviour plays only run/fire/hurt, so `windup`
+maps to the `fire` clip in the registry. Stranger wired into `SanctuaryScene.addStranger()`.
+
+## BIO-02 roster animation source
 Animation source = template clips (walking-6-frames→`run`, cross-punch→`strike`, taking-punch→`hurt`,
 fireball→`fire`) + v3 custom (hound `flinching…`→hurt, wisp `drifting…`→run / `recoiling…`→hurt). The
 `fetch_enemy_art.py` keyword map matches the action-slug folder names. The Mirror Double reuses the

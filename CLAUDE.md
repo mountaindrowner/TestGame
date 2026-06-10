@@ -261,21 +261,29 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   Verified: first-fall→descent transition fires; gate + untrue-image arenas still arm; all
   links/doors/keys preserved; build green; no console errors. (Some BIO-02 shelves are still
   block-ledges in rock rather than fully wall-attached — a later polish.)
-- **Ranged enemy archetypes (DONE):** two grounded ranged foes that kite to a standoff, telegraph,
-  then strike (both share the striker sheet, tinted, for now). **Bone Archer** (`archer` behavior,
-  pale-green) looses a fast straight bolt (reuses `fireProjectile` → `enemyProjectiles`). **Cinder
-  Bomber** (`bomber` behavior, amber) **lobs an arcing timed bomb** (`EnemyDeps.lobBomb` → `GameScene`
-  spawns a gravity bomb with a ~1.5s fuse → `explodeBomb` fires an expanding blast into `bossHazards`,
-  which already damages the player). Both are attack-only (no contact dmg). `updateRangedGround(time,
-  bomb)` drives both; `groundAtDir` keeps them from kiting off a ledge. Placed in `catacombs` (test) +
-  an archer on the crossroads spine. Real PixelLab sheets are the follow-up (like the mirror roster).
+- **Ranged enemy archetypes (DONE — now REAL PixelLab art):** two grounded ranged foes that kite to a
+  standoff, telegraph, then strike. **Bone Archer** (`archer` behavior) looses a fast straight bolt
+  (reuses `fireProjectile` → `enemyProjectiles`) — a gaunt pale-green skeletal undead whose `fire` clip
+  draws and looses a bow (47×52). **Cinder Bomber** (`bomber` behavior) **lobs an arcing timed bomb**
+  (`EnemyDeps.lobBomb` → `GameScene` spawns a gravity bomb with a ~1.5s fuse → `explodeBomb` fires an
+  expanding blast into `bossHazards`, which already damages the player) — a flame-wreathed charred demon
+  whose `fire` clip winds up and hurls the bomb (53×57). Both are attack-only (no contact dmg).
+  `updateRangedGround(time, bomb)` drives both (plays only run/fire/hurt, so the registry maps
+  `windup`→the `fire` clip); `groundAtDir` keeps them from kiting off a ledge. Placed in `catacombs`
+  (test) + an archer on the crossroads spine. Sheets pulled via the proven mirror-roster pipeline (ids
+  in `docs/ENEMY_ART_SPEC.md` → `fetch_enemy_art.py` → `pack_enemy.py` → `assetManifest`/`Animations`/
+  `PreloadScene`/`enemyRegistry`, tints dropped).
+- **The Stranger now has a face (DONE):** the Sanctuary's pact-giver is a real PixelLab figure — a
+  hooded grey/violet cloaked figure (16×50, a 4-frame breathing idle) standing in a soft violet halo to
+  the left of the altar panel (`SanctuaryScene.addStranger()`, screen-fixed so the backdrop drifts
+  behind it). Id in `docs/ENEMY_ART_SPEC.md`.
 - **Tutorial legend:** already a crisp DOM overlay (`src/systems/Tutorial.ts` mounts `#tutorial`, Dash
   Horizon font) — the old "in-canvas pixel-art" note was stale. Done.
 - **Roadmap remaining (all PixelLab-art, opt-in — cost generations; Mark to greenlit before spending):**
-  dedicated **archer/bomber** sheets (~12 gens, proven mirror-roster pipeline; they share the striker
-  sheet tinted today), a small **Stranger** figure for the Sanctuary (~3 gens), and a **higher-res
-  player** (~20+ gens + heavy re-integration; a prior HD player re-roll was *rejected* — recommend
-  deferring). Plus optional: full wall-attached re-layout of the BIO-02 mirror rooms.
+  the archer/bomber sheets + the Stranger are now DONE (real art, integrated — see above). The only
+  art item left is a **higher-res player** (~20+ gens + heavy re-integration; a prior HD player re-roll
+  was *rejected* — recommend deferring). Plus optional, non-art: full wall-attached re-layout of the
+  BIO-02 mirror rooms. (Generation budget: hard floor 500 remaining; ~1030 left after this art pass.)
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;

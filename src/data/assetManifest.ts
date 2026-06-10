@@ -15,6 +15,11 @@ export const Assets = {
   falseFace: { key: 'falseFace', path: 'assets/sprites/falseFace.png', frameW: 51, frameH: 52 },
   fractureWisp: { key: 'fractureWisp', path: 'assets/sprites/fractureWisp.png', frameW: 34, frameH: 44 },
   lookingGlass: { key: 'lookingGlass', path: 'assets/sprites/lookingGlass.png', frameW: 62, frameH: 65 },
+  // Ranged archetypes — real PixelLab side-view sheets (replace the tinted striker placeholders).
+  archer: { key: 'archer', path: 'assets/sprites/archer.png', frameW: 47, frameH: 52 },
+  bomber: { key: 'bomber', path: 'assets/sprites/bomber.png', frameW: 53, frameH: 57 },
+  // The Sanctuary's pact-giver — a single idle clip, shown in SanctuaryScene.
+  stranger: { key: 'stranger', path: 'assets/sprites/stranger.png', frameW: 16, frameH: 50 },
   tileset: { key: 'tileset', path: 'assets/tilesets/depths.png', frameW: 16, frameH: 16 },
   bgFar: { key: 'bg-far', path: 'assets/backgrounds/far.png' },
   bgMid: { key: 'bg-mid', path: 'assets/backgrounds/mid.png' },

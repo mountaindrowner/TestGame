@@ -99,6 +99,10 @@ def build() -> None:
     pack_bbox("falseFace", ["run", "strike", "hurt"])
     pack_bbox("fractureWisp", ["run", "hurt"])
     pack_bbox("lookingGlass", ["run", "strike", "hurt"])
+    # Ranged archetypes (real PixelLab art) + the Sanctuary's Stranger.
+    pack_bbox("archer", ["run", "fire", "hurt"])
+    pack_bbox("bomber", ["run", "fire", "hurt"])
+    pack_bbox("stranger", ["idle"])
 
 
 if __name__ == "__main__":

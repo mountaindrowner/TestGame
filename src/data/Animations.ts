@@ -105,6 +105,25 @@ export const LookingGlassAnims: AnimDef[] = [
   { key: 'lookingGlass-hurt', sheet: 'lookingGlass', start: 12, end: 17, frameRate: 16, repeat: 0 },
 ];
 
+// Ranged archetypes (real PixelLab art). Ranges MUST match tools/pack_enemy.py.
+//   archer 47x52: run 0-5 | fire 6-14 (draw-and-loose) | hurt 15-20
+//   bomber 53x57: run 0-5 | fire 6-14 (wind-up-and-hurl) | hurt 15-20
+// fire is the telegraph the ranged-ground behaviour plays before it shoots.
+export const ArcherAnims: AnimDef[] = [
+  { key: 'archer-run', sheet: 'archer', start: 0, end: 5, frameRate: 11, repeat: -1 },
+  { key: 'archer-fire', sheet: 'archer', start: 6, end: 14, frameRate: 16, repeat: 0 },
+  { key: 'archer-hurt', sheet: 'archer', start: 15, end: 20, frameRate: 16, repeat: 0 },
+];
+export const BomberAnims: AnimDef[] = [
+  { key: 'bomber-run', sheet: 'bomber', start: 0, end: 5, frameRate: 10, repeat: -1 },
+  { key: 'bomber-fire', sheet: 'bomber', start: 6, end: 14, frameRate: 15, repeat: 0 },
+  { key: 'bomber-hurt', sheet: 'bomber', start: 15, end: 20, frameRate: 16, repeat: 0 },
+];
+// The Stranger — a single looping breathing idle for the Sanctuary (16x50).
+export const StrangerAnims: AnimDef[] = [
+  { key: 'stranger-idle', sheet: 'stranger', start: 0, end: 3, frameRate: 6, repeat: -1 },
+];
+
 export function registerAnims(scene: Phaser.Scene, defs: AnimDef[]): void {
   for (const d of defs) {
     if (scene.anims.exists(d.key)) continue;

@@ -41,6 +41,11 @@ ENEMIES = {
     "falseFace": ("2fcfa995-7b17-4cbb-bd5d-3df471c75978", {"run": "animating", "strike": "cross", "hurt": "taking"}),
     "fractureWisp": ("45e29f72-32a7-4418-8bbc-eb3139ee3bf3", {"run": "drifting", "hurt": "recoiling"}),
     "lookingGlass": ("5f852c46-54f5-4e44-9e0f-6c4e097273b6", {"run": "animating", "strike": "cross", "hurt": "taking"}),
+    # Ranged archetypes — real PixelLab side-view sheets (east frames). run/fire(draw or throw)/hurt.
+    "archer": ("39c2b805-956c-41d3-b4a4-9e64c23fd240", {"run": "running", "fire": "drawing", "hurt": "taking"}),
+    "bomber": ("bcd1d41b-a249-4e59-8fef-1da8f3bf766f", {"run": "running", "fire": "hurling", "hurt": "taking"}),
+    # The Sanctuary's pact-giver — a single idle pose for the SanctuaryScene.
+    "stranger": ("3eb3aa7a-cc4c-40a8-90d0-e39738e82b81", {"idle": "animating"}),
 }
 
 

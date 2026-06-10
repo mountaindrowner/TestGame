@@ -13,6 +13,9 @@ import {
   FalseFaceAnims,
   FractureWispAnims,
   LookingGlassAnims,
+  ArcherAnims,
+  BomberAnims,
+  StrangerAnims,
   registerAnims,
 } from '../data/Animations';
 import { FONT } from '../data/ui';
@@ -36,6 +39,7 @@ export class PreloadScene extends Phaser.Scene {
     for (const a of [
       Assets.crawler, Assets.spark, Assets.striker, Assets.warden,
       Assets.glassWitch, Assets.reflectionHound, Assets.falseFace, Assets.fractureWisp, Assets.lookingGlass,
+      Assets.archer, Assets.bomber, Assets.stranger,
     ]) {
       this.load.spritesheet(a.key, a.path, { frameWidth: a.frameW, frameHeight: a.frameH });
     }
@@ -78,6 +82,9 @@ export class PreloadScene extends Phaser.Scene {
     registerAnims(this, FalseFaceAnims);
     registerAnims(this, FractureWispAnims);
     registerAnims(this, LookingGlassAnims);
+    registerAnims(this, ArcherAnims);
+    registerAnims(this, BomberAnims);
+    registerAnims(this, StrangerAnims);
     // Make sure the display font is ready before any text is drawn (canvas text
     // bakes the font at creation; loading it late would show a fallback flash).
     // Boot flow: Title menu by default; ?edit → editor; ?play → straight to the
