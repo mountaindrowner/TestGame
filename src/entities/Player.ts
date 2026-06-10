@@ -21,9 +21,14 @@ type State = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'attack' | 'hurt' | 'de
 export class Player extends Phaser.Physics.Arcade.Sprite {
   declare body: Phaser.Physics.Arcade.Body;
   public health = P.maxHealth;
+  public maxHealth = P.maxHealth; // raised by Sanctuary graces/pacts (applyUpgrades)
   public readonly hitbox: AttackHitbox;
   public controllable = true;
   public attackDamage: number = PlayerCombo[0].dmg; // damage of the current combo hit (read by CombatSystem)
+  // Sanctuary-derived multipliers (1 = baseline)
+  private damageMult = 1;
+  private moveMult = 1;
+  private airDashesMax = 1;
 
   private controls: InputManager;
   private sfx: Sfx;
@@ -35,7 +40,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private mode: State = 'idle';
   private lastGroundedAt = 0;
   private airJumpsUsed = 0;
-  private airDashUsed = false; // one Grace Burst air-dash per airtime
+  private airDashesUsed = 0; // Grace Burst air-dashes spent this airtime (max from upgrades)
   public graceBurst = false; // Grace Burst air-dash unlocked (set from RunState)
   private wasOnGround = false;
 
@@ -108,7 +113,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (onGround) {
       this.lastGroundedAt = time;
       this.airJumpsUsed = 0;
-      this.airDashUsed = false; // refresh the Grace Burst on landing
+      this.airDashesUsed = 0; // refresh the Grace Burst(s) on landing
       if (!this.wasOnGround && this.body.velocity.y >= 0) this.onLand();
     }
     this.wasOnGround = onGround;
@@ -192,7 +197,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocity(0, 0);
     this.lastGroundedAt = this.scene.time.now;
     this.airJumpsUsed = 0;
-    this.airDashUsed = false;
+    this.airDashesUsed = 0;
     this.climbReadyAt = this.scene.time.now + 240;
     this.mode = 'idle';
     this.play('player-idle', true);
@@ -218,8 +223,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.lastPivotAt = time;
       }
       const a = accel * (turning ? P.turnBonus : 1) * dt;
+      const top = P.runSpeed * this.moveMult;
       let nv = v + axis * a;
-      nv = Phaser.Math.Clamp(nv, -P.runSpeed, P.runSpeed);
+      nv = Phaser.Math.Clamp(nv, -top, top);
       this.body.setVelocityX(nv);
     } else {
       // friction toward 0
@@ -264,9 +270,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.controls.justPressed('dash') && time >= this.dashReadyAt) {
       const onGround = this.body.blocked.down;
       if (!onGround) {
-        // Air-dash is the Grace Burst — locked until earned, one per airtime.
-        if (!this.graceBurst || this.airDashUsed) return;
-        this.airDashUsed = true;
+        // Air-dash is the Grace Burst — locked until earned; GRACE graces add more.
+        if (!this.graceBurst || this.airDashesUsed >= this.airDashesMax) return;
+        this.airDashesUsed++;
         this.juice.flash(Palette.grace, 60);
         this.particles.graceMotes?.(this.x, this.y - 14, 10);
       }
@@ -309,7 +315,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.comboStep = this.attacking ? (this.comboStep + 1) % PlayerCombo.length : 0;
     const c = PlayerCombo[this.comboStep];
     this.curAttack = c;
-    this.attackDamage = c.dmg;
+    this.attackDamage = Math.round(c.dmg * this.damageMult);
     this.attacking = true;
     this.resetSquash(); // attack uses body-lean, not squash
     this.attackStartAt = time;
@@ -435,7 +441,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       // waits — weary/battered once he's below half health.
       next =
         now - this.idleSince > P.restDelayMs
-          ? this.health <= P.maxHealth * 0.5
+          ? this.health <= this.maxHealth * 0.5
             ? 'player-weary'
             : 'player-rest'
           : 'player-idle';
@@ -464,17 +470,25 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   // ----------------------------------------------------------------------
+  /** Apply Sanctuary upgrades (called by GameScene after creating the player). */
+  applyUpgrades(u: { maxHealth: number; damageMult: number; moveMult: number; airDashes: number }): void {
+    this.maxHealth = u.maxHealth;
+    this.damageMult = u.damageMult;
+    this.moveMult = u.moveMult;
+    this.airDashesMax = u.airDashes;
+  }
+
   /** Restore life (life orb). Clamped to max; emits the HUD update. */
   heal(amount: number): void {
     if (this.mode === 'dead') return;
-    this.health = Math.min(P.maxHealth, this.health + amount);
-    this.scene.events.emit('player-health', this.health, P.maxHealth);
+    this.health = Math.min(this.maxHealth, this.health + amount);
+    this.scene.events.emit('player-health', this.health, this.maxHealth);
   }
 
   takeDamage(amount: number, sourceX: number): void {
     if (this.isInvulnerable() || this.mode === 'dead' || this.mode === 'reborn') return;
     this.health -= amount;
-    this.scene.events.emit('player-health', this.health, P.maxHealth);
+    this.scene.events.emit('player-health', this.health, this.maxHealth);
     if (this.health <= 0) {
       this.die();
       return;
@@ -525,8 +539,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.reset(x, y);
     this.body.setAllowGravity(false);
     this.setAlpha(0);
-    this.health = P.maxHealth;
-    this.scene.events.emit('player-health', this.health, P.maxHealth);
+    this.health = this.maxHealth;
+    this.scene.events.emit('player-health', this.health, this.maxHealth);
   }
 
   /** Control returns; brief grace i-frames. */

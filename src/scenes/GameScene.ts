@@ -5,6 +5,7 @@ import { Assets, Vis, VIS_SOLID_MAX, biomeOf } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace } from '../data/Tunables';
 import { RunState } from '../data/RunState';
+import { deriveUpgrades, DerivedUpgrades } from '../data/upgrades';
 import { FONT } from '../data/ui';
 import { ENEMY_REGISTRY, EnemyKind, isEnemyKind } from '../data/enemyRegistry';
 import { InputManager } from '../systems/InputManager';
@@ -61,6 +62,7 @@ export class GameScene extends Phaser.Scene {
   private respawning = false;
   private fadeRect!: Phaser.GameObjects.Rectangle;
   private run!: RunState;
+  private up!: DerivedUpgrades; // Sanctuary-derived stats (magnet/souls/leech read here)
 
   // multi-room
   private entryDoorId?: string;
@@ -136,14 +138,18 @@ export class GameScene extends Phaser.Scene {
     this.spawnFromData();
     this.events.emit('souls', this.run.souls);
 
+    // Sanctuary upgrades (graces + pacts) → concrete stats, applied to the player.
+    this.up = deriveUpgrades(this.run.graces, this.run.pacts);
+    this.player.applyUpgrades(this.up);
+    this.run.maxHealth = this.up.maxHealth;
     // Restore carried-over health and persist changes back to the run.
-    this.player.health = this.run.health;
+    this.player.health = Math.min(this.run.health, this.up.maxHealth);
     // The House of Mirrors is only ever reached after the Warden grants Grace Burst;
     // guarantee it here so the biome is never soft-locked (and is jumpable via __gotoRoom).
     if (this.room.biome === 'mirrors' && !this.run.graceBurst) this.run.graceBurst = true;
     this.player.graceBurst = this.run.graceBurst || this.room.id === 'mirror-preview'; // preview grants it
 
-    this.events.emit('player-health', this.player.health, this.run.data.maxHealth);
+    this.events.emit('player-health', this.player.health, this.run.maxHealth);
     // The scene's event emitter survives scene.restart, so bind these exactly once.
     if (!this.bound) {
       this.bound = true;
@@ -355,6 +361,7 @@ export class GameScene extends Phaser.Scene {
   // ── Economy: souls, life orbs, breakable urns ─────────────────────────
   /** A foe falls → it sheds souls (the elite a small fountain + a life orb). */
   private onEnemyKilled(x: number, y: number, elite: boolean, kind: EnemyKind): void {
+    if (this.up.leechOnKill) this.player.heal(this.up.leechOnKill); // Pact of Hunger
     if (kind === 'fractureShard') return; // split shards don't drop (no fountain)
     const n = elite ? 10 : Phaser.Math.Between(1, 2);
     for (let i = 0; i < n; i++) this.spawnDrop(x + Phaser.Math.Between(-8, 8), y, 'soul');
@@ -380,7 +387,7 @@ export class GameScene extends Phaser.Scene {
       this.sfx.heal();
       this.particles.graceMotes(p.x, p.y, 12);
     } else {
-      this.run.souls += 1;
+      this.run.souls += 1 + this.up.soulBonus; // GATHER / Fortune
       this.sfx.pickup();
       this.particles.sparks(p.x, p.y, 4);
       this.events.emit('souls', this.run.souls);
@@ -730,7 +737,11 @@ export class GameScene extends Phaser.Scene {
         onComplete: () => {
           this.cameras.main.fadeOut(320, 0, 0, 0);
           this.run.health = this.player.health;
-          this.time.delayedCall(340, () => this.scene.restart({ roomId: g.to, entryDoorId: g.toEntry }));
+          // The lift rises into the interim SANCTUARY; departing it continues to the area.
+          this.time.delayedCall(340, () => {
+            this.scene.stop('UIScene');
+            this.scene.start('SanctuaryScene', { next: g.to, entry: g.toEntry });
+          });
         },
       });
     });
@@ -766,7 +777,7 @@ export class GameScene extends Phaser.Scene {
       const p = obj as Phaser.Physics.Arcade.Image;
       if (!p.active || this.time.now - (p.getData('bornAt') as number) < 280) continue;
       const d = Phaser.Math.Distance.Between(px, py, p.x, p.y);
-      if (d < 52) {
+      if (d < this.up.magnetRange) {
         const b = p.body as Phaser.Physics.Arcade.Body;
         b.setAllowGravity(false);
         this.physics.velocityFromRotation(Math.atan2(py - p.y, px - p.x), 200, b.velocity);
@@ -1097,6 +1108,10 @@ export class GameScene extends Phaser.Scene {
     };
     window.__health = () => this.player.health;
     window.__ppos = () => ({ x: Math.round(this.player.x), y: Math.round(this.player.y) });
+    window.__sanctuary = (next?: string) => {
+      this.scene.stop('UIScene');
+      this.scene.start('SanctuaryScene', { next: next ?? this.room.id });
+    };
   }
 
   private poseScene(pose: string, anim?: string, progress?: number): void {

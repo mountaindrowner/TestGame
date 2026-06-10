@@ -221,6 +221,16 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   of frame**, then it travels to the next area (a cinematic, not the instant fade). Hints are directive
   (post-Warden, sequenced after the Grace Burst hint; locked = where to find the Broken Memory).
   `__health()` dev hook reads HP.
+- **The Sanctuary (DONE) — interim upgrade space between areas** (`SanctuaryScene`, a crisp DOM panel
+  over a drifting backdrop; the lift rises INTO it — `rideLift` → `SanctuaryScene{next}` → the area).
+  Two halves (`src/data/upgrades.ts` is the catalog): the **ALTAR** kindles persistent, leveled
+  **graces** with souls — **Vigor** (+max life), **Edge** (+strength), **Grace** (+air-dash/leap),
+  **Gather** (soul magnet + bonus); the **STRANGER** grants one-time **pacts** (% boons: Fury/Swift/
+  Hunger/Fortune/Bulwark/Resolve), **lifetime-capped at 4**. `deriveUpgrades(graces,pacts)` folds them
+  into concrete stats; `Player.applyUpgrades` (maxHealth/damageMult/moveMult/airDashes) + GameScene
+  (magnet range, +souls, leech-on-kill) apply each room. Stored in `RunState.graces/pacts`; **DEPART**
+  full-heals (grace renews) and continues. Theme = grace *given* for what you carried out, not power
+  bought. Dev hook `__sanctuary(next?)`.
 - **Ambient life (DONE, partial):** `src/systems/Ambience.ts` — a faint screen-fixed **surface-dust**
   haze drifting up top + a few **critters** (a tiny beetle, `prop-critter`) scuttling along the lowest
   ledges (deterministic per room, rest/dart states, clamped to their ledge span; depth 15, cosmetic).

@@ -13,6 +13,8 @@ export interface RunStateData {
   untrueImageDefeated: boolean; // BIO-02 mini-boss (THE UNTRUE IMAGE) beaten
   graceBurst: boolean; // Grace Burst air-dash unlocked (earned from the Warden)
   souls: number; // currency dropped by foes / urns
+  graces: { vigor: number; edge: number; grace: number; gather: number }; // Sanctuary altar levels
+  pacts: string[]; // one-time Stranger pacts taken (lifetime-capped)
   currentRoomId: string;
   entryDoorId?: string; // which door we entered the current room from
 }
@@ -48,6 +50,8 @@ export class RunState {
       untrueImageDefeated: false,
       graceBurst: false,
       souls: 0,
+      graces: { vigor: 0, edge: 0, grace: 0, gather: 0 },
+      pacts: [],
       currentRoomId: roomId,
     };
   }
@@ -92,5 +96,17 @@ export class RunState {
   }
   set souls(v: number) {
     this.data.souls = v;
+  }
+  get graces(): { vigor: number; edge: number; grace: number; gather: number } {
+    return this.data.graces;
+  }
+  get pacts(): string[] {
+    return this.data.pacts;
+  }
+  get maxHealth(): number {
+    return this.data.maxHealth;
+  }
+  set maxHealth(v: number) {
+    this.data.maxHealth = v;
   }
 }
