@@ -5,7 +5,8 @@ import { Room } from './build';
 // Open to the east (→ the Gallery). The arrival door 'from-gate' matches the
 // BIO-01 gate's destination. Floor feet row = h-4 (18).
 export function mirrorHall(): RoomData {
-  const r = new Room('HALL OF FIRST REFLECTIONS', 48, 22).biome('mirrors').frame({ right: true });
+  const r = new Room('HALL OF FIRST REFLECTIONS', 48, 22).biome('mirrors').fill();
+  r.carve(2, 3, 46, 16); //  carved hall: left wall + rock floor/ceiling, open east edge
 
   r.solid(8, 14, 7, 2); //   first ledge up from the floor
   r.platform(19, 12, 5); //  one-way step across

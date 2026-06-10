@@ -6,7 +6,8 @@ import { Room } from './build';
 // completes the House of Mirrors. Mirrors ring the hall — you fight yourself.
 // Floor feet row = h-4 (14).
 export function untrueImage(): RoomData {
-  const r = new Room('HALL OF THE UNTRUE IMAGE', 48, 18).biome('mirrors').shell();
+  const r = new Room('HALL OF THE UNTRUE IMAGE', 48, 18).biome('mirrors').fill();
+  r.carve(2, 3, 44, 12); // carved boss hall (closed; rock walls/floor/ceiling)
 
   r.platform(13, 10, 6);
   r.platform(29, 10, 6);

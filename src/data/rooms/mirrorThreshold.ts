@@ -4,7 +4,8 @@ import { Room } from './build';
 // BIO-02 pre-boss — the threshold of the Untrue Image. A Hollow Striker bars the
 // climb to the ↑ door into the boss hall. Closed shell. Floor feet row = h-4 (16).
 export function mirrorThreshold(): RoomData {
-  const r = new Room('THRESHOLD OF THE UNTRUE', 44, 20).biome('mirrors').shell();
+  const r = new Room('THRESHOLD OF THE UNTRUE', 44, 20).biome('mirrors').fill();
+  r.carve(2, 3, 40, 14); // carved chamber (closed; rock walls/floor/ceiling)
 
   r.platform(13, 12, 5);
   r.solid(21, 13, 7, 2); //  top 13

@@ -5,7 +5,8 @@ import { Room } from './build';
 // gap near the top is only crossable by air-dashing. Closed shell; in at the bottom
 // (from-gallery), out at the top (rise-up). Floor feet row = h-4 (30).
 export function mirrorRise(): RoomData {
-  const r = new Room('THE ASCENDING GLASS', 40, 34).biome('mirrors').shell();
+  const r = new Room('THE ASCENDING GLASS', 40, 34).biome('mirrors').fill();
+  r.carve(2, 3, 36, 28); //  carved vertical shaft (closed; rock walls/floor/ceiling)
 
   r.solid(5, 26, 7, 2); //   top 26
   r.platform(14, 23, 5); //  23

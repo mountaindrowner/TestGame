@@ -1,16 +1,20 @@
 import { RoomData } from '../roomData';
 import { Room } from './build';
 
-// Branch (closed) — face what you buried: a Striker guards the Broken Memory key.
-// Reached/left via the ↑ door back to the crossroads. Floor feet row 14.
+// Branch (closed catacomb chamber) — face what you buried: a Striker guards the
+// Broken Memory, set on a carved rock pedestal. In/out via the ↑ door to the
+// crossroads. Feet row = 15 (floor solid rows 16-17).
 export function memory(): RoomData {
-  const r = new Room('A BURIED MEMORY', 40, 18).shell();
-  r.solid(18, 11, 4, 1); // pedestal under the key
+  const r = new Room('A BURIED MEMORY', 40, 18).fill();
 
-  r.at('door', 5, 14, { id: 'from-cross', to: 'crossroads', toEntry: 'cross-mem' });
-  r.at('striker', 28, 14);
+  r.carve(2, 6, 36, 10); //  the chamber (closed; 2-thick walls, floor rows 16-17, ceiling rows 0-5)
+  r.solid(17, 12, 6, 1); //  a rock pedestal the Memory rests over
+
+  r.at('door', 5, 15, { id: 'from-cross', to: 'crossroads', toEntry: 'cross-mem' });
+  r.at('striker', 28, 15);
   r.at('key', 20, 10); // the Broken Memory, floating over the pedestal
-  r.at('torch', 6, 14);
-  r.at('torch', 34, 14);
+  r.at('torch', 6, 15);
+  r.at('torch', 34, 15);
+  r.at('jar', 11, 15);
   return r.build('memory');
 }

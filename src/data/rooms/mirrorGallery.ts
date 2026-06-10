@@ -5,7 +5,8 @@ import { Room } from './build';
 // Open west (→ Hall). A central climb leads to the ↑ door into the Ascending Glass.
 // Floor feet row = h-4 (18).
 export function mirrorGallery(): RoomData {
-  const r = new Room('THE GALLERY OF FALSE FACES', 56, 22).biome('mirrors').frame({ left: true });
+  const r = new Room('THE GALLERY OF FALSE FACES', 56, 22).biome('mirrors').fill();
+  r.carve(0, 3, 54, 16); // carved gallery: open west edge, right wall + rock floor/ceiling
 
   // a stepped climb to the central up-door
   r.platform(10, 15, 5);

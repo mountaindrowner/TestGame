@@ -1,4 +1,5 @@
-import { RoomData, buildFirstFall } from './roomData';
+import { RoomData } from './roomData';
+import { firstFall } from './rooms/firstFall';
 import { descent } from './rooms/descent';
 import { crossroads } from './rooms/crossroads';
 import { memory } from './rooms/memory';
@@ -17,7 +18,7 @@ import { loadRoomOverride, listOverrideRooms } from './roomStore';
 export const START_ROOM = 'first-fall';
 
 const BUILDERS: Record<string, () => RoomData> = {
-  'first-fall': () => ({ ...buildFirstFall(), id: 'first-fall' }),
+  'first-fall': firstFall,
   descent,
   crossroads,
   memory,

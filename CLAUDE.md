@@ -249,14 +249,18 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   jump; it'll shine once the **catacomb** grammar gives grab-height architecture. `mirror-preview` has
   a grab-test wall; dev hook `__ppos()` reads player position. NOTE: variable jump height means a
   *tapped* jump barely rises (cut short) — hold jump to reach a lip.
-- **Catacomb level grammar (PROOF done; rollout pending):** the Room builder gained `fill()` +
-  `carve(x,y,w,h)` — a room starts as **solid rock** and the path is **carved** out, so every ledge is
-  part of the wall mass (no floating islands). The proof room `catacombs` (`src/data/rooms/catacombs.ts`,
-  `__gotoRoom('catacombs')`) is a weaving **switchback climb**: a carved vertical chamber with shelves
-  attached to alternating walls (~3 rows apart, overlapping past centre for short up-and-across hops).
-  Verified traversable (bot climbed floor→mid) and it shows off the lighting + ledge-grab + tight camera.
-  **Next:** roll the grammar into the real BIO-01/BIO-02 path rooms (replace the floating-platform
-  layouts), per `docs/LEVEL_DESIGN.md` / `WORLD_PLAN.md`.
+- **Catacomb level grammar (ROLLED OUT across both areas):** the Room builder has `fill()` +
+  `carve(x,y,w,h)` — a room starts as **solid rock** and the path is **carved** out (the autotiler then
+  walls/floors/ceilings the passages). Proof: `catacombs` (`__gotoRoom`). **BIO-01 fully re-authored as
+  carved catacombs:** `first-fall` (now its own file `src/data/rooms/firstFall.ts` — a carved
+  descending switchback with a molten scar + east exit), `descent` (humped through-passage, validated
+  2-tile steps traversable), `crossroads` (carved passage + central vault for the spark + ↑door to
+  memory), `memory` (closed chamber, Memory on a rock pedestal), `gate` (carved flat-floor Warden
+  ARENA, portcullis on the solid east wall). **BIO-02 mirror rooms** converted `frame()/shell()` →
+  `fill()`+`carve()` (thin-walled frame → thick carved rock) keeping their working shelf/door layouts.
+  Verified: first-fall→descent transition fires; gate + untrue-image arenas still arm; all
+  links/doors/keys preserved; build green; no console errors. (Some BIO-02 shelves are still
+  block-ledges in rock rather than fully wall-attached — a later polish.)
 - **Ranged enemy archetypes (DONE):** two grounded ranged foes that kite to a standoff, telegraph,
   then strike (both share the striker sheet, tinted, for now). **Bone Archer** (`archer` behavior,
   pale-green) looses a fast straight bolt (reuses `fireProjectile` → `enemyProjectiles`). **Cinder
@@ -265,9 +269,13 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   which already damages the player). Both are attack-only (no contact dmg). `updateRangedGround(time,
   bomb)` drives both; `groundAtDir` keeps them from kiting off a ledge. Placed in `catacombs` (test) +
   an archer on the crossroads spine. Real PixelLab sheets are the follow-up (like the mirror roster).
-- **Roadmap from the same notes (NOT done yet — biggest/riskiest, do as focused passes):**
-  rolling the catacomb grammar across the path, a *higher-res player* sprite, dedicated art for the
-  archer/bomber, and crispening the opener Tutorial legend (still in-canvas pixel text).
+- **Tutorial legend:** already a crisp DOM overlay (`src/systems/Tutorial.ts` mounts `#tutorial`, Dash
+  Horizon font) — the old "in-canvas pixel-art" note was stale. Done.
+- **Roadmap remaining (all PixelLab-art, opt-in — cost generations; Mark to greenlit before spending):**
+  dedicated **archer/bomber** sheets (~12 gens, proven mirror-roster pipeline; they share the striker
+  sheet tinted today), a small **Stranger** figure for the Sanctuary (~3 gens), and a **higher-res
+  player** (~20+ gens + heavy re-integration; a prior HD player re-roll was *rejected* — recommend
+  deferring). Plus optional: full wall-attached re-layout of the BIO-02 mirror rooms.
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
