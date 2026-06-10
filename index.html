@@ -46,11 +46,83 @@
         pointer-events: none;
         transition: opacity 0.4s;
       }
+      /* Landscape-first: nudge phones (touch + portrait) to turn sideways. The game
+         is a 16:9 strip, so portrait shrinks it and pushes the touch buttons into the
+         letterbox. Pure CSS — shows in portrait on coarse pointers, auto-hides on
+         rotation; "Play anyway" sets .rotate-dismissed to opt out (locked orientation). */
+      #rotate-hint {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        place-items: center;
+        text-align: center;
+        padding: 24px;
+        background: rgba(5, 5, 10, 0.94);
+        color: #cdeffb;
+        font-family: 'Dash Horizon', ui-monospace, monospace;
+      }
+      #rotate-hint .icon {
+        font-size: 56px;
+        display: inline-block;
+        animation: rh-rock 2.4s ease-in-out infinite;
+      }
+      #rotate-hint h2 {
+        margin: 16px 0 6px;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: #eaf7ff;
+      }
+      #rotate-hint p {
+        margin: 0 0 18px;
+        font-size: 12px;
+        opacity: 0.7;
+      }
+      #rotate-hint button {
+        pointer-events: auto;
+        appearance: none;
+        border: 1.5px solid rgba(126, 240, 255, 0.55);
+        background: rgba(10, 16, 24, 0.5);
+        color: #cdeffb;
+        border-radius: 999px;
+        padding: 10px 20px;
+        font-family: inherit;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+      }
+      @keyframes rh-rock {
+        0%,
+        100% {
+          transform: rotate(-12deg);
+        }
+        50% {
+          transform: rotate(78deg);
+        }
+      }
+      @media (orientation: portrait) and (pointer: coarse) {
+        body:not(.rotate-dismissed) #rotate-hint {
+          display: grid;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="game"></div>
     <div id="boot">R E P E N T A N C E</div>
+    <div id="rotate-hint">
+      <div>
+        <div class="icon">📱</div>
+        <h2>ROTATE TO LANDSCAPE</h2>
+        <p>REPENTANCE plays best with your phone turned sideways.</p>
+        <button id="rotate-dismiss" type="button">Play anyway</button>
+      </div>
+    </div>
+    <script>
+      document
+        .getElementById('rotate-dismiss')
+        ?.addEventListener('click', () => document.body.classList.add('rotate-dismissed'));
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
