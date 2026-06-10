@@ -3,6 +3,7 @@ import { firstFall } from './rooms/firstFall';
 import { descent } from './rooms/descent';
 import { crossroads } from './rooms/crossroads';
 import { memory } from './rooms/memory';
+import { vault } from './rooms/vault';
 import { gate } from './rooms/gate';
 import { mirrorPreview } from './rooms/mirrorPreview';
 import { catacombs } from './rooms/catacombs';
@@ -22,6 +23,7 @@ const BUILDERS: Record<string, () => RoomData> = {
   descent,
   crossroads,
   memory,
+  vault,
   gate,
   'mirror-preview': mirrorPreview,
   catacombs,

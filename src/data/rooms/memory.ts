@@ -13,8 +13,11 @@ export function memory(): RoomData {
   r.at('door', 5, 15, { id: 'from-cross', to: 'crossroads', toEntry: 'cross-mem' });
   r.at('striker', 28, 15);
   r.at('key', 20, 10); // the Broken Memory, floating over the pedestal
+  // the shortcut loop: a second passage straight to the gate approach, so the
+  // detour pays a pickup AND a faster way onward (LEVEL_DESIGN §3.5)
+  r.at('door', 35, 15, { id: 'mem-out', to: 'gate', toEntry: 'gate-west' });
   r.at('torch', 6, 15);
-  r.at('torch', 34, 15);
+  r.at('torch', 33, 15);
   r.at('jar', 11, 15);
   return r.build('memory');
 }

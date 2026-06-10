@@ -18,7 +18,7 @@ export function descent(): RoomData {
   r.at('runner', 16, 16);
   r.at('crawler', 34, 14);
   r.at('runner', 52, 16);
-  r.at('jar', 30, 8); //     tucked in the nook
+  r.at('ember', 30, 8); //   the optional climb pays a Grace Ember (risk/reward)
   r.at('jar', 46, 16);
   r.at('torch', 8, 16);
   r.at('torch', 34, 14);
