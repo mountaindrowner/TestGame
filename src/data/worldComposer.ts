@@ -149,10 +149,23 @@ export function composeWorld(startId: string): WorldData {
   const entries: Record<string, { tx: number; ty: number }> = {};
   for (const q of placements) {
     const r = rooms.get(q.id)!;
-    // Prefer the room's player spawn; else just-inside-the-floor on the west side
-    // (NOT a door — door entries now sit in climb-up holes you'd fall through).
+    // Prefer the room's player spawn; else the first STANDABLE floor tile (open with
+    // solid just below) — never a door or a climb-up hole you'd fall through.
     const ps = r.spawns.find((s) => s.type === 'player');
-    const local = ps ? { tx: ps.tx, ty: ps.ty } : { tx: 3, ty: r.h - 4 };
+    let local = ps ? { tx: ps.tx, ty: ps.ty } : { tx: 3, ty: r.h - 4 };
+    if (!ps) {
+      // Open tile with SAFE floor directly below (solid/cracked/platform, never the
+      // molten lake or a climb-up hole). Scan columns L→R, rows near the floor.
+      const safe = (c: number | undefined) => c === Sem.SOLID || c === Sem.CRACKED || c === Sem.PLATFORM;
+      outer: for (let x = 2; x < r.w - 2; x++) {
+        for (let y = r.h - 5; y <= r.h - 2; y++) {
+          if (r.tiles[y]?.[x] === Sem.EMPTY && safe(r.tiles[y + 1]?.[x])) {
+            local = { tx: x, ty: y };
+            break outer;
+          }
+        }
+      }
+    }
     entries[q.id] = { tx: local.tx + q.ox, ty: local.ty + q.oy };
   }
 

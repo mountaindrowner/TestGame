@@ -1043,7 +1043,7 @@ export class GameScene extends Phaser.Scene {
       const need = !this.run.hasBrokenMemory && !this.run.guardianDefeated
         ? 'SEALED — DEFEAT THE WARDEN AND BRING A BROKEN MEMORY.'
         : !this.run.hasBrokenMemory
-          ? 'SEALED — A BROKEN MEMORY IS MISSING (↑ ABOVE THE CROSSROADS, TO THE WEST).'
+          ? 'SEALED — A BROKEN MEMORY IS MISSING (DROP INTO THE PIT AT THE CROSSROADS, TO THE WEST).'
           : 'SEALED — THE WARDEN STILL STANDS.';
       this.events.emit('hint', need);
     }

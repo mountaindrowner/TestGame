@@ -14,9 +14,6 @@ export function gate(): RoomData {
   r.solid(20, 9, 6, 1); //   low rock shelves for silhouette, out of the Warden's lane
   r.solid(52, 9, 6, 1);
 
-  // the shortcut loop back to the buried memory (and a fast lane in, key in hand)
-  r.at('door', 4, 16, { id: 'gate-west', to: 'memory', toEntry: 'mem-out' });
-
   r.at('guardian', 44, 16); // the Warden looms deep in the arena, before its gate
   // Opened (Warden down + Memory), the gate climbs UP into BIO-02 (the House of Mirrors).
   r.at('gate', 60, 16, { id: 'final', to: 'mirror-hall', toEntry: 'from-gate' });

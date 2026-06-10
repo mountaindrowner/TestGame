@@ -267,14 +267,27 @@ ONE big map at build time** (the whole area is only ~5 rooms, so it's all reside
   holds you in; kill lifts it). `placementAt(x,y)` is the world→sub-room lookup.
 - **Per-region HUD name:** `checkSubRoom()` re-emits `room-name` as you cross between sub-regions, so
   the one map still names its places (THE FIRST FALL → THE LOWER VAULTS → THE CROSSROADS → …).
-- **BIO-01 composes the full horizontal spine** (first-fall→descent→crossroads→gate = one 228×48 map,
-  floors aligned at world row 45). **BIO-02 composes its horizontal pair** (mirror-hall+gallery).
-- **STILL A SEAM (next slice):** **vertical / door-linked** branches don't compose yet — BIO-01's
-  memory & vault and BIO-02's vertical climb (rise→threshold→untrue-image) are **door** spawns, so
-  they remain quick door-transitions (a fade). Making them seamless needs either authoring them as
-  up/down **edge links** with aligned openings + a connecting shaft (and a return path / drop-through
-  design call), or extending the compositor to follow doors with carved connectors (watch placement
-  overlap). Dev: `__loads` counts scene builds; `__gotoRoom(id)` spawns at that sub-room's entry.
+- **Vertical seams now compose too (DONE — every branch is seamless, no fades anywhere).** The
+  door-linked branches were re-authored as real walkable openings + up/down edge links, stitched by
+  `Room.climbShaft(cx,yTop,yBottom)` — a vertical shaft laddered with **2-wide footholds alternating
+  every 3 rows** (a single base jump ~3.4 tiles clears each; you climb the zigzag diagonally, open air
+  above each nub → no head-bonk), top/bottom edges left clear so the compositor reads the opening.
+  • **BIO-02 = one vertical tower:** mirror-hall+gallery (horizontal base) → **climb up** rise →
+    threshold → untrue-image (173×94). Each lower room got a top climb-shaft over its old up-ledge +
+    a bottom entrance hole (flanked by floor); Grace Burst is granted throughout so the climbs are
+    forgiving. • **BIO-01 = spine + two vertical branches** (228×66): crossroads `down`→**memory**
+    (a **5-wide floor PIT** — walk in to drop to the buried memory, or jump it to pass; verified the
+    drop AND the no-Grace-Burst climb-out both work) and crossroads `up`→**vault** (climb the nook
+    shaft up into the Hidden Vault; its molten lake still needs Grace Burst). The old memory→gate
+    shortcut + all the branch doors were removed (the spine is already continuous).
+- **Arena seal is edge-aware** (`sealArena` + `openSpanRow/Col`): seals whichever edge the figure
+  entered by — a vertical wall at an open WEST edge (the gate) OR a floor across an open BOTTOM hole
+  (untrue-image, climbed up into). **Compositor down-link fix:** place the neighbour below by THIS
+  room's height (not the neighbour's). Dev: `__loads` counts scene builds; `__gotoRoom(id)` spawns
+  on safe floor (a standable-tile finder, never a hole/lake) at that sub-room.
+- **STILL A SEAM:** only **cross-environment** transitions remain (BIO-01 gate → Sanctuary → BIO-02),
+  which are deliberate set-pieces (the lift cinematic), not in-environment loads. Within an
+  environment there are now **zero fades**.
 
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)

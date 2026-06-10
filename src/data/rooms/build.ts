@@ -55,9 +55,11 @@ export class Room {
   climbShaft(cx: number, yTop: number, yBottom: number, w = 5): this {
     const x0 = cx - Math.floor(w / 2);
     this.carve(x0, yTop, w, yBottom - yTop + 1);
+    // 2-wide nubs alternating left/right every 3 rows: you climb the zigzag diagonally
+    // (open air above each nub, since the next is on the OTHER side — never a head-bonk).
     let side = 0;
     for (let y = yBottom - 3; y >= yTop + 2; y -= 3) {
-      const fx = side ? x0 : x0 + w - 2; // 2-wide nub, alternating side, middle stays open
+      const fx = side ? x0 : x0 + w - 2;
       this.solid(fx, y, 2, 1);
       side ^= 1;
     }
