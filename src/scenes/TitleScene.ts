@@ -36,14 +36,18 @@ export class TitleScene extends Phaser.Scene {
     this.parallax = new ParallaxBackground(this, 'depths');
     new ParticleSystem(this).startAmbient(w * 2, h * 2); // drifting dust/motes
 
-    // Title — big, with a soft glow shadow.
+    // Title — big, with a soft glow shadow. All title/menu UI is screen-fixed
+    // (scrollFactor 0): the camera keeps drifting to animate the parallax, so any
+    // scrollFactor-1 text would slide off-screen ("float away").
     this.add
       .text(w / 2 + 1, h * 0.32 + 1, 'REPENTANCE', { fontFamily: FONT, fontSize: '26px', color: '#0a0a12' })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setAlpha(0.6);
     const title = this.add
       .text(w / 2, h * 0.32, 'REPENTANCE', { fontFamily: FONT, fontSize: '26px', color: '#eaf7ff' })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setScrollFactor(0);
     this.add
       .text(w / 2, h * 0.32 + 20, 'FAIL · RETURN IN GRACE · GO DEEPER', {
         fontFamily: FONT,
@@ -51,6 +55,7 @@ export class TitleScene extends Phaser.Scene {
         color: '#7ef0ff',
       })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setAlpha(0.6);
     this.tweens.add({ targets: title, alpha: { from: 0.78, to: 1 }, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
@@ -60,13 +65,20 @@ export class TitleScene extends Phaser.Scene {
       { label: () => (this.sfx.isMuted() ? 'SOUND: OFF' : 'SOUND: ON'), act: () => this.toggleSound() },
     ];
     this.options.forEach((_, i) => {
+      const y = h * 0.62 + i * 18;
       const t = this.add
-        .text(w / 2, h * 0.62 + i * 16, '', { fontFamily: FONT, fontSize: '10px', color: '#eaf7ff' })
+        .text(w / 2, y, '', { fontFamily: FONT, fontSize: '10px', color: '#eaf7ff' })
         .setOrigin(0.5)
+        .setScrollFactor(0);
+      this.items.push(t);
+      // A generous, screen-fixed tap/click zone (the text itself is 0-width until
+      // refresh() fills it, so an explicit zone is what makes touch reliable).
+      this.add
+        .zone(w / 2, y, Math.min(w * 0.8, 220), 16)
+        .setScrollFactor(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerover', () => this.move(i))
         .on('pointerdown', () => { this.move(i); this.choose(); });
-      this.items.push(t);
     });
     this.refresh();
 
@@ -74,6 +86,7 @@ export class TitleScene extends Phaser.Scene {
     this.add
       .text(w / 2, h - 10, 'an art project · the crossroads', { fontFamily: FONT, fontSize: '6px', color: '#7ef0ff' })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setAlpha(0.4);
 
     const k = this.input.keyboard!;
@@ -121,10 +134,11 @@ export class TitleScene extends Phaser.Scene {
     this.sfx.startMusic();
     const w = this.scale.width;
     const h = this.scale.height;
-    const veil = this.add.rectangle(0, 0, w, h, 0x05050a).setOrigin(0).setDepth(200).setAlpha(0);
+    const veil = this.add.rectangle(0, 0, w, h, 0x05050a).setOrigin(0).setScrollFactor(0).setDepth(200).setAlpha(0);
     const loading = this.add
       .text(w / 2, h / 2, 'ENTERING THE FALL…', { fontFamily: FONT, fontSize: '9px', color: '#7ef0ff' })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setDepth(201)
       .setAlpha(0);
     this.tweens.add({ targets: veil, alpha: 1, duration: 420 });
