@@ -246,6 +246,36 @@ The "combat-feel + run-structure" pass. The dodge-roll (earlier) was its first b
   never stacks) fires on the **combo finisher** + big hits (core/kill/elite, `Player.isFinisher`) and on
   the Nova; heavy hits also take the longer hitstop.
 
+## Seamless world (loadless environments — IN PROGRESS)
+Mark's direction: **no fading at all, a camera that just follows the player, each environment
+one massive map that requires no loading.** Approach = **compose each environment's rooms into
+ONE big map at build time** (the whole area is only ~5 rooms, so it's all resident — no streaming).
+- **`src/data/worldComposer.ts` → `composeWorld(roomId): WorldData`** — BFS over the SAME-biome
+  **edge links** from any room (links are reciprocal, so BFS from anywhere covers the component);
+  each neighbour is offset so the linked openings abut — **floors aligned** for east/west seams,
+  **opening-centres aligned** for up/down. Stamps every room's tiles into one merged grid (solid
+  rock fills gaps), offsets all spawns, keeps exactly one player spawn, and returns `placements`
+  (per-sub-room bounds + name) + `entries` (a spawn per sub-room for dev jumps). Cross-biome links
+  and **door** spawns pointing outside the composed set are preserved as transitions.
+- **`GameScene` loads the composed world** (`composeWorld(roomId)`; the editor Play-test still loads
+  the single room via `fromEditor`). Intra-world edge links are dropped → **walking across a seam is
+  seamless, zero fade** (verified: ~39 tiles of continuous travel descent→ across seams, `__loads`
+  counter never bumps). Camera follows, bounds = the whole world.
+- **Boss arena is world-space now:** don't arm on load — `checkArena()` arms (seal + Mega-Man intro)
+  the moment the figure enters the elite's `placement`; the seal is a **physical invisible wall**
+  (`arenaWall`) at that sub-room's western edge so you can't walk back out (verified: pushing west
+  holds you in; kill lifts it). `placementAt(x,y)` is the world→sub-room lookup.
+- **Per-region HUD name:** `checkSubRoom()` re-emits `room-name` as you cross between sub-regions, so
+  the one map still names its places (THE FIRST FALL → THE LOWER VAULTS → THE CROSSROADS → …).
+- **BIO-01 composes the full horizontal spine** (first-fall→descent→crossroads→gate = one 228×48 map,
+  floors aligned at world row 45). **BIO-02 composes its horizontal pair** (mirror-hall+gallery).
+- **STILL A SEAM (next slice):** **vertical / door-linked** branches don't compose yet — BIO-01's
+  memory & vault and BIO-02's vertical climb (rise→threshold→untrue-image) are **door** spawns, so
+  they remain quick door-transitions (a fade). Making them seamless needs either authoring them as
+  up/down **edge links** with aligned openings + a connecting shaft (and a return path / drop-through
+  design call), or extending the compositor to follow doors with carved connectors (watch placement
+  overlap). Dev: `__loads` counts scene builds; `__gotoRoom(id)` spawns at that sub-room's entry.
+
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)
   → GameScene. `TitleScene` drifts the depths parallax behind a glowing **REPENTANCE** title +

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { RoomData, Spawn } from '../data/roomData';
 import { buildRoom, START_ROOM } from '../data/levelGraph';
+import { composeWorld, Placement } from '../data/worldComposer';
 import { Assets, Vis, VIS_SOLID_MAX, biomeOf } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace, Skill, Ember } from '../data/Tunables';
@@ -47,6 +48,15 @@ export class GameScene extends Phaser.Scene {
   private parallax!: ParallaxBackground;
 
   private room!: RoomData;
+  // Composed-world support: an ENVIRONMENT is merged into one big map (no fades,
+  // a following camera). `placements` are the sub-rooms within it; `entries` give
+  // a spawn per sub-room for dev jumps.
+  private placements: Placement[] = [];
+  private worldEntries: Record<string, { tx: number; ty: number }> = {};
+  private requestedRoomId = START_ROOM;
+  private arenaWall?: Phaser.Physics.Arcade.Image; // physical seal at the arena's edge while a boss lives
+  private pendingArena?: Placement; // an undefeated elite's region; arms when the figure enters it
+  private currentSubRoom = ''; // which composed sub-region the figure is in (for per-region HUD name)
   private layer!: Phaser.Tilemaps.TilemapLayer;
   private decorations!: Decorations;
   private ambience!: Ambience;
@@ -106,7 +116,20 @@ export class GameScene extends Phaser.Scene {
     this.respawning = false;
     this.interactArmed = false;
 
-    this.room = buildRoom(roomId);
+    // Compose the whole ENVIRONMENT (same-biome, edge-linked rooms) into ONE big
+    // map so it plays as a single loadless world — a following camera, no fades on
+    // the horizontal spine. The editor's Play-test loads the single edited room.
+    this.requestedRoomId = roomId;
+    if (data?.fromEditor) {
+      this.room = buildRoom(roomId);
+      this.placements = [{ id: roomId, name: this.room.name, ox: 0, oy: 0, w: this.room.w, h: this.room.h }];
+      this.worldEntries = {};
+    } else {
+      const world = composeWorld(roomId);
+      this.room = world;
+      this.placements = world.placements;
+      this.worldEntries = world.entries;
+    }
     const roomW = this.room.w * World.tile;
     const roomH = this.room.h * World.tile;
 
@@ -193,8 +216,10 @@ export class GameScene extends Phaser.Scene {
     cam.startFollow(this.player, true, 0.12, 0.12);
     cam.setDeadzone(64, 44);
 
-    // A room holding an undefeated elite is its arena — lock in + intro on arrival.
-    if (this.undefeatedEliteSpawn()) this.armBoss(true);
+    // The arena is a sub-room of the composed world — don't arm on load; arm when
+    // the figure actually walks into that region (see checkArena).
+    const eliteSpawn = this.undefeatedEliteSpawn();
+    this.pendingArena = eliteSpawn ? this.placementAt(eliteSpawn.tx * World.tile, eliteSpawn.ty * World.tile) : undefined;
 
     // Death/transition fade overlay (screen-fixed, above world, below HUD)
     this.fadeRect = this.add
@@ -228,6 +253,7 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
+    (window as { __loads?: number }).__loads = ((window as { __loads?: number }).__loads ?? 0) + 1;
     this.installDebugHooks();
     this.debug = new DebugOverlay(this, {
       player: this.player,
@@ -292,12 +318,16 @@ export class GameScene extends Phaser.Scene {
     const entryDoor = this.entryDoorId
       ? this.room.spawns.find((s) => s.type === 'door' && s.id === this.entryDoorId)
       : undefined;
+    const subEntry = this.worldEntries[this.requestedRoomId]; // composed sub-room spawn
     let pos: { x: number; y: number };
     if (entryDoor) {
       pos = this.tileToWorld(entryDoor);
     } else if (this.entrySide) {
       const tx = this.entrySide === 'west' ? 3 : this.room.w - 4; // arrive just inside that edge
       pos = { x: tx * World.tile + World.tile / 2, y: (this.room.h - 4) * World.tile + World.tile };
+    } else if (subEntry) {
+      // Direct load / dev jump to a specific sub-area of the composed world.
+      pos = this.tileToWorld({ type: 'player', tx: subEntry.tx, ty: subEntry.ty });
     } else {
       const pSpawn = this.room.spawns.find((s) => s.type === 'player');
       pos = pSpawn ? this.tileToWorld(pSpawn) : { x: World.tile * 4, y: World.tile * 5 };
@@ -892,8 +922,35 @@ export class GameScene extends Phaser.Scene {
     this.checkHazards();
     this.checkPickups();
     this.updateBombs(time);
+    this.checkArena();
+    this.checkSubRoom();
     this.checkInteractions(time);
     if (this.actions.justPressed('skill')) this.castNova(time);
+  }
+
+  /** Update the HUD area name as the figure roams between sub-regions of the one
+   *  composed world (THE LOWER VAULTS → THE CROSSROADS → …) — the seamless map
+   *  still names its places. */
+  private checkSubRoom(): void {
+    if (this.placements.length < 2) return;
+    const here = this.placementAt(this.player.x, this.player.y);
+    if (here && here.id !== this.currentSubRoom) {
+      this.currentSubRoom = here.id;
+      this.events.emit('room-name', here.name);
+    }
+  }
+
+  /** Arm the arena (seal + Mega-Man intro) the moment the figure crosses into the
+   *  undefeated elite's region of the composed world. */
+  private checkArena(): void {
+    if (this.bossActive || this.won || !this.pendingArena) return;
+    const p = this.pendingArena;
+    const tx = this.player.x / World.tile;
+    const ty = this.player.y / World.tile;
+    if (tx >= p.ox && tx < p.ox + p.w && ty >= p.oy && ty < p.oy + p.h) {
+      this.pendingArena = undefined;
+      this.armBoss(true);
+    }
   }
 
   private checkPickups(): void {
@@ -992,20 +1049,41 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Seal the arena and (first time) play the Mega-Man-style intro. */
+  /** Which composed sub-room contains this world point (tile-space lookup). */
+  private placementAt(x: number, y: number): Placement | undefined {
+    const tx = x / World.tile;
+    const ty = y / World.tile;
+    return this.placements.find((p) => tx >= p.ox && tx < p.ox + p.w && ty >= p.oy && ty < p.oy + p.h);
+  }
+
+  /** Seal the arena and (first time) play the Mega-Man-style intro. In a composed
+   *  world the arena is one sub-room of the big map, so the seal is a PHYSICAL wall
+   *  at that sub-room's western edge (the crossroads side) — you can't walk out. */
   private armBoss(cinematic: boolean): void {
     const guardian = this.enemies.getChildren().find((e) => (e as Enemy).cfg?.elite) as Enemy | undefined;
     if (!guardian) return;
     this.bossActive = true;
     this.guardianRef = guardian;
+    const arena = this.placementAt(guardian.x, guardian.y) ?? this.placements[0];
+    const wallX = (arena?.ox ?? 0) * World.tile;
+    const wallY = (arena?.oy ?? 0) * World.tile;
+    const wallH = (arena?.h ?? this.room.h) * World.tile;
     if (!this.bossBarrier) {
-      const roomH = this.room.h * World.tile;
       this.bossBarrier = this.add
-        .rectangle(World.tile * 2, 0, 4, roomH, Palette.blood, 0.0)
+        .rectangle(wallX + 2, wallY, 4, wallH, Palette.blood, 0.0)
         .setOrigin(0.5, 0)
         .setDepth(60)
         .setBlendMode(Phaser.BlendModes.ADD);
       this.tweens.add({ targets: this.bossBarrier, fillAlpha: 0.5, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    // A solid invisible wall so the figure can't retreat out of the open arena edge.
+    if (!this.arenaWall && arena && arena.ox > 0) {
+      const wall = this.physics.add.staticImage(wallX + 2, wallY + wallH / 2, Assets.dot.key).setVisible(false);
+      const body = wall.body as Phaser.Physics.Arcade.StaticBody;
+      body.setSize(6, wallH);
+      body.updateFromGameObject();
+      this.physics.add.collider(this.player, wall);
+      this.arenaWall = wall;
     }
     if (cinematic && !this.bossIntroPlayed) {
       this.bossIntroPlayed = true;
@@ -1062,6 +1140,8 @@ export class GameScene extends Phaser.Scene {
         },
       });
     }
+    this.arenaWall?.destroy(); // lift the physical seal — you may leave the arena
+    this.arenaWall = undefined;
     this.juice.flash(Palette.grace, 140);
     if (this.gate) {
       this.drawGate();
