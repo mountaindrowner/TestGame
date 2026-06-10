@@ -215,6 +215,37 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   player-reflection sprite. Build against the concept sheet + `docs/LEVEL_DESIGN.md`. Dev hooks
   `__setRun(partial)` / `__killBoss()` help test gated paths.
 
+## Phase 1 — the roguelite loop (DONE, this pass)
+The "combat-feel + run-structure" pass. The dodge-roll (earlier) was its first beat; the rest:
+- **Grace Nova — the active skill** (`L`/`C`, touch **NOVA**): a radiant burst that staggers,
+  damages and repels every foe in `Skill.novaRadius` + pops projectiles (`GameScene.castNova`).
+  9s cooldown shown as a HUD pip (`skill-cd` event → `UIScene` refill+glow). Reuses the elite
+  `takeDamage(core=true)` long-stagger. Punches the camera on release.
+- **Grace Embers — in-level run-scoped boosts** (the Dead-Cells "scroll"): an `'ember'` spawn is a
+  floating flame; touch it and a paused DOM overlay (`showEmberChoice`) lets you CHOOSE EDGE OF GRACE
+  (+15% blade) / BREATH OF LIFE (+25 max life, restored) / KINDLED SPIRIT (nova −25% cd). Stored in
+  `RunState.embers` (+ `embersTaken` so a taken ember stays gone for the run), folded by
+  `deriveUpgrades(graces, pacts, embers)`, re-applied live. Placed: first-fall outcrop, descent climb,
+  the Hidden Vault. Tunables in `Tunables.ts` (`Skill`/`Ember`).
+- **THE PLACE OF RETURN — the hub** (`HubScene`): every run begins and every death ends here — the
+  grace-beam, the cloaked figure resting in the light, the **ALTAR** (the persistent graces moved here),
+  **DESCEND**. Death no longer respawns in place: world darkens → the defiant line → you wake at the hub.
+  **`RunState.reset` now KEEPS the permanent** (graces, pacts, unlocked moves) **and banks souls**;
+  run-scoped state (key, felled wardens, embers, health) resets and the route is walked again. Title
+  BEGIN → hub; area-complete → hub. Dev hooks `__hub(died?)`, `__die()`, `__ember()`, `__zoom()`.
+- **BIO-01 rebuilt to dramatize the signature beat** — the run now **opens on the FALL**: you wake
+  mid-air atop a 40-tile carved shaft and drop past torches to land among a **broken altar** (collapse
+  made literal), then a teaching corridor east (runner → molten scar taught small+lit then escalated to
+  a real jump → an optional double-jump ember perch). New **THE HIDDEN VAULT** = the planted Grace-Burst
+  gate (its crossroads door is reachable turn one; a wide molten lake under a dropped ceiling bars the
+  prize until you return with the air-dash). Crossroads shows that sealed door (the "come back" tease);
+  A Buried Memory gained a **shortcut door** to the gate (loop, not dead-end); the Sealed Gate is now a
+  torch-lit western approach opening into the Warden's arena. All rooms pass the editor validator.
+  (`buildFirstFall()`'s dead grid removed from `roomData.ts`; `rooms/firstFall.ts` owns it.)
+- **Vibe pass — the crunch:** `JuiceSystem.zoomPunch()` (fast dolly-in, slow settle, tracks rest zoom,
+  never stacks) fires on the **combo finisher** + big hits (core/kill/elite, `Player.isFinisher`) and on
+  the Nova; heavy hits also take the longer hitstop.
+
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)
   → GameScene. `TitleScene` drifts the depths parallax behind a glowing **REPENTANCE** title +
