@@ -51,24 +51,38 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   (dangling/one-way links, unreachable rooms, dead-ends — `src/data/roomValidate.ts`).
 - **Game feel:** squash/stretch on jump/double-jump/land + a pivot squish on hard turns (feet-
   anchored scale, no new art; `PlayerTune.*Squash`), atop dash afterimages + attack body-lean/slash.
-- **Player art:** the **original "Hollow Revenant"** (PixelLab id `d6e11e94`, 48px source → packed
-  **45×43**, `PlayerTune.scale` 1) — the robot/HD re-rolls were rejected. Its stiff template clips
-  were **re-animated emotively** (v3, 7–17 frames each, real wind-up/extension/follow-through):
-  idle/run/jump/fall/dash/hurt + **3 distinct attack swings** + death, plus a user-made
-  **running-jump** (`runjump`, used when leaping with horizontal speed; standstill uses the leap).
-  The **3-hit combo** now uses the **newer hand-made swings**: 1 = fast overhead broken-sword chop
-  (7f), 2 = pull-the-glowing-blade-back heavy horizontal slash (17f), 3 = explosive crouch→leap
-  forward-thrust finisher (9f) — wired in `PlayerCombo`/`PlayerAnims` (the older slash/horizontal/
-  cleave clips remain on the character but are no longer mapped). The leap finisher added 2px of
-  union-bbox headroom (41→43 tall); `__poseScene({anim,progress})` poses any clip for verification.
-  A **long-idle "waits" pose**: stand still > `PlayerTune.restDelayMs` and he props the blade on
-  his shoulder (`player-rest`); below half HP it's the hunched, weary, blade-dragging variant
-  (`player-weary`) — gated in `Player.updateAnimation` via an `idleSince` timer.
-  Pulled via
-  `tools/fetch_enemy_art.py` (player id + per-clip keywords there; note PixelLab keys animations by
-  name, so emotive re-rolls of same-named clips need `delete_animation` first), packed by
-  `tools/pack_player.py` (union-bbox, feet-anchored). Run cadence speed-coupled; squash/stretch via
-  `PlayerTune.*Squash`.
+- **Player art (HD upgrade — DONE):** the rigid old sprite was the problem — the original
+  "Hollow Revenant" (`d6e11e94`, 48px **standard-mode** = template-skeleton clips → stiff). It's
+  now the **"Hollow Revenant HD"** (PixelLab id `2a16dbc2-…`, **v3** highest-quality, **64px source
+  → packed 98×68**, `PlayerTune.scale 0.68`). Identity held (same cloaked figure, glowing broken
+  blade, dark + cyan neon); Mark chose the dynamic/flowing-cape candidate over the somber one. A
+  **full emotive v3 animation pass** (1 ref + N animated, east only, ~31 gens): idle/run/jump/
+  **runjump**/fall/dash/hurt + **3 attack swings** + death + rest/weary. The **3-hit combo**: 1 =
+  fast overhead chop, 2 = pull-back heavy horizontal slash, 3 = explosive crouch→leap forward-thrust
+  finisher (wired in `PlayerCombo`/`PlayerAnims`). The long-idle "waits" poses (`player-rest`;
+  `player-weary` below half HP) are gated in `Player.updateAnimation` via `idleSince`.
+  `__poseScene({anim,progress})` poses any clip.
+  - **scale 0.68 is deliberate**: keeps the on-screen size AND world collision body identical to the
+    old 45×43 sprite (`bodyW/H` in *frame* px chosen so px·scale ≈ old 12×28 world), so **no room/
+    physics retuning** — a pure fidelity bump. The Mirror Double inherits the new sprite automatically.
+  - **GOTCHA (mobile texture cap):** `pack_player.py` lays the sheet as a **grid** (40×3, 3920×204),
+    NOT one long strip. A single-row HD strip is ~10.8k px wide — past `GL_MAX_TEXTURE_SIZE` on many
+    mobile GPUs (4096) and the headless renderer; the texture silently fails to upload and the player
+    renders as a **black quad**. Keep both sheet dims < 4096. Phaser numbers spritesheet frames
+    row-major, so `PlayerAnims` ranges are layout-agnostic.
+  - **GOTCHA (v3 reference frame):** every v3 animation ships a shared neutral `frame_000` (identical
+    across all clips) — `pack_player.py` **drops it** so looping clips don't hitch and one-shots start
+    on motion.
+  - Pulled via `tools/fetch_enemy_art.py` (`player` entry: new id + action-slug keywords), packed by
+    `tools/pack_player.py` (union-bbox, feet-anchored, grid). Run cadence speed-coupled; squash via
+    `PlayerTune.*Squash`. (Old `d6e11e94` kept in PixelLab for provenance, no longer referenced.)
+- **Player hit/attack boxes (improved):** the **hurtbox** is a slim, fair, chest-height body (~12×28
+  world, forgiving vs the ~39px-wide figure). The **attack boxes are generous weapon-arcs** — sized a
+  touch LONGER than the drawn blade (measured ~24/33/33px → boxes **32/44/54** reach, finisher
+  longest to sell the heavy cleave), centred at chest height (`PlayerTune.attackCyFactor`) with a
+  small **back-margin** (`attackBack`) so point-blank foes still connect. `Player.attackBox()` is the
+  shared seam (fire + per-frame reposition); the crescent visual scales with `PlayerCombo[].arc` to
+  match. Verify live with the debug overlay (\` key) — orange = attack box, green = hurtbox.
 - **Boss arena:** the gate room is the Warden's arena — entering **seals the exits** (barrier +
   edge-lock via `bossActive`) and plays a **Mega-Man-style intro** (camera to boss, a dedicated
   **roar taunt** clip + `Sfx.roar()` + shake, then the **boss health bar** draws in; `UIScene`

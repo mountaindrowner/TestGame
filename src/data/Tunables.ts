@@ -11,16 +11,18 @@ export const World = {
 };
 
 export const PlayerTune = {
-  // Frame / body  (45x43 original Revenant, emotive clips + running-jump + the
-  // new hand-made 3-hit swings; bbox-packed — the leap-thrust finisher added 2px
-  // of headroom so the union frame grew 45x41 -> 45x43).
-  frameW: 45,
-  frameH: 43,
-  scale: 1,
-  bodyW: 12,
-  bodyH: 28,
-  bodyOffsetX: 16, // (frameW - bodyW)/2 -> centred
-  bodyOffsetY: 15, // body spans rows 15..43 (feet at frame bottom; frameH - bodyH)
+  // Frame / body  (98x68 Hollow Revenant HD — the v3, 64px-source re-roll; richer
+  // emotive clips, bbox-packed feet-anchored, character centred at x=49). scale 0.68
+  // keeps the on-screen size AND the world collision body identical to the old 45x43
+  // sprite (visual ~41px, body ~12x28 world), so no room/physics retuning is needed
+  // — a pure fidelity upgrade. Body px chosen so px*scale matches the old world body.
+  frameW: 98,
+  frameH: 68,
+  scale: 0.68,
+  bodyW: 18, //  18 * 0.68 ≈ 12.2 world  (old 12)
+  bodyH: 41, //  41 * 0.68 ≈ 27.9 world  (old 28)
+  bodyOffsetX: 40, // (frameW - bodyW)/2 -> centred under the figure (cx=49)
+  bodyOffsetY: 27, // body spans rows 27..68 (feet at frame bottom; frameH - bodyH)
 
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),
@@ -50,8 +52,10 @@ export const PlayerTune = {
 
   // Attack — base/fallback values; the live 3-hit combo lives in PlayerCombo below.
   comboWindowMs: 320, // press again within this (after recovery) to chain the next hit
-  attackReach: 22, // hitbox extends this far in front of the body center
-  attackHeight: 26,
+  attackReach: 32, // hitbox extends this far in front of the body center
+  attackHeight: 30,
+  attackBack: 7, // the box also reaches this far BEHIND centre so point-blank foes still land
+  attackCyFactor: 0.62, // hitbox vertical centre = bodyH*scale*this above the feet (chest height)
   attackDamage: 26, // fallback if combo config is unavailable
 
   // Squash & stretch (feet-anchored micro-animation; origin 0.5,1 keeps the base
@@ -80,10 +84,13 @@ export const PlayerTune = {
 // The 3-hit blade combo. Chain one→two→three within comboWindowMs for the payoff:
 // a light swipe, a heavier swing, then a big committed forward cleave that hits
 // hardest but is slow to recover (whiff = punishable). Damage roughly 1 : 1.5 : 2.6.
+// reach/height = the attack BOX (world px). Deliberately a touch LONGER than the
+// drawn blade (measured ~24/33/33px) — a generous weapon-arc like other action games,
+// the finisher longest to sell the heavy cleave. The crescent visual scales with `arc`.
 export const PlayerCombo = [
-  { dmg: 20, reach: 22, height: 26, windupMs: 30, activeMs: 80, recoveryMs: 110, lunge: 90, anim: 'player-attack1', arc: 1.0, lean: 0.16 },
-  { dmg: 30, reach: 28, height: 30, windupMs: 60, activeMs: 110, recoveryMs: 250, lunge: 130, anim: 'player-attack2', arc: 1.4, lean: 0.24 },
-  { dmg: 52, reach: 34, height: 34, windupMs: 70, activeMs: 115, recoveryMs: 240, lunge: 240, anim: 'player-attack3', arc: 1.7, lean: 0.32 },
+  { dmg: 20, reach: 32, height: 30, windupMs: 30, activeMs: 80, recoveryMs: 110, lunge: 90, anim: 'player-attack1', arc: 1.25, lean: 0.16 },
+  { dmg: 30, reach: 44, height: 36, windupMs: 60, activeMs: 110, recoveryMs: 250, lunge: 130, anim: 'player-attack2', arc: 1.7, lean: 0.24 },
+  { dmg: 52, reach: 54, height: 42, windupMs: 70, activeMs: 115, recoveryMs: 240, lunge: 240, anim: 'player-attack3', arc: 2.1, lean: 0.32 },
 ] as const;
 
 export const EnemyTune = {

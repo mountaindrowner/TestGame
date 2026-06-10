@@ -16,6 +16,22 @@
 
 *(Ignore the failed first Warden `f85b3d4b…` — PixelLab heavy-load failure.)*
 
+## PLAYER — "Hollow Revenant HD" (account 076c964e…) — DONE, integrated
+The high-quality re-roll that replaced the rigid 48px standard-mode original (`d6e11e94`, kept for
+provenance, unused). **v3** character (highest quality), 64px source → packed **98×68**.
+| character_id | mode | packed | east animations (animated-frame counts, after dropping the v3 ref) |
+|---|---|---|---|
+| `2a16dbc2-badc-412a-8da4-9640577bb4c0` | v3, 64px | 98×68 (grid 40×3) | idle8 run10 jump10 runjump8 fall6 dash6 hurt6 attack1 8 attack2 12 attack3 10 death10 rest8 weary8 |
+
+Animation source = **v3 custom** (`animate_character`, east only, ~1–3 gens each), action
+descriptions in `fetch_enemy_art.py`'s `player` map (combo = overhead chop / pull-back slash /
+crouch→leap thrust). Pipeline is the same as the enemies: `fetch_enemy_art.py` → `pack_player.py`
+→ `assetManifest`/`Animations`/`Tunables`. **Two non-obvious rules baked into `pack_player.py`:**
+(1) lay the sheet as a **grid** (both dims < 4096) — a single-row HD strip overflows mobile
+`GL_MAX_TEXTURE_SIZE` and renders black; (2) **drop each clip's `frame_000`** — it's the shared v3
+reference pose. `PlayerTune.scale 0.68` keeps the on-screen size + collision body identical to the
+old sprite (no level retuning).
+
 ## BIO-02 House of Mirrors roster (account 076c964e…) — DONE, integrated
 Generated as standard side-view PixelLab characters from the concept sheet, east frames only
 (`directions:['east']` keeps each animation at 1 generation). Packed sizes (union bbox) noted.

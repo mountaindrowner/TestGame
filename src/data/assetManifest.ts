@@ -2,7 +2,7 @@
 // The Python packers (tools/*.py) MUST produce sheets matching these.
 
 export const Assets = {
-  player: { key: 'player', path: 'assets/sprites/player.png', frameW: 45, frameH: 43 },
+  player: { key: 'player', path: 'assets/sprites/player.png', frameW: 98, frameH: 68 },
   runner: { key: 'runner', path: 'assets/sprites/runner.png', frameW: 48, frameH: 44 },
   // The BIO-01 enemy family — real PixelLab art (varied native frame sizes).
   crawler: { key: 'crawler', path: 'assets/sprites/crawler.png', frameW: 43, frameH: 49 },

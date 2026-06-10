@@ -330,12 +330,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.scene.time.delayedCall(c.windupMs, () => this.openHitbox(), undefined, this);
   }
 
+  /** The swing's attack BOX: a generous weapon arc — `reach` in front of centre plus
+   *  a small `attackBack` margin behind (so point-blank foes still connect), centred
+   *  at chest height. Shared by openHitbox + the per-frame reposition. */
+  private attackBox(c: { reach: number; height: number }): { cx: number; cy: number; w: number; h: number } {
+    const w = c.reach + P.attackBack;
+    const cx = this.x + this.facing * ((c.reach - P.attackBack) / 2);
+    const cy = this.y - P.bodyH * P.scale * P.attackCyFactor;
+    return { cx, cy, w, h: c.height };
+  }
+
   private openHitbox(): void {
     if (!this.attacking) return;
     const c = this.curAttack;
-    const cx = this.x + this.facing * (c.reach * 0.5);
-    const cy = this.y - P.bodyH * P.scale * 0.55;
-    this.hitbox.fire(cx, cy, c.reach, c.height);
+    const { cx, cy, w, h } = this.attackBox(c);
+    this.hitbox.fire(cx, cy, w, h);
     this.attackStartedActive = true;
     this.spawnSlash(cx, cy, c.arc);
   }
@@ -380,11 +389,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.lastAfterimageAt = time;
     }
     if (this.hitbox.live) {
-      // keep hitbox glued in front of the player during the active window
-      const cx = this.x + this.facing * (c.reach * 0.5);
-      const cy = this.y - P.bodyH * P.scale * 0.55;
-      this.hitbox.setPosition(cx - c.reach / 2, cy - c.height / 2);
-      this.hitbox.body.reset(cx - c.reach / 2, cy - c.height / 2);
+      // keep the attack box glued to the player during the active window
+      const { cx, cy, w, h } = this.attackBox(c);
+      this.hitbox.setPosition(cx - w / 2, cy - h / 2);
+      this.hitbox.body.reset(cx - w / 2, cy - h / 2);
       if (time >= this.attackActiveEndAt) this.hitbox.disable();
     }
     if (time >= this.attackPhaseEndAt) {

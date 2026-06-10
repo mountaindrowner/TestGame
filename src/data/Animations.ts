@@ -12,30 +12,31 @@ export interface AnimDef {
   repeat: number; // -1 = loop
 }
 
-// PLAYER strip (45x43), packed by tools/pack_player.py:
-//   idle 0-8 | run 9-19 | jump 20-34 | runjump 35-42 | fall 43-49 | dash 50-56 |
-//   hurt 57-65 | attack1 66-72 | attack2 73-89 | attack3 90-98 | death 99-109 |
-//   rest 110-118 | weary 119-129
-// jump = standstill leap (15f); runjump = user-made running jump (8f, used when moving).
+// PLAYER strip (98x68), Hollow Revenant HD (v3, 64px source), packed by tools/pack_player.py:
+//   idle 0-7 | run 8-17 | jump 18-27 | runjump 28-35 | fall 36-41 | dash 42-47 |
+//   hurt 48-53 | attack1 54-61 | attack2 62-73 | attack3 74-83 | death 84-93 |
+//   rest 94-101 | weary 102-109
+// jump = standstill leap; runjump = running jump (used when moving horizontally).
 // rest/weary = long-idle "waits" poses (blade on shoulder; weary = below half HP).
-// 3-hit combo = the hand-made swings: 1 fast overhead broken-sword chop (7f),
-// 2 heavy pull-back glowing horizontal slash (17f), 3 leap-thrust finisher (9f).
+// 3-hit combo = the v3 swings: 1 fast overhead broken-sword chop, 2 heavy pull-back
+// glowing horizontal slash, 3 explosive crouch->leap forward-thrust finisher.
 // Frame rates chosen so each swing plays ~start-to-finish across its combo step.
+// (The shared v3 reference frame_000 is dropped by the packer — every clip starts on motion.)
 export const PlayerAnims: AnimDef[] = [
-  { key: 'player-idle', sheet: 'player', start: 0, end: 8, frameRate: 8, repeat: -1 },
-  { key: 'player-run', sheet: 'player', start: 9, end: 19, frameRate: 16, repeat: -1 },
-  { key: 'player-jump', sheet: 'player', start: 20, end: 34, frameRate: 20, repeat: 0 },
-  { key: 'player-runjump', sheet: 'player', start: 35, end: 42, frameRate: 16, repeat: 0 },
-  { key: 'player-fall', sheet: 'player', start: 43, end: 49, frameRate: 12, repeat: -1 },
-  { key: 'player-dash', sheet: 'player', start: 50, end: 56, frameRate: 22, repeat: 0 },
-  { key: 'player-hurt', sheet: 'player', start: 57, end: 65, frameRate: 18, repeat: 0 },
-  { key: 'player-attack1', sheet: 'player', start: 66, end: 72, frameRate: 32, repeat: 0 },
-  { key: 'player-attack2', sheet: 'player', start: 73, end: 89, frameRate: 39, repeat: 0 },
-  { key: 'player-attack3', sheet: 'player', start: 90, end: 98, frameRate: 21, repeat: 0 },
-  { key: 'player-death', sheet: 'player', start: 99, end: 109, frameRate: 12, repeat: 0 },
+  { key: 'player-idle', sheet: 'player', start: 0, end: 7, frameRate: 8, repeat: -1 },
+  { key: 'player-run', sheet: 'player', start: 8, end: 17, frameRate: 16, repeat: -1 },
+  { key: 'player-jump', sheet: 'player', start: 18, end: 27, frameRate: 18, repeat: 0 },
+  { key: 'player-runjump', sheet: 'player', start: 28, end: 35, frameRate: 16, repeat: 0 },
+  { key: 'player-fall', sheet: 'player', start: 36, end: 41, frameRate: 12, repeat: -1 },
+  { key: 'player-dash', sheet: 'player', start: 42, end: 47, frameRate: 22, repeat: 0 },
+  { key: 'player-hurt', sheet: 'player', start: 48, end: 53, frameRate: 18, repeat: 0 },
+  { key: 'player-attack1', sheet: 'player', start: 54, end: 61, frameRate: 32, repeat: 0 },
+  { key: 'player-attack2', sheet: 'player', start: 62, end: 73, frameRate: 30, repeat: 0 },
+  { key: 'player-attack3', sheet: 'player', start: 74, end: 83, frameRate: 24, repeat: 0 },
+  { key: 'player-death', sheet: 'player', start: 84, end: 93, frameRate: 12, repeat: 0 },
   // Long-idle "waits" poses (blade on shoulder). Ranges/size confirmed by the packer.
-  { key: 'player-rest', sheet: 'player', start: 110, end: 118, frameRate: 7, repeat: -1 },
-  { key: 'player-weary', sheet: 'player', start: 119, end: 129, frameRate: 6, repeat: -1 },
+  { key: 'player-rest', sheet: 'player', start: 94, end: 101, frameRate: 7, repeat: -1 },
+  { key: 'player-weary', sheet: 'player', start: 102, end: 109, frameRate: 6, repeat: -1 },
 ];
 
 // RUNNER strip (48x44), packed by tools/pack_enemy.py from PixelLab frames:

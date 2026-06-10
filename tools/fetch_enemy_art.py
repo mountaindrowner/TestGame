@@ -14,17 +14,20 @@ URL = "https://api.pixellab.ai/mcp/characters/{}/download"
 
 # kind -> (character_id, { engine_anim_role: keyword-in-action-slug })
 ENEMIES = {
-    "player": ("d6e11e94-d526-46f8-a306-92181692a41a", {
-        "idle": "sway", "run": "strides", "jump": "leap", "runjump": "running_jump",
-        "fall": "billow", "dash": "lunge", "hurt": "snapping",
-        # 3-hit combo = the newer, richer hand-made swings:
-        #   1 light  -> fast overhead broken-sword chop (7f)
-        #   2 heavy  -> pull the glowing blade back, big horizontal slash (17f)
-        #   3 finish -> explosive crouch->leap forward thrust + follow-through (9f)
-        "attack1": "broken_sword", "attack2": "glowing_blue", "attack3": "animating-433",
+    # Hollow Revenant HD (v3, 64px source) — the high-quality re-roll. Full emotive
+    # v3 animation pass (east). Keywords match the action-slug dir names in the zip.
+    "player": ("2a16dbc2-badc-412a-8da4-9640577bb4c0", {
+        "idle": "resolute", "run": "determination", "jump": "straight_up",
+        "runjump": "running_leap", "fall": "falling_downward", "dash": "dashing",
+        "hurt": "recoiling",
+        # 3-hit combo (richer v3 swings):
+        #   1 light  -> fast overhead broken-sword chop
+        #   2 heavy  -> pull the glowing blade back, big horizontal slash
+        #   3 finish -> explosive crouch->leap forward thrust + follow-through
+        "attack1": "overhead_chop", "attack2": "pulling_the_glowing", "attack3": "explosive_finisher",
         "death": "collapsing",
         # long-idle "waits" poses: rest (healthy) + weary (below half HP)
-        "rest": "propped", "weary": "weary",
+        "rest": "propping", "weary": "hunched",
     }),
     "crawler": ("e69cc50e-451e-4e02-ae1d-8111c2931e02", {"run": "crawling", "hurt": "recoiling"}),
     "spark": ("7d0aa99c-c02c-400e-b494-03146403a4a1", {"run": "floating", "windup": "flaring", "hurt": "flickering"}),
