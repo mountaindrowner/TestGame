@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 
-export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'dash' | 'attack';
+export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'dash' | 'attack' | 'skill';
 
-const ACTIONS: Action[] = ['left', 'right', 'up', 'down', 'jump', 'dash', 'attack'];
+const ACTIONS: Action[] = ['left', 'right', 'up', 'down', 'jump', 'dash', 'attack', 'skill'];
 
 // Maps physical keys -> actions. Keep the mapping here so rebinding is trivial
 // and so gameplay code only ever asks about *actions*, never raw keys.
@@ -21,6 +21,8 @@ const KEY_MAP: Record<string, Action> = {
   J: 'attack',
   K: 'attack',
   X: 'attack',
+  L: 'skill',
+  C: 'skill',
 };
 
 /** Single abstraction between devices and the game. Funnels keyboard (now) and
@@ -46,7 +48,7 @@ export class InputManager {
   }
 
   private blank(): Record<Action, boolean> {
-    return { left: false, right: false, up: false, down: false, jump: false, dash: false, attack: false };
+    return { left: false, right: false, up: false, down: false, jump: false, dash: false, attack: false, skill: false };
   }
 
   /** Call once at the top of the scene update, before entities read input. */

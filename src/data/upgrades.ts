@@ -1,4 +1,4 @@
-import { PlayerTune } from './Tunables';
+import { PlayerTune, Ember } from './Tunables';
 
 /** The Sanctuary economy. ALTAR graces are persistent, leveled (spend souls to
  *  kindle). The STRANGER's pacts are one-time % boons, lifetime-capped. Both the
@@ -47,20 +47,27 @@ export interface DerivedUpgrades {
   magnetRange: number;
   soulBonus: number; // extra souls per pickup
   leechOnKill: number;
+  skillCdMult: number; // Grace Nova cooldown multiplier (KINDLED SPIRIT embers)
 }
 
-/** Fold the run's graces + pacts into the concrete stats the engine applies. */
+const NO_EMBERS = { blade: 0, life: 0, spirit: 0 };
+
+/** Fold the run's graces + pacts (+ run-scoped Grace Embers) into the concrete
+ *  stats the engine applies. */
 export function deriveUpgrades(
   graces: { vigor: number; edge: number; grace: number; gather: number },
   pacts: string[],
+  embers: { blade: number; life: number; spirit: number } = NO_EMBERS,
 ): DerivedUpgrades {
   const has = (id: string) => pacts.includes(id);
   let maxHealth = PlayerTune.maxHealth + graces.vigor * 20;
   if (has('bulwark')) maxHealth = Math.round(maxHealth * 1.15);
   if (has('resolve')) maxHealth = Math.round(maxHealth * 1.1);
+  maxHealth += embers.life * Ember.life;
   let damageMult = 1 + graces.edge * 0.12;
   if (has('fury')) damageMult *= 1.25;
   if (has('resolve')) damageMult *= 1.1;
+  damageMult *= 1 + embers.blade * Ember.blade;
   return {
     maxHealth,
     damageMult,
@@ -69,5 +76,6 @@ export function deriveUpgrades(
     magnetRange: 52 + graces.gather * 22,
     soulBonus: graces.gather + (has('fortune') ? 1 : 0),
     leechOnKill: has('leech') ? 4 : 0,
+    skillCdMult: Math.pow(1 - Ember.spirit, embers.spirit),
   };
 }

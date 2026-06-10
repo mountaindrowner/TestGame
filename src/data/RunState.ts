@@ -15,6 +15,8 @@ export interface RunStateData {
   souls: number; // currency dropped by foes / urns
   graces: { vigor: number; edge: number; grace: number; gather: number }; // Sanctuary altar levels
   pacts: string[]; // one-time Stranger pacts taken (lifetime-capped)
+  embers: { blade: number; life: number; spirit: number }; // RUN-scoped Grace Ember boosts
+  embersTaken: string[]; // which placed embers were collected this run (room:tx,ty)
   currentRoomId: string;
   entryDoorId?: string; // which door we entered the current room from
 }
@@ -34,9 +36,19 @@ export class RunState {
     return d;
   }
 
-  /** Begin a brand-new run (called on first boot and on "restart run"). */
+  /** Begin a new RUN (death / hub depart / area complete). PERMANENT things
+   *  survive — altar graces, pacts, unlocked moves (Grace Burst) — and gathered
+   *  souls are banked at the Place of Return. Everything run-scoped (keys, felled
+   *  wardens, embers, health) resets: the route is walked again, in grace. */
   reset(startRoomId: string): RunStateData {
+    const prev = this.registry.get(KEY) as RunStateData | undefined;
     const d = this.fresh(startRoomId);
+    if (prev) {
+      d.graces = prev.graces;
+      d.pacts = prev.pacts;
+      d.graceBurst = prev.graceBurst;
+      d.souls = prev.souls;
+    }
     this.registry.set(KEY, d);
     return d;
   }
@@ -52,6 +64,8 @@ export class RunState {
       souls: 0,
       graces: { vigor: 0, edge: 0, grace: 0, gather: 0 },
       pacts: [],
+      embers: { blade: 0, life: 0, spirit: 0 },
+      embersTaken: [],
       currentRoomId: roomId,
     };
   }

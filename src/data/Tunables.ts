@@ -84,6 +84,23 @@ export const PlayerTune = {
   invulnMsAfterHit: 700,
 };
 
+// Grace Nova — the active "skill slot" (kindled at the Place of Return): a burst
+// of grace that staggers + knocks back everything near the figure. Run-scoped
+// KINDLED SPIRIT embers shorten the cooldown (see Ember below).
+export const Skill = {
+  novaRadius: 72, // world px around the figure
+  novaDamage: 22, // scaled by the live damageMult
+  novaCooldownMs: 9000,
+};
+
+// Grace Embers — in-level pickups (the Scrolls-of-Power beat): found in secret
+// nooks / risky detours, each grants ONE chosen boost for the current run.
+export const Ember = {
+  blade: 0.15, // EDGE OF GRACE: +15% blade damage per ember
+  life: 25, //   BREATH OF LIFE: +25 max life (and restores that much)
+  spirit: 0.25, // KINDLED SPIRIT: nova cooldown -25% per ember (multiplicative)
+};
+
 // The 3-hit blade combo. Chain one→two→three within comboWindowMs for the payoff:
 // a light swipe, a heavier swing, then a big committed forward cleave that hits
 // hardest but is slow to recover (whiff = punishable). Damage roughly 1 : 1.5 : 2.6.

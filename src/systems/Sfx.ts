@@ -120,6 +120,16 @@ export class Sfx {
     const notes = [523, 659, 784, 1047]; // C E G C — major, rising
     notes.forEach((n, i) => setTimeout(() => this.tone(n, 0.5, 'triangle', 0.22), i * 90));
   }
+  /** Grace Nova — a deep gathered breath, then a bright radiant burst. */
+  nova(): void {
+    this.tone(110, 0.3, 'sine', 0.3, 55); // the gather (low swell)
+    this.tone(72, 0.22, 'square', 0.2, 40); // sub thump
+    this.noise(0.18, 0.2, 700);
+    setTimeout(() => {
+      this.tone(660, 0.3, 'triangle', 0.2, 1320); // the radiant release
+      this.tone(880, 0.24, 'sine', 0.14, 1760);
+    }, 70);
+  }
 
   // --- UI / pickups -----------------------------------------------------
   /** Menu cursor move — a soft blip. */

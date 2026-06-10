@@ -130,20 +130,21 @@ export class TitleScene extends Phaser.Scene {
   private begin(): void {
     if (this.starting) return;
     this.starting = true;
-    new RunState(this.registry).reset(START_ROOM); // a fresh descent
+    new RunState(this.registry).reset(START_ROOM); // a new run (permanent graces/moves kept)
     this.sfx.startMusic();
     const w = this.scale.width;
     const h = this.scale.height;
     const veil = this.add.rectangle(0, 0, w, h, 0x05050a).setOrigin(0).setScrollFactor(0).setDepth(200).setAlpha(0);
     const loading = this.add
-      .text(w / 2, h / 2, 'ENTERING THE FALL…', { fontFamily: FONT, fontSize: '9px', color: '#7ef0ff' })
+      .text(w / 2, h / 2, 'RETURNING…', { fontFamily: FONT, fontSize: '9px', color: '#7ef0ff' })
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(201)
       .setAlpha(0);
     this.tweens.add({ targets: veil, alpha: 1, duration: 420 });
     this.tweens.add({ targets: loading, alpha: 0.9, duration: 420 });
-    this.time.delayedCall(900, () => this.scene.start('GameScene'));
+    // Every journey begins at the Place of Return — the hub owns the descent.
+    this.time.delayedCall(900, () => this.scene.start('HubScene', {}));
   }
 
   update(_time: number, delta: number): void {

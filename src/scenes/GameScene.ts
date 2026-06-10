@@ -3,7 +3,7 @@ import { RoomData, Spawn } from '../data/roomData';
 import { buildRoom, START_ROOM } from '../data/levelGraph';
 import { Assets, Vis, VIS_SOLID_MAX, biomeOf } from '../data/assetManifest';
 import { Palette } from '../data/palette';
-import { World, Grace } from '../data/Tunables';
+import { World, Grace, Skill, Ember } from '../data/Tunables';
 import { RunState } from '../data/RunState';
 import { deriveUpgrades, DerivedUpgrades } from '../data/upgrades';
 import { FONT } from '../data/ui';
@@ -83,6 +83,9 @@ export class GameScene extends Phaser.Scene {
   // key pickup
   private keyObj?: Phaser.GameObjects.Container;
   private keyPos = new Phaser.Math.Vector2();
+  // Grace Embers (run-scoped in-level boosts) + the Grace Nova skill
+  private embers: { id: string; x: number; y: number; obj: Phaser.GameObjects.Container }[] = [];
+  private novaReadyAt = 0;
 
   constructor() {
     super('GameScene');
@@ -97,6 +100,7 @@ export class GameScene extends Phaser.Scene {
     this.doors = [];
     this.gate = undefined;
     this.keyObj = undefined;
+    this.embers = [];
     this.transitioning = false;
     this.won = false;
     this.respawning = false;
@@ -138,8 +142,8 @@ export class GameScene extends Phaser.Scene {
     this.spawnFromData();
     this.events.emit('souls', this.run.souls);
 
-    // Sanctuary upgrades (graces + pacts) → concrete stats, applied to the player.
-    this.up = deriveUpgrades(this.run.graces, this.run.pacts);
+    // Sanctuary upgrades (graces + pacts) + run-scoped embers → concrete stats.
+    this.up = deriveUpgrades(this.run.graces, this.run.pacts, this.run.data.embers);
     this.player.applyUpgrades(this.up);
     this.run.maxHealth = this.up.maxHealth;
     // Restore carried-over health and persist changes back to the run.
@@ -335,6 +339,9 @@ export class GameScene extends Phaser.Scene {
         break;
       case 'key':
         if (!this.run.hasBrokenMemory) this.makeKey(x, y - 12);
+        break;
+      case 'ember':
+        this.makeEmber(x, y - 12, s);
         break;
       case 'gate':
         this.makeGate(x, y, s);
@@ -634,6 +641,129 @@ export class GameScene extends Phaser.Scene {
     this.keyObj = undefined;
   }
 
+  /** A Grace Ember — the in-level "scroll": a warm floating flame. Collected on
+   *  contact; the player CHOOSES what it kindles (run-scoped). Once taken it stays
+   *  gone for the run (tracked by room:tile id in RunState.embersTaken). */
+  private makeEmber(x: number, y: number, s: Spawn): void {
+    const id = `${this.room.id}:${s.tx},${s.ty}`;
+    if (this.run.data.embersTaken.includes(id)) return;
+    const halo = this.add
+      .image(0, 0, Assets.dot.key)
+      .setScale(6)
+      .setTint(Palette.molten)
+      .setAlpha(0.3)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const flame = this.add
+      .image(0, 0, Assets.dot.key)
+      .setScale(2.6)
+      .setTint(Palette.moltenHi)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const core = this.add.image(0, -1, Assets.dot.key).setScale(1.2).setTint(Palette.bloom).setBlendMode(Phaser.BlendModes.ADD);
+    const c = this.add.container(x, y, [halo, flame, core]).setDepth(49);
+    this.tweens.add({ targets: c, y: y - 5, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: halo, scale: 7.4, alpha: 0.42, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.embers.push({ id, x, y, obj: c });
+  }
+
+  private collectEmber(e: { id: string; x: number; y: number; obj: Phaser.GameObjects.Container }): void {
+    this.embers = this.embers.filter((q) => q !== e);
+    e.obj.destroy();
+    this.sfx.heal();
+    this.particles.graceMotes(e.x, e.y, 18);
+    this.juice.flash(Palette.moltenHi, 90);
+    this.showEmberChoice(e.id);
+  }
+
+  /** Pause and let the player choose what the ember kindles (this run). */
+  private showEmberChoice(emberId: string): void {
+    const id = 'ember-overlay';
+    document.getElementById(id)?.remove();
+    const el = document.createElement('div');
+    el.id = id;
+    el.innerHTML = `
+      <style>
+        #${id}{position:fixed;inset:0;display:grid;place-items:center;z-index:9998;
+          font-family:'Dash Horizon',ui-monospace,monospace;color:#eaf7ff;text-align:center;
+          background:radial-gradient(ellipse at center, rgba(30,16,8,0.25), rgba(5,5,10,0.85));}
+        #${id} .ttl{font-size:17px;letter-spacing:0.3em;color:#ffb46a;margin-bottom:6px;
+          text-shadow:0 0 14px rgba(255,140,60,.5);}
+        #${id} .sub{font-size:10px;opacity:0.7;letter-spacing:0.16em;margin-bottom:18px;}
+        #${id} .opts{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+        #${id} button{pointer-events:auto;appearance:none;border:1.5px solid rgba(126,240,255,0.5);
+          background:rgba(10,16,24,0.72);color:#cdeffb;border-radius:12px;padding:14px 16px;width:150px;
+          font-family:inherit;cursor:pointer;text-align:center;}
+        #${id} button:hover{background:rgba(126,240,255,0.18);}
+        #${id} .bn{font-size:12px;letter-spacing:0.12em;margin-bottom:6px;color:#eaf7ff;}
+        #${id} .bb{font-size:9.5px;opacity:0.7;letter-spacing:0.04em;line-height:1.5;}
+      </style>
+      <div>
+        <div class="ttl">A GRACE EMBER</div>
+        <div class="sub">choose what it kindles — for this run</div>
+        <div class="opts">
+          <button data-k="blade"><div class="bn">EDGE OF GRACE</div><div class="bb">+${Math.round(Ember.blade * 100)}% blade damage</div></button>
+          <button data-k="life"><div class="bn">BREATH OF LIFE</div><div class="bb">+${Ember.life} max life<br>and restore it</div></button>
+          <button data-k="spirit"><div class="bn">KINDLED SPIRIT</div><div class="bb">grace nova recovers<br>${Math.round(Ember.spirit * 100)}% faster</div></button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    this.scene.pause();
+    el.querySelectorAll<HTMLButtonElement>('button').forEach((b) =>
+      b.addEventListener('pointerup', () => {
+        const k = b.dataset.k as 'blade' | 'life' | 'spirit';
+        this.run.data.embers[k] += 1;
+        this.run.data.embersTaken.push(emberId);
+        // re-derive and re-apply the live stats
+        this.up = deriveUpgrades(this.run.graces, this.run.pacts, this.run.data.embers);
+        this.player.applyUpgrades(this.up);
+        this.run.maxHealth = this.up.maxHealth;
+        if (k === 'life') this.player.heal(Ember.life);
+        this.events.emit('player-health', this.player.health, this.up.maxHealth);
+        this.sfx.uiSelect();
+        el.remove();
+        this.scene.resume();
+      }),
+    );
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => el.remove());
+  }
+
+  /** Grace Nova — the active skill: a radiant burst that staggers and repels
+   *  everything around the figure. The breath you take to make space. */
+  private castNova(time: number): void {
+    if (time < this.novaReadyAt || !this.player.controllable || this.respawning || this.won) return;
+    const cd = Skill.novaCooldownMs * this.up.skillCdMult;
+    this.novaReadyAt = time + cd;
+    this.events.emit('skill-cd', cd);
+    const px = this.player.x;
+    const py = this.player.y - 10;
+    this.sfx.nova();
+    this.juice.flash(Palette.grace, 90);
+    this.juice.shake(180, 0.008);
+    this.particles.graceMotes(px, py, 26);
+    // the expanding ring
+    const ring = this.add.graphics({ x: px, y: py }).setDepth(60).setBlendMode(Phaser.BlendModes.ADD);
+    ring.lineStyle(3, Palette.grace, 0.9).strokeCircle(0, 0, 10);
+    ring.lineStyle(1.5, Palette.bloom, 0.8).strokeCircle(0, 0, 7);
+    this.tweens.add({
+      targets: ring,
+      scale: Skill.novaRadius / 10,
+      alpha: 0,
+      duration: 320,
+      ease: 'Quad.easeOut',
+      onComplete: () => ring.destroy(),
+    });
+    // stagger + damage + repel everything in the radius; pop projectiles too
+    for (const obj of this.enemies.getChildren()) {
+      const e = obj as Enemy;
+      if (!e.isAlive()) continue;
+      if (Phaser.Math.Distance.Between(px, py, e.x, e.y) > Skill.novaRadius) continue;
+      e.takeDamage(Math.round(Skill.novaDamage * this.up.damageMult), px, true); // core=true -> the long stagger
+    }
+    for (const obj of this.enemyProjectiles.getChildren()) {
+      const pr = obj as Projectile;
+      if (pr.active && Phaser.Math.Distance.Between(px, py, pr.x, pr.y) <= Skill.novaRadius) pr.kill();
+    }
+  }
+
   private makeGate(x: number, y: number, s?: Spawn): void {
     const open = this.run.hasBrokenMemory && this.run.guardianDefeated;
     const visual = this.add.graphics().setDepth(9);
@@ -762,12 +892,19 @@ export class GameScene extends Phaser.Scene {
     this.checkPickups();
     this.updateBombs(time);
     this.checkInteractions(time);
+    if (this.actions.justPressed('skill')) this.castNova(time);
   }
 
   private checkPickups(): void {
     if (this.keyObj && !this.run.hasBrokenMemory) {
       if (Phaser.Math.Distance.Between(this.player.x, this.player.y - 8, this.keyPos.x, this.keyPos.y) < 18) {
         this.collectKey();
+      }
+    }
+    for (const e of this.embers) {
+      if (Phaser.Math.Distance.Between(this.player.x, this.player.y - 8, e.x, e.y) < 18) {
+        this.collectEmber(e);
+        break;
       }
     }
     // Souls/orbs drift toward the player once settled + near (a little magnetism).
@@ -967,14 +1104,15 @@ export class GameScene extends Phaser.Scene {
       <div>
         <div class="ttl">${this.room.biome === 'mirrors' ? 'THE HOUSE OF MIRRORS — COMPLETE' : 'THE FIRST FALL — COMPLETE'}</div>
         <div class="sub">${this.room.biome === 'mirrors' ? 'YOU FACED THE UNTRUE IMAGE.' : 'YOU GOT BACK UP.'} &nbsp;·&nbsp; TO BE CONTINUED</div>
-        <button id="${id}-again">RETURN TO THE FALL</button>
+        <button id="${id}-again">RETURN IN GRACE</button>
       </div>`;
     document.body.appendChild(el);
     const again = document.getElementById(`${id}-again`);
     again?.addEventListener('pointerup', () => {
       el.remove();
-      this.run.reset(START_ROOM);
-      this.scene.restart({ roomId: START_ROOM });
+      this.run.reset(START_ROOM); // a new run — permanent graces/moves + souls kept
+      this.scene.stop('UIScene');
+      this.scene.start('HubScene', {});
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => el.remove());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => el.remove());
@@ -991,47 +1129,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   // ----------------------------------------------------------------------
-  // Death -> renewal. The emotional centerpiece: grace refuses to let it end here.
+  // Death -> the Place of Return. Grace does not leave you where you fell — it
+  // carries you home, and the route is walked again (a new run; everything
+  // permanent kept, souls banked). The defiant line lands in the darkness, then
+  // you wake in the beam at the hub.
   private startGraceRespawn(deathX: number, deathY: number): void {
     if (this.respawning) return;
     this.respawning = true;
-    const cam = this.cameras.main;
-
     this.particles.sparks(deathX, deathY - 12, 14);
     this.tweens.add({ targets: this.player, alpha: 0, duration: Grace.deathFadeMs * 0.7 });
-
-    // 1) world darkens
-    this.tweens.add({ targets: this.fadeRect, alpha: 0.92, duration: Grace.deathFadeMs });
-
-    // 2) in the darkness, move focus to the place of return and rebuild the room
-    this.time.delayedCall(Grace.deathFadeMs + Grace.beamDelayMs, () => {
-      cam.stopFollow();
-      cam.centerOn(this.graceSpawn.x, this.graceSpawn.y - 30);
-      this.resetEnemies();
-      this.player.beginReborn(this.graceSpawn.x, this.graceSpawn.y);
-      this.sfx.grace();
-      this.juice.shakeRespawn();
-      this.castGraceBeam(this.graceSpawn.x, this.graceSpawn.y);
-      // lift the darkness as the light arrives
-      this.tweens.add({ targets: this.fadeRect, alpha: 0, duration: Grace.beamGrowMs });
-    });
-
-    // 3) the figure reforms in the light, then stands and runs again
-    const reformAt = Grace.deathFadeMs + Grace.beamDelayMs + Grace.beamGrowMs;
-    this.time.delayedCall(reformAt, () => {
-      this.particles.graceMotes(this.graceSpawn.x, this.graceSpawn.y - 14, 30);
-      this.tweens.add({
-        targets: this.player,
-        alpha: 1,
-        duration: Grace.reformMs,
-        onComplete: () => {
-          this.time.delayedCall(Grace.riseMs, () => {
-            this.player.finishReborn();
-            this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
-            this.respawning = false;
-          });
-        },
-      });
+    this.tweens.add({ targets: this.fadeRect, alpha: 1, duration: Grace.deathFadeMs });
+    this.time.delayedCall(Grace.deathFadeMs + 1100, () => {
+      this.run.reset(START_ROOM);
+      this.scene.stop('UIScene');
+      this.scene.start('HubScene', { died: true });
     });
   }
 
@@ -1062,21 +1173,6 @@ export class GameScene extends Phaser.Scene {
       },
     });
     void top;
-  }
-
-  private resetEnemies(): void {
-    this.enemies.clear(true, true);
-    this.enemyProjectiles.clear(true, true);
-    this.bossHazards.clear(true, true);
-    for (const s of this.room.spawns) {
-      if (!isEnemyKind(s.type)) continue;
-      const { x, y } = this.tileToWorld(s);
-      this.spawnEnemy(s.type, x, y);
-    }
-    this.physics.add.collider(this.enemies, this.layer);
-    new CombatSystem(this, this.player, this.enemies, this.sfx, this.juice, this.particles);
-    // Re-seal the arena after a grace-respawn while an elite still lives (no taunt).
-    if (this.undefeatedEliteSpawn()) this.armBoss(false);
   }
 
   // ----------------------------------------------------------------------
@@ -1112,6 +1208,12 @@ export class GameScene extends Phaser.Scene {
       this.scene.stop('UIScene');
       this.scene.start('SanctuaryScene', { next: next ?? this.room.id });
     };
+    (window as { __hub?: (died?: boolean) => void }).__hub = (died?: boolean) => {
+      this.scene.stop('UIScene');
+      this.scene.start('HubScene', { died: !!died });
+    };
+    (window as { __die?: () => void }).__die = () => this.player.takeDamage(99999, this.player.x);
+    (window as { __ember?: () => void }).__ember = () => this.showEmberChoice(`dev:${Date.now()}`);
   }
 
   private poseScene(pose: string, anim?: string, progress?: number): void {

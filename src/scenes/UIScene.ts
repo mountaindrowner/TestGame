@@ -15,7 +15,10 @@ export class UIScene extends Phaser.Scene {
   private bossWrap!: HTMLDivElement;
   private bossNameEl!: HTMLDivElement;
   private bossFill!: HTMLDivElement;
+  private skillWrap!: HTMLDivElement;
+  private skillFill!: HTMLSpanElement;
   private hintTimer = 0;
+  private skillTimer = 0;
 
   constructor() {
     super('UIScene');
@@ -30,6 +33,7 @@ export class UIScene extends Phaser.Scene {
       <div class="hud-tl">
         <div class="hp-track"><div class="hp-fill"></div></div>
         <div class="hud-area"><span class="area">THE FIRST FALL</span><span class="mem">◇ MEMORY</span></div>
+        <div class="hud-skill ready"><span class="sk-ico">✦</span><span class="sk-track"><span class="sk-fill"></span></span><span class="sk-name">NOVA</span></div>
       </div>
       <div class="hud-souls"><span class="gem"></span><span class="soul-num">0</span></div>
       <div class="hud-boss"><div class="boss-name"></div><div class="boss-track"><div class="boss-fill"></div></div></div>
@@ -48,6 +52,8 @@ export class UIScene extends Phaser.Scene {
     this.bossWrap = q('.hud-boss');
     this.bossNameEl = q('.boss-name');
     this.bossFill = q('.boss-fill');
+    this.skillWrap = q('.hud-skill');
+    this.skillFill = q('.sk-fill');
 
     this.wire();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.root.remove());
@@ -90,6 +96,18 @@ export class UIScene extends Phaser.Scene {
       this.bossFill.style.width = `${Phaser.Math.Clamp((hp / max) * 100, 0, 100)}%`;
     });
     game.events.on('boss-defeated', () => this.bossWrap.classList.remove('show'));
+    // Grace Nova cooldown — the track refills over the cooldown, then glows ready.
+    game.events.on('skill-cd', (ms: number) => {
+      this.skillWrap.classList.remove('ready');
+      this.skillFill.style.transition = 'none';
+      this.skillFill.style.width = '0%';
+      requestAnimationFrame(() => {
+        this.skillFill.style.transition = `width ${ms}ms linear`;
+        this.skillFill.style.width = '100%';
+      });
+      window.clearTimeout(this.skillTimer);
+      this.skillTimer = window.setTimeout(() => this.skillWrap.classList.add('ready'), ms);
+    });
   }
 
   private setHealth(h: number, max: number): void {
@@ -136,6 +154,14 @@ export class UIScene extends Phaser.Scene {
       #hud .area{color:var(--cyan);opacity:.78;}
       #hud .mem{font-size:10px;letter-spacing:.18em;opacity:.32;color:var(--cyan);transition:opacity .3s;}
       #hud .mem.on{opacity:.95;text-shadow:0 0 8px rgba(126,240,255,.7);}
+      #hud .hud-skill{margin-top:6px;display:flex;align-items:center;gap:6px;opacity:.6;transition:opacity .3s;}
+      #hud .hud-skill.ready{opacity:1;}
+      #hud .hud-skill .sk-ico{font-size:11px;color:var(--cyan);}
+      #hud .hud-skill.ready .sk-ico{text-shadow:0 0 8px rgba(126,240,255,.9);}
+      #hud .hud-skill .sk-track{width:64px;height:5px;background:var(--ink);border:1px solid rgba(126,240,255,.3);
+        border-radius:3px;overflow:hidden;display:inline-block;}
+      #hud .hud-skill .sk-fill{display:block;height:100%;width:100%;background:linear-gradient(180deg,#7ef0ff,rgba(126,240,255,.6));}
+      #hud .hud-skill .sk-name{font-size:8px;letter-spacing:.18em;color:var(--cyan);opacity:.7;}
       #hud .hud-souls{position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:8px;}
       #hud .gem{width:12px;height:12px;border-radius:2px;transform:rotate(45deg);
         background:linear-gradient(135deg,#cdf3ff,#2f78d2);box-shadow:0 0 7px rgba(126,240,255,.75);}
