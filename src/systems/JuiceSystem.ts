@@ -6,6 +6,8 @@ import { Juice } from '../data/Tunables';
  *  extend cleanly and we never resume mid-frame with a velocity spike. */
 export class JuiceSystem {
   private frozenUntil = 0;
+  private zoomTween?: Phaser.Tweens.Tween;
+  private baseZoom = 1;
 
   constructor(private scene: Phaser.Scene) {}
 
@@ -42,5 +44,29 @@ export class JuiceSystem {
   flash(color: number, duration = 120): void {
     const c = Phaser.Display.Color.IntegerToColor(color);
     this.scene.cameras.main.flash(duration, c.red, c.green, c.blue);
+  }
+
+  /** A quick dolly-in then ease back — the "crunch" on a heavy/finisher impact.
+   *  Tracks the camera's resting zoom so it composes with whatever the scene set,
+   *  and never stacks (a new punch retargets the existing tween). */
+  zoomPunch(amount = 1.06, inMs = 70, outMs = 240): void {
+    const cam = this.scene.cameras.main;
+    if (!this.zoomTween?.isPlaying()) this.baseZoom = cam.zoom; // capture rest, ignore mid-punch
+    const rest = this.baseZoom;
+    this.zoomTween?.stop();
+    this.zoomTween = this.scene.tweens.add({
+      targets: cam,
+      zoom: rest * amount,
+      duration: inMs,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        this.zoomTween = this.scene.tweens.add({
+          targets: cam,
+          zoom: rest,
+          duration: outMs,
+          ease: 'Sine.easeOut',
+        });
+      },
+    });
   }
 }

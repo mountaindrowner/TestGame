@@ -738,6 +738,7 @@ export class GameScene extends Phaser.Scene {
     this.sfx.nova();
     this.juice.flash(Palette.grace, 90);
     this.juice.shake(180, 0.008);
+    this.juice.zoomPunch(1.05, 90, 300); // the gathered breath, released
     this.particles.graceMotes(px, py, 26);
     // the expanding ring
     const ring = this.add.graphics({ x: px, y: py }).setDepth(60).setBlendMode(Phaser.BlendModes.ADD);
@@ -1213,6 +1214,7 @@ export class GameScene extends Phaser.Scene {
       this.scene.start('HubScene', { died: !!died });
     };
     (window as { __die?: () => void }).__die = () => this.player.takeDamage(99999, this.player.x);
+    (window as { __zoom?: () => number }).__zoom = () => this.cameras.main.zoom;
     (window as { __ember?: () => void }).__ember = () => this.showEmberChoice(`dev:${Date.now()}`);
   }
 

@@ -25,6 +25,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public readonly hitbox: AttackHitbox;
   public controllable = true;
   public attackDamage: number = PlayerCombo[0].dmg; // damage of the current combo hit (read by CombatSystem)
+  /** True while the active swing is the combo finisher (the big cleave) — read by
+   *  CombatSystem to give the third hit its extra crunch (zoom-punch + heavy juice). */
+  public get isFinisher(): boolean {
+    return this.attacking && this.comboStep === PlayerCombo.length - 1;
+  }
   // Sanctuary-derived multipliers (1 = baseline)
   private damageMult = 1;
   private moveMult = 1;

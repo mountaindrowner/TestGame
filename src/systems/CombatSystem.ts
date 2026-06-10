@@ -35,9 +35,13 @@ export class CombatSystem {
     enemy.takeDamage(dmg, this.player.x, core);
 
     this.sfx.hit();
-    this.juice.hitstop(core || !enemy.isAlive() ? Juice.hitstopHeavyMs : Juice.hitstopMs);
+    const heavy = core || !enemy.isAlive() || this.player.isFinisher;
+    this.juice.hitstop(heavy ? Juice.hitstopHeavyMs : Juice.hitstopMs);
     if (core) this.juice.shake(Juice.shakeHurt.duration, Juice.shakeHurt.intensity);
     else this.juice.shakeHit();
+    // The crunch: a quick zoom-punch on the combo finisher and on big hits
+    // (exposed core, a kill, an elite) — scaled so the finisher kill hits hardest.
+    if (heavy) this.juice.zoomPunch(this.player.isFinisher || !enemy.isAlive() ? 1.07 : 1.045);
     if (core) this.particles.debris(enemy.x, enemy.y - 14, 12);
     else this.particles.sparks(enemy.x, enemy.y - 8, 9);
   };
