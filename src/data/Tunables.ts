@@ -49,6 +49,9 @@ export const PlayerTune = {
   dashCooldownMs: 360,
   dashIFrameMs: 170, // invulnerable window during/just-after dash
   dashAfterimageEveryMs: 18,
+  // Dodge-roll qualities layered onto the dash (Dead Cells-style evade):
+  dashBodyH: 22, //    low-profile hurtbox (frame px) during the dash -> ducks high/overhead attacks
+  dodgeOffsetMs: 240, // after a dash cancels a swing, press attack within this to RESUME the combo
 
   // Attack — base/fallback values; the live 3-hit combo lives in PlayerCombo below.
   comboWindowMs: 320, // press again within this (after recovery) to chain the next hit

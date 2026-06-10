@@ -49,6 +49,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private dashEndAt = 0;
   private dashReadyAt = 0;
   private lastAfterimageAt = 0;
+  // dodge-offset: a dash mid-swing preserves the combo so the next strike resumes it
+  private dodgeStep = -1;
+  private dodgeUntil = 0;
   // i-frames
   private invulnUntil = 0;
   // attack
@@ -276,6 +279,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.juice.flash(Palette.grace, 60);
         this.particles.graceMotes?.(this.x, this.y - 14, 10);
       }
+      // dodge-offset: a dash mid-swing preserves the combo so the next strike resumes it
+      if (this.attacking) {
+        this.dodgeStep = this.comboStep;
+        this.dodgeUntil = time + P.dashDurationMs + P.dodgeOffsetMs;
+      }
       this.dashing = true;
       this.attacking = false; // dash cancels a swing
       this.hitbox.disable();
@@ -286,6 +294,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.invulnUntil = Math.max(this.invulnUntil, time + P.dashIFrameMs);
       this.body.setAllowGravity(false);
       this.body.setVelocity(this.facing * P.dashSpeed, 0);
+      this.duckHurtbox(true); // low profile through the roll — high/overhead attacks whiff
       this.mode = 'dash';
       this.sfx.dash();
       this.juice.shakeDash();
@@ -305,14 +314,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.dashing = false;
       this.body.setAllowGravity(true);
       this.body.setVelocityX(this.facing * P.runSpeed * 0.6); // gentle exit momentum
+      this.duckHurtbox(false); // restore full hurtbox
     }
+  }
+
+  /** Shrink the hurtbox to a low profile during the dash/roll (feet stay planted,
+   *  body bottom unchanged) so high/overhead attacks whiff — the skill ceiling of a
+   *  well-timed dodge. Toggle off to restore the full chest-height body. */
+  private duckHurtbox(on: boolean): void {
+    const h = on ? P.dashBodyH : P.bodyH;
+    this.body.setSize(P.bodyW, h);
+    this.body.setOffset(P.bodyOffsetX, P.bodyOffsetY + (P.bodyH - h));
   }
 
   private handleAttack(time: number): void {
     if (!this.controls.justPressed('attack')) return;
     if (this.attacking && time > this.comboWindowEnd) return;
-    // start, or chain to the next of the 3 hits (light → heavy → big forward cleave)
-    this.comboStep = this.attacking ? (this.comboStep + 1) % PlayerCombo.length : 0;
+    // dodge-offset: if a recent dash cancelled a swing, resume the combo from where it
+    // left off; otherwise chain the next hit (mid-swing) or start fresh (light → heavy → cleave).
+    const resume = this.dodgeStep >= 0 && time <= this.dodgeUntil && !this.attacking;
+    this.comboStep = resume
+      ? (this.dodgeStep + 1) % PlayerCombo.length
+      : this.attacking
+        ? (this.comboStep + 1) % PlayerCombo.length
+        : 0;
+    this.dodgeStep = -1;
     const c = PlayerCombo[this.comboStep];
     this.curAttack = c;
     this.attackDamage = Math.round(c.dmg * this.damageMult);
@@ -508,6 +534,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocity(dir * P.hurtKnockback, P.hurtKnockbackUp);
     this.dashing = false;
     this.attacking = false;
+    this.dodgeStep = -1;
+    this.duckHurtbox(false); // a hit mid-dash restores the full hurtbox
     this.hitbox.disable();
     this.setRotation(0);
     this.resetSquash();

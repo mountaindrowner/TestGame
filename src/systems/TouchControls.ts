@@ -69,7 +69,7 @@ export class TouchControls {
 
     const right = document.createElement('div');
     right.className = 'pad right';
-    right.appendChild(this.button('DASH', 'dash', 'act'));
+    right.appendChild(this.button('DODGE', 'dash', 'act'));
     right.appendChild(this.button('ATK', 'attack', 'act'));
     right.appendChild(this.button('JUMP', 'jump', 'act big'));
 

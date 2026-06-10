@@ -39,6 +39,12 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
 - **Player combat:** a **3-hit escalating combo** (`PlayerCombo` in `Tunables.ts`: light → heavy
   → big forward cleave, ~1:1.5:2.6 dmg; chain within `comboWindowMs`). `CombatSystem` reads the
   live `player.attackDamage`; swings lean the body + sweep a scaled slash arc.
+- **Dodge-roll (Dead Cells-style evade):** the dash IS the roll — we didn't add a second evade
+  button. The ground/air dash now (a) drops to a **low-profile hurtbox** (`PlayerTune.dashBodyH`)
+  so high/overhead attacks whiff mid-dodge, (b) keeps its i-frames, (c) already cancels a swing,
+  and (d) supports **dodge-offset**: dash out of an attack and the next strike **resumes the combo**
+  where you left off (within `dashDurationMs + dodgeOffsetMs`; `Player.dodgeStep/dodgeUntil`). Air
+  dash stays the Grace Burst. Touch button relabeled DODGE. (First of the Phase-1 combat-feel pass.)
 - **Design direction:** `docs/LEVEL_DESIGN.md` is the **authority on player experience / layout /
   fairness / flow / the map** — our adapted "Level Design Bible" (non-negotiables, difficulty ramp,
   signaling, teach→escalate, lock-and-key via the planned Grace Burst, build workflow + checklists,
