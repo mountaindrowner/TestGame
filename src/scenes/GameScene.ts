@@ -22,6 +22,7 @@ import { ParticleSystem } from '../systems/ParticleSystem';
 import { ParallaxBackground } from '../systems/ParallaxBackground';
 import { CombatSystem } from '../systems/CombatSystem';
 import { autotile } from '../systems/Autotiler';
+import { GroundDecor } from '../systems/GroundDecor';
 import { Decorations } from '../systems/Decorations';
 import { Ambience } from '../systems/Ambience';
 import { Lighting } from '../systems/Lighting';
@@ -155,6 +156,7 @@ export class GameScene extends Phaser.Scene {
 
     this.buildTilemap();
     this.decorations = new Decorations(this, this.room, this.room.biome);
+    new GroundDecor(this, this.room, this.room.biome); // fire-and-forget scatter (pure cosmetics)
     this.ambience = new Ambience(this, this.room);
     this.lighting = new Lighting(this, this.room, this.room.biome);
     this.physics.world.setBounds(0, 0, roomW, roomH);
@@ -640,17 +642,23 @@ export class GameScene extends Phaser.Scene {
   }
 
   private makeTorch(x: number, y: number): void {
-    const flame = this.add
-      .image(x, y, Assets.dot.key)
-      .setScale(2.4)
-      .setTint(Palette.moltenHi)
+    // A real torch OBJECT: iron sconce + animated flame (the lights finally read
+    // as things). A soft additive halo breathes behind the flame; the Lighting
+    // system pools warm light here too.
+    const torch = this.add.sprite(x, y + 4, Assets.torch.key).setOrigin(0.5, 1).setDepth(47);
+    torch.play({ key: 'torch-burn', startFrame: Phaser.Math.Between(0, 3) }); // desync neighbours
+    const halo = this.add
+      .image(x, y - 14, Assets.dot.key)
+      .setScale(7)
+      .setTint(Palette.molten)
+      .setAlpha(0.16)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(47);
+      .setDepth(46);
     this.tweens.add({
-      targets: flame,
-      scale: 2.9,
-      alpha: 0.7,
-      duration: 320,
+      targets: halo,
+      scale: 8.5,
+      alpha: 0.1,
+      duration: 460,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',

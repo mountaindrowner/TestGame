@@ -43,6 +43,7 @@ export interface EnemyTuneBase {
   hoverOffset?: number; // flyer float height above player
   standoff?: number; // flyer horizontal keep-away distance
   fireEveryMs?: number; // flyer fire cadence
+  lingerMs?: number; // flyer post-shot drift — the window to close in and punish
   strikeMs?: number; // heavy committed-strike duration
   recoveryMs?: number; // heavy punishable recovery window
   damageReduction?: number; // heavy armor (0..1 of incoming chipped)

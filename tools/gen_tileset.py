@@ -226,19 +226,33 @@ def platform():
 
 
 def molten():
+    """REAL LAVA: a bright molten body under a skin of dark floating crust plates,
+    glow leaking through every seam, the hottest white line at the surface. (The
+    old version was stone with a thin orange squiggle — never read as lava.)"""
     img = new(T, T)
     px = img.load()
+    crust = lerp(STONE_LO, (20, 12, 14), 0.65)
+    crust_hi = lerp(STONE_LO, MOLTEN, 0.35)
+    # 1) the molten body — hot everywhere, hottest near the surface
     for y in range(T):
+        heat = 1.0 - y / (T * 1.15)  # cools slightly with depth
         for x in range(T):
             v = hsh(x, y, 7)
-            px[x, y] = rgba(lerp(STONE_LO, BG_DEEP, 0.4 + v * 0.4))
+            c = lerp(lerp(MOLTEN, (120, 28, 18), 0.35), MOLTEN_HI, max(0.0, heat - v * 0.3))
+            px[x, y] = rgba(c)
     d = ImageDraw.Draw(img)
+    # 2) dark crust plates floating on it (staggered so the bright seams wander)
+    for (cx, cy, w_, h_) in [(1, 4, 5, 3), (8, 5, 6, 3), (3, 9, 6, 3), (11, 10, 5, 3), (0, 13, 4, 2), (7, 13, 5, 2)]:
+        d.rounded_rectangle([cx, cy, cx + w_, cy + h_], radius=1, fill=rgba(crust))
+        d.line([(cx + 1, cy), (cx + w_ - 1, cy)], fill=rgba(crust_hi))  # heat-lit plate edge
+    # 3) the surface line — white-hot, rippling, spitting
     for x in range(T):
         glow = 0.5 + 0.5 * math.sin(x * 0.9 + 1.3)
-        d.point((x, 9 + int(glow * 3)), fill=rgba(lerp(MOLTEN, MOLTEN_HI, glow)))
-        d.point((x, 0), fill=rgba(lerp(MOLTEN, BLOOM, glow * 0.5)))
-        d.point((x, 1), fill=rgba(MOLTEN))
-    return apply_bloom(img, threshold=120, radius=1.6, gain=1.0)
+        d.point((x, 0), fill=rgba(lerp(MOLTEN_HI, BLOOM, glow)))
+        d.point((x, 1), fill=rgba(lerp(MOLTEN, MOLTEN_HI, glow)))
+        if hsh(x, 2, 11) > 0.8:
+            d.point((x, 2), fill=rgba(BLOOM))
+    return apply_bloom(img, threshold=110, radius=2.0, gain=1.25)
 
 
 def build():

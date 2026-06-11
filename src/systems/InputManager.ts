@@ -25,8 +25,11 @@ const KEY_MAP: Record<string, Action> = {
   C: 'skill',
 };
 
-/** Single abstraction between devices and the game. Funnels keyboard (now) and
- *  later touch/gamepad into a unified action API with edge + buffer timing. */
+/** Single abstraction between devices and the game. Funnels keyboard, touch and
+ *  gamepad into a unified action API with edge + buffer timing. Gamepad follows
+ *  the PC-platformer convention (Dead Cells / Hollow Knight): stick+dpad move,
+ *  bottom face (A) jumps, left face (X) attacks, B / right shoulder dashes,
+ *  top face (Y) / left shoulder casts. */
 export class InputManager {
   private state: Record<Action, boolean>;
   private prev: Record<Action, boolean>;
@@ -47,6 +50,25 @@ export class InputManager {
     }
   }
 
+  /** Fold the first connected gamepad into `next` (standard mapping indices). */
+  private readPad(next: Record<Action, boolean>): void {
+    const pads = this.scene.input.gamepad;
+    if (!pads || pads.total === 0) return;
+    const pad = pads.getPad(0);
+    if (!pad) return;
+    const dead = 0.3;
+    const lx = pad.axes.length > 0 ? pad.axes[0].getValue() : 0;
+    const ly = pad.axes.length > 1 ? pad.axes[1].getValue() : 0;
+    if (lx < -dead || pad.left) next.left = true;
+    if (lx > dead || pad.right) next.right = true;
+    if (ly < -dead || pad.up) next.up = true;
+    if (ly > dead || pad.down) next.down = true;
+    if (pad.A) next.jump = true; //                bottom face
+    if (pad.X) next.attack = true; //              left face
+    if (pad.B || pad.R1) next.dash = true; //      right face / right shoulder
+    if (pad.Y || pad.L1) next.skill = true; //     top face / left shoulder
+  }
+
   private blank(): Record<Action, boolean> {
     return { left: false, right: false, up: false, down: false, jump: false, dash: false, attack: false, skill: false };
   }
@@ -60,6 +82,7 @@ export class InputManager {
       const key = this.keys[name];
       if (key && key.isDown) next[action] = true;
     }
+    this.readPad(next);
     for (const a of ACTIONS) {
       next[a] = next[a] || this.virtual[a];
       if (next[a] && !this.prev[a]) this.bufferedAt[a] = time; // record press edge

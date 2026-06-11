@@ -39,6 +39,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private recoverEndAt = 0;
   private stunUntil = 0;
   private nextFireAt = 0;
+  private lingerUntil = 0; // flyers drift (catchable) until this time after firing
   private latched = false; // pursuer aggro, once on never off
   private attackType: 'charge' | 'slam' = 'charge'; // heavy_telegraph: which attack this cycle
   private coreGlow?: Phaser.GameObjects.Image; // burning ember weak point (runner only)
@@ -375,10 +376,19 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     if (inRange) {
       this.facing = dx < 0 ? -1 : 1;
-      const targetX = p.x - this.facing * (this.t.standoff ?? 120); // hover on the player's side
-      const targetY = p.y - (this.t.hoverOffset ?? 60);
-      this.body.setVelocityX(Phaser.Math.Clamp((targetX - this.x) * 4, -speed, speed));
-      this.body.setVelocityY(Phaser.Math.Clamp((targetY - this.y) * 4, -speed, speed));
+      // After each shot the flyer LINGERS — it stops correcting and drifts, so a
+      // player who pushes in aggressively gets a real window to catch and punish
+      // it. Outside that window it repositions LAZILY (low gain), not snappily —
+      // closing the gap is possible, just not free.
+      if (time < this.lingerUntil) {
+        this.body.setVelocityX(this.body.velocity.x * 0.94);
+        this.body.setVelocityY(this.body.velocity.y * 0.94 + Math.sin(time * 0.004) * 3);
+      } else {
+        const targetX = p.x - this.facing * (this.t.standoff ?? 120); // hover on the player's side
+        const targetY = p.y - (this.t.hoverOffset ?? 60);
+        this.body.setVelocityX(Phaser.Math.Clamp((targetX - this.x) * 1.5, -speed, speed));
+        this.body.setVelocityY(Phaser.Math.Clamp((targetY - this.y) * 1.5, -speed, speed));
+      }
 
       if (this.mode !== 'windup' && time >= this.nextFireAt) {
         this.mode = 'windup';
@@ -388,6 +398,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.fire(p);
         this.mode = 'patrol';
         this.nextFireAt = time + (this.t.fireEveryMs ?? 1500);
+        this.lingerUntil = time + (this.t.lingerMs ?? 1000); // the catchable beat
         this.play(this.cfg.anims.run, true);
       }
     } else {

@@ -34,21 +34,67 @@ def gem(core, edge, name):
 
 
 def urn():
+    """An OSSUARY JAR — dark carved stone with a faint grace-rune band, not bright
+    clay. It belongs to the catacombs: ash inside, the dead remembered."""
     w, h = 14, 18
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    clay = (120, 92, 70)
-    clay_hi = (158, 126, 96)
-    clay_lo = (78, 58, 44)
+    stone = (58, 56, 70)
+    stone_hi = (92, 92, 110)
+    stone_lo = (36, 35, 46)
+    rune = (96, 190, 215)
     # body (rounded), neck, lip
-    d.ellipse([1, 5, w - 2, h - 1], fill=clay)
-    d.rectangle([4, 2, w - 5, 6], fill=clay)         # neck
-    d.rectangle([3, 1, w - 4, 3], fill=clay_hi)       # lip
+    d.ellipse([1, 5, w - 2, h - 1], fill=stone)
+    d.rectangle([4, 2, w - 5, 6], fill=stone)         # neck
+    d.rectangle([3, 1, w - 4, 3], fill=stone_hi)      # lip
     # shading
-    d.line([(3, 8), (3, h - 4)], fill=clay_hi)        # lit left
-    d.line([(w - 4, 9), (w - 4, h - 3)], fill=clay_lo)  # shaded right
-    d.line([(2, 11), (w - 3, 11)], fill=clay_lo)      # banding
+    d.line([(3, 8), (3, h - 4)], fill=stone_hi)       # lit left
+    d.line([(w - 4, 9), (w - 4, h - 3)], fill=stone_lo)  # shaded right
+    d.line([(2, 12), (w - 3, 12)], fill=stone_lo)     # band shadow
+    # the rune band — three faint grace marks circling the shoulder
+    for x, ch in [(4, 0), (7, 1), (10, 0)]:
+        d.point((x, 9), fill=rune + (170,))
+        d.point((x, 10), fill=rune + (90,))
+        if ch:
+            d.point((x + 1, 9), fill=rune + (110,))
+    # chipped lip + a hairline crack (it's old)
+    d.point((w - 5, 1), fill=(0, 0, 0, 0))
+    d.line([(9, 13), (11, 16)], fill=stone_lo)
     _save(im, "urn.png")
+
+
+def torch():
+    """A real WALL TORCH (12x26, 4-frame strip): iron sconce + wood shaft + a
+    layered living flame. The engine animates the strip + adds the light halo;
+    this finally makes the lights read as OBJECTS, not floating dots."""
+    fw, fh, frames = 12, 26, 4
+    im = Image.new("RGBA", (fw * frames, fh), (0, 0, 0, 0))
+    iron = (62, 64, 74)
+    iron_hi = (108, 112, 126)
+    wood = (84, 62, 42)
+    wood_hi = (118, 90, 62)
+    fl_core = (255, 236, 160)
+    fl_mid = (255, 160, 60)
+    fl_out = (200, 72, 24)
+    for f in range(frames):
+        fr = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+        d = ImageDraw.Draw(fr)
+        cx = fw // 2
+        # shaft + binding + sconce cup
+        d.line([(cx, 12), (cx, 24)], fill=wood, width=2)
+        d.line([(cx - 1, 13), (cx - 1, 23)], fill=wood_hi)
+        d.rectangle([cx - 2, 20, cx + 1, 21], fill=iron)      # wall band
+        d.rectangle([cx - 3, 10, cx + 2, 12], fill=iron)      # cup
+        d.line([(cx - 3, 10), (cx + 2, 10)], fill=iron_hi)
+        # layered flame — shape shifts per frame (lick left/right, taller/shorter)
+        sway = [-1, 0, 1, 0][f]
+        tall = [0, 1, 0, -1][f]
+        d.polygon([(cx - 3, 10), (cx + sway, 2 - tall), (cx + 3, 10)], fill=fl_out + (235,))
+        d.polygon([(cx - 2, 10), (cx + sway, 4 - tall), (cx + 2, 10)], fill=fl_mid + (255,))
+        d.polygon([(cx - 1, 10), (cx + sway, 6 - tall), (cx + 1, 10)], fill=fl_core + (255,))
+        d.point((cx + sway, 1 - tall), fill=fl_mid + (160,))  # a spark licking off
+        im.alpha_composite(fr, (f * fw, 0))
+    _save(im, "torch.png")
 
 
 def critter():
@@ -92,6 +138,7 @@ def build() -> None:
     gem((120, 220, 255), (40, 120, 210), "soul.png")  # cold cyan currency
     gem((150, 255, 170), (40, 170, 90), "heal.png")   # green life orb
     urn()
+    torch()
     critter()
     cobweb()
 

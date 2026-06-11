@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Assets } from '../data/assetManifest';
+import { Assets, ENV_GROUND, ENV_WALL, envKey, envPath } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import {
   PlayerAnims,
@@ -16,6 +16,7 @@ import {
   ArcherAnims,
   BomberAnims,
   StrangerAnims,
+  PropAnims,
   registerAnims,
 } from '../data/Animations';
 import { FONT } from '../data/ui';
@@ -68,6 +69,11 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(Assets.urn.key, Assets.urn.path);
     this.load.image(Assets.critter.key, Assets.critter.path);
     this.load.image(Assets.cobweb.key, Assets.cobweb.path);
+    this.load.spritesheet(Assets.torch.key, Assets.torch.path, {
+      frameWidth: Assets.torch.frameW,
+      frameHeight: Assets.torch.frameH,
+    });
+    for (const name of [...ENV_GROUND, ...ENV_WALL]) this.load.image(envKey(name), envPath(name));
   }
 
   create(): void {
@@ -85,6 +91,7 @@ export class PreloadScene extends Phaser.Scene {
     registerAnims(this, ArcherAnims);
     registerAnims(this, BomberAnims);
     registerAnims(this, StrangerAnims);
+    registerAnims(this, PropAnims);
     // Make sure the display font is ready before any text is drawn (canvas text
     // bakes the font at creation; loading it late would show a fallback flash).
     // Boot flow: Title menu by default; ?edit → editor; ?play → straight to the

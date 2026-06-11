@@ -160,7 +160,7 @@ export const CrawlerTune = {
 export const SparkTune = {
   maxHealth: 22,
   patrolSpeed: 0,
-  chaseSpeed: 80,
+  chaseSpeed: 66, // lazy repositioning — committed pursuit CAN close the gap
   aggroRange: 210,
   aggroVertical: 170,
   windupMs: 280, // flare telegraph before firing
@@ -171,6 +171,7 @@ export const SparkTune = {
   hoverOffset: 64, // floats this far above the player
   standoff: 130, // tries to keep this much horizontal distance
   fireEveryMs: 1700,
+  lingerMs: 1050, // post-shot drift — THE window to close in and punish a flyer
   projectile: { speed: 150, damage: 12, count: 1, spreadDeg: 0, lifespanMs: 2200 },
 };
 

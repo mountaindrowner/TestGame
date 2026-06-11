@@ -124,6 +124,10 @@ export const BomberAnims: AnimDef[] = [
 export const StrangerAnims: AnimDef[] = [
   { key: 'stranger-idle', sheet: 'stranger', start: 0, end: 3, frameRate: 6, repeat: -1 },
 ];
+// Props — the wall torch's living flame (12x26, 4-frame strip).
+export const PropAnims: AnimDef[] = [
+  { key: 'torch-burn', sheet: 'prop-torch', start: 0, end: 3, frameRate: 7, repeat: -1 },
+];
 
 export function registerAnims(scene: Phaser.Scene, defs: AnimDef[]): void {
   for (const d of defs) {

@@ -48,7 +48,23 @@ export const Assets = {
   urn: { key: 'prop-urn', path: 'assets/sprites/props/urn.png' },
   critter: { key: 'prop-critter', path: 'assets/sprites/props/critter.png' },
   cobweb: { key: 'prop-cobweb', path: 'assets/sprites/props/cobweb.png' },
+  // A real wall torch (4-frame flame strip) — the lights are objects now.
+  torch: { key: 'prop-torch', path: 'assets/sprites/props/torch.png', frameW: 12, frameH: 26 },
 } as const;
+
+/** The environment-decor scatter set (tools/gen_environment.py): 24 ground pieces
+ *  + 2 wall pieces that populate floors/walls deterministically (GroundDecor).
+ *  Keys are `env-<name>`; ground pieces are feet-anchored, wall pieces centered. */
+export const ENV_GROUND = [
+  'skull', 'bone-pile', 'ribcage', 'bone-heap', 'rubble-small', 'rubble-large',
+  'pillar-stump', 'fallen-column', 'statue-head', 'stalagmite-floor',
+  'gravestone-round', 'gravestone-cross', 'candle-cluster', 'candelabra',
+  'broken-shield', 'stuck-sword', 'rusted-helmet', 'chain-coil', 'pot-shards',
+  'ash-heap', 'mushrooms', 'crystals', 'moss-clump', 'roots-patch',
+] as const;
+export const ENV_WALL = ['wall-relief', 'wall-plaque'] as const;
+export const envKey = (name: string) => `env-${name}`;
+export const envPath = (name: string) => `assets/sprites/env/${name}.png`;
 
 // Per-biome theme lookup: a room's `biome` resolves to its tileset + parallax
 // layers here. Same autotiler/Vis contract for every biome — only the art differs.
