@@ -310,7 +310,7 @@ scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the e
   off; no unobtainable lock), **payoff** for every detour/reward (#5), **wave pacing** (arrival
   gentlest, finale peak, the path climbs, long levels need a breather, no 4-in-a-row slog, §3.2/§3.6),
   one-new-facet-per-room (§5.3), and emotional-arc coherence. `error`=🔴 broken, `note`=advisory.
-  Both areas pass ✓ (BIO-01 carries one honest note: it's a pure ramp, no downtime).
+  Both areas pass ✓ with **0 notes**.
 - **Timeline readout `describeScore`** — renders the score as a strip: ordered beats + a tension
   **sparkline** + the key/lock graph (`*`=planted come-back) + the verdict. The "timeline of moments"
   made visible. `__score(env)` prints one; `__score()` prints all.
@@ -322,10 +322,18 @@ scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the e
   them to the override store under `gb:<env>:<room>` ids (never touches shipped rooms); then
   `__gotoRoom('gb:<env>:<first-room>')` walks the skeleton and `?edit` refines it. Greybox-before-art
   (§0.3) automated — a playable first pass to prove the *sequence* is fun, then shape by hand.
-- **Verified:** both scores pass the gate; the timeline readout renders; scaffolding BIO-01/BIO-02
-  produces composable, playable greybox worlds (144×32 / 166×18) with the right markers, no errors.
-  **Next increment (optional):** surface `describeScore` + a Scaffold button in the editor's Map view
-  (today it's console hooks + `?edit`); keep the prose `WORLD_PLAN.md` table in sync with each Score.
+- **Editor integration (DONE):** the Map view (`?edit` → 🗺) now mounts a **LEVEL SCORE panel**
+  (right side): pick an environment → the full timeline readout renders live, and **⚒ Scaffold
+  greybox** writes the `gb:*` rooms and drops the editor straight into the first beat for refining.
+- **BIO-01 breather (DONE — the gate's own advisory, answered):** new room **THE LONG APPROACH**
+  (`approach`, `src/data/rooms/approach.ts`) between crossroads and gate — a quiet vaulted
+  torch-colonnade hall, zero enemies, the trough of the wave (§3.6) before the Warden. Spine links
+  re-routed (crossroads east→approach→gate); the crossroads archer moved west of the seam so the
+  hall stays quiet; the `approach` breather beat added to `firstFallScore` (7 beats, ▂▃▄▅▅▂█).
+  BIO-01 now composes 264×66/7 sub-rooms.
+- **Verified:** both scores pass the gate with 0 notes; the editor panel + Scaffold button work
+  end-to-end (panel renders the timeline; scaffold → 7 `gb:` rooms → editor opens the first);
+  the hall plays seamlessly in the composed world; no console errors.
 
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)

@@ -50,6 +50,7 @@ a key+guardian finale. Deepest, dampest, most overgrown biome in the route.
 | **THE LOWER VAULTS** (`descent`) | Teach combat · begin **ascend** | "Down in the dark, something stalks." | Runner + Regret Crawler | Sunken vaults, heavy moss/calcite; first real fights as you start rising. |
 | **THE CROSSROADS** (`crossroads`) | Branch hub · **ascend**, side-door down | "A choice: face the memory, or press on." | Shame Spark (airborne) | A junction; ↑ side-door drops to the buried memory; airborne threat opens space up. |
 | **A BURIED MEMORY** (`memory`) | Branch reward · **descend** (dead-end) | "Face what you buried." | Hollow Striker (guards it) | A sealed vault holding the **Broken Memory** key; most claustrophobic, most calcified. |
+| **THE LONG APPROACH** (`approach`) | Breather/set-piece · **ascend** | "A quiet hall; the torches lead toward the light." | none (true downtime) | A vaulted colonnade, no threats — the trough of the tension wave before the Warden (§3.6). |
 | **THE SEALED GATE** (`gate`) | Finale · **ascend toward light** | "The way up is guarded — get back up past it." | **The Warden of the Fall** (armored Runner kin) | The gate (the way out/up); brightest grace-light; the telegraph-and-weave boss. |
 
 **Onward:** the gate exits the biome upward — next Shame biome is **House of Mirrors**

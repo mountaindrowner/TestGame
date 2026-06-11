@@ -121,6 +121,14 @@ export const firstFallScore: LevelScore = {
       optional: true,
     },
     {
+      room: 'approach',
+      role: 'breather',
+      intent: 'The long approach — a quiet vaulted hall, a colonnade of torches leading toward the light. Breathe before the Warden.',
+      emotion: 'grace',
+      elevation: 'ascend',
+      tension: 0.15,
+    },
+    {
       room: 'gate',
       role: 'finale',
       intent: 'The way up is guarded — read and weave the Warden of the Fall; the gate opens toward the light.',

@@ -10,6 +10,9 @@ import { buildRoom, allRoomIds, isBuiltInRoom, START_ROOM } from '../data/levelG
 import { saveRoomOverride, clearRoomOverride, hasRoomOverride } from '../data/roomStore';
 import { validateRoom } from '../data/roomValidate';
 import { Room } from '../data/rooms/build';
+import { allScoreEnvs, scoreFor } from '../data/levelScore';
+import { describeScore } from '../data/scoreValidate';
+import { scaffoldToStore } from '../data/scoreScaffold';
 
 const LINK_DIRS = ['east', 'west', 'up', 'down'] as const;
 
@@ -64,6 +67,7 @@ export class EditorScene extends Phaser.Scene {
 
   // DOM
   private panel?: HTMLDivElement;
+  private scorePanel?: HTMLDivElement;
   private inspector?: HTMLDivElement;
   private status?: HTMLDivElement;
   private roomSel?: HTMLSelectElement;
@@ -407,6 +411,7 @@ export class EditorScene extends Phaser.Scene {
     this.computeMapLayout(ids, rooms);
     this.drawMap(rooms);
     this.fitMap();
+    this.mountScorePanel();
     if (this.mapBtn) {
       this.mapBtn.textContent = '✕ Exit map';
       this.mapBtn.classList.add('on');
@@ -417,12 +422,80 @@ export class EditorScene extends Phaser.Scene {
     this.mapMode = false;
     for (const go of this.mapGos) go.destroy();
     this.mapGos = [];
+    this.unmountScorePanel();
     this.setEditVisible(true);
     this.fitCamera();
     if (this.mapBtn) {
       this.mapBtn.textContent = '🗺 Map view';
       this.mapBtn.classList.remove('on');
     }
+  }
+
+  // --- Level Score panel (map view only) --------------------------------
+  // The design timeline made visible where the map lives: pick an environment,
+  // read its beats/tension/locks + the logic-gate verdict, and scaffold the
+  // greybox straight into the editor (docs/LEVEL_GRAMMAR.md).
+  private mountScorePanel(): void {
+    this.unmountScorePanel();
+    const envs = allScoreEnvs();
+    if (!envs.length) return;
+    const root = document.createElement('div');
+    root.id = 'editor-score';
+    root.innerHTML = '';
+    const style = document.createElement('style');
+    style.id = 'editor-score-style';
+    style.textContent = `
+      #editor-score { position: fixed; top: 8px; right: 8px; z-index: 10000; max-width: min(620px, 56vw);
+        font: 11px/1.45 ui-monospace, monospace; color: #cdeffb; background: rgba(8,12,20,0.92);
+        border: 1px solid rgba(126,240,255,0.45); border-radius: 8px; padding: 9px 10px;
+        -webkit-user-select: text; user-select: text; max-height: 92vh; overflow: auto; }
+      #editor-score h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .1em; color: #7ef0ff; }
+      #editor-score select, #editor-score button { font: inherit; color:#cdeffb; background:rgba(126,240,255,.1);
+        border:1px solid rgba(126,240,255,.45); border-radius:5px; padding:3px 6px; cursor:pointer; }
+      #editor-score pre { margin: 8px 0 0; white-space: pre; font: inherit; color:#cdeffb; }
+      #editor-score .ok { color:#9af0b2; } #editor-score .bad { color:#ff9a9a; }
+    `;
+    document.head.appendChild(style);
+    root.appendChild(this.h('LEVEL SCORE — the timeline'));
+    const row = this.row();
+    const sel = document.createElement('select');
+    for (const env of envs) {
+      const o = document.createElement('option');
+      o.value = env;
+      o.textContent = scoreFor(env)?.title ?? env;
+      sel.appendChild(o);
+    }
+    const pre = document.createElement('pre');
+    const render = () => {
+      const s = scoreFor(sel.value);
+      pre.textContent = s ? describeScore(s) : `no score for '${sel.value}'`;
+    };
+    sel.addEventListener('change', render);
+    row.appendChild(sel);
+    row.appendChild(
+      this.btn('⚒ Scaffold greybox', () => {
+        const s = scoreFor(sel.value);
+        if (!s) return;
+        const { startId, ids } = scaffoldToStore(s);
+        this.populateRoomSelect(); // the gb:* rooms are overrides — show them in the picker
+        this.exitMapView();
+        this.loadRoom(startId); // straight into refining the first beat
+        this.refreshInspector();
+        this.updateStatus();
+        if (this.status) this.status.textContent = `scaffolded ${ids.length} greybox rooms (gb:${s.env}:*)\nrefine each, then ▶ Play-test\n` + (this.status.textContent ?? '');
+      })
+    );
+    root.appendChild(row);
+    root.appendChild(pre);
+    render();
+    document.body.appendChild(root);
+    this.scorePanel = root;
+  }
+
+  private unmountScorePanel(): void {
+    this.scorePanel?.remove();
+    this.scorePanel = undefined;
+    document.getElementById('editor-score-style')?.remove();
   }
 
   /** Lay rooms out spatially by following their edge-link directions from the
@@ -807,5 +880,6 @@ export class EditorScene extends Phaser.Scene {
     this.panel?.remove();
     this.panel = undefined;
     document.getElementById('editor-panel-style')?.remove();
+    this.unmountScorePanel();
   }
 }

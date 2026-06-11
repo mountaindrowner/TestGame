@@ -24,7 +24,7 @@ export function gate(): RoomData {
   r.at('torch', 22, 16);
   r.at('torch', 56, 16);
 
-  r.link('west', 'crossroads');
+  r.link('west', 'approach'); // arrive out of the breather hall, into the arena
   r.link('up', 'mirror-hall'); // reciprocal with mirror-hall's down-link (the gate climbs into BIO-02)
   return r.build('gate');
 }

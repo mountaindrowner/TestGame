@@ -96,17 +96,22 @@ the key/lock graph (with `*` marking planted come-backs), and the verdict. This 
 
 ```
 THE FIRST FALL  ·  "You hit the lowest place — then learn the kit and climb back up past the Warden."
-  env=first-fall   6 beats   tension ▂▃▄▅▅█
+  env=first-fall   7 beats   tension ▂▃▄▅▅▂█
   1  first-fall   arrival   ▂ 0.10 collapse  Wake mid-fall … learn move/jump/dash.
   2  descent      teach     ▃ 0.35 stalked   First blade-work … read the runner's lunge.
   3  crossroads   branch    ▄ 0.40 choice    A junction … drop to the memory, or press on.
   4  memory       reward    ▅ 0.55 struggle  A Striker guards the Broken Memory; take it, climb out.
   5* vault        gate      ▅ 0.50 mastery   A molten lake only the Grace Burst crosses (planted come-back).
-  6  gate         finale    █ 1.00 ascent    Read-and-weave the Warden; the gate opens toward the light.
+  6  approach     breather  ▂ 0.15 grace     A quiet vaulted hall; torches lead toward the light. Breathe.
+  7  gate         finale    █ 1.00 ascent    Read-and-weave the Warden; the gate opens toward the light.
   keys  broken-memory@memory   grace-burst@gate
   locks grace-burst→vault*     broken-memory→gate
-  verdict ✓ logic gate passed · 1 note (no breather — a pure ramp)
+  verdict ✓ logic gate passed · 0 notes
 ```
+
+(The breather at beat 6 is the gate's own doing: the first draft of this score was a pure
+ramp and the gate flagged it — THE LONG APPROACH room exists because the timeline demanded
+a trough. That's the system working as intended.)
 
 ---
 

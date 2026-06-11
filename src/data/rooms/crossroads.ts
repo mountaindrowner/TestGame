@@ -18,7 +18,7 @@ export function crossroads(): RoomData {
   r.climbShaft(51, 0, 6); // …and a shaft climbing UP out of the nook into the Hidden Vault
 
   r.at('runner', 16, 16);
-  r.at('archer', 48, 16); // ranged: looses bolts down the passage
+  r.at('archer', 38, 16); // ranged: looses bolts down the passage (kept west of the seam so the breather hall stays quiet)
   r.at('spark', 28, 9); //   harasses from the central vault
   r.at('torch', 6, 16);
   r.at('torch', 52, 16);
@@ -28,7 +28,7 @@ export function crossroads(): RoomData {
   r.at('jar', 44, 16);
 
   r.link('west', 'descent');
-  r.link('east', 'gate');
+  r.link('east', 'approach'); // the quiet torch-lit hall before the Warden (the breather)
   r.link('down', 'memory'); // drop through the pit into A BURIED MEMORY
   r.link('up', 'vault'); //    climb the nook shaft up into THE HIDDEN VAULT
   return r.build('crossroads');
