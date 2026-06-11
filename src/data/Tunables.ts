@@ -17,12 +17,12 @@ export const PlayerTune = {
   // sprite (visual ~41px, body ~12x28 world), so no room/physics retuning is needed
   // — a pure fidelity upgrade. Body px chosen so px*scale matches the old world body.
   frameW: 98,
-  frameH: 68,
+  frameH: 79,
   scale: 0.68,
   bodyW: 18, //  18 * 0.68 ≈ 12.2 world  (old 12)
   bodyH: 41, //  41 * 0.68 ≈ 27.9 world  (old 28)
   bodyOffsetX: 40, // (frameW - bodyW)/2 -> centred under the figure (cx=49)
-  bodyOffsetY: 27, // body spans rows 27..68 (feet at frame bottom; frameH - bodyH)
+  bodyOffsetY: 38, // body spans rows 38..79 (feet at frame bottom; frameH - bodyH)
 
   // Horizontal movement
   // Feel intent (Game-Feel rule #2): TIGHT on the ground (precision/penitence),

@@ -436,6 +436,28 @@ scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the e
   was *rejected* — recommend deferring). Plus optional, non-art: full wall-attached re-layout of the
   BIO-02 mirror rooms. (Generation budget: hard floor 500 remaining; ~1030 left after this art pass.)
 
+## PC playtest pass (Mark, 2026-06-11) — landed this session
+- **Crisp rendering:** Scale mode NONE + integer-snapped zoom (desktop ≥2× floors to whole
+  multiples — 1080p = exact 5×; small screens keep fractional fill); `applyZoom` in `main.ts`.
+  **TitleScene is a DOM overlay now** (canvas text upscales blocky — same lesson as the hub).
+  Title menu: BEGIN / CONTROLS / MAP EDITOR / SOUND.
+- **Player anim re-rolls (PixelLab, ~14 gens):** idle = angled ¾ heavy-breathing stance, jump =
+  coil→explosive spring, fall = windswept drop, + NEW `player-climb` ledge-mantle (wired in
+  `beginClimb`). Frame grew 98×68→**98×79** (grid 40×4) — manifest + `PlayerTune.frameH/bodyOffsetY`
+  updated (formulas: offX=(fw-bodyW)/2, offY=fh-bodyH). Fetch keywords match the zip's
+  action-DESCRIPTION slugs (not names): three-quarter/explosive_vertical/dropping_fast/mantling.
+- **Real torches** (`gen_props.torch`, 12×26 4-frame strip + `torch-burn` anim + halo; desynced),
+  **real lava** (molten tile = bright body + dark crust plates + white-hot surface), **ossuary urn**
+  (dark stone + grace runes). **26-piece env decor set** (`tools/gen_environment.py` → `sprites/env/`,
+  `ENV_GROUND`/`ENV_WALL` in manifest) scattered by **`systems/GroundDecor.ts`** (deterministic,
+  floor-tops + wall faces, depths-only).
+- **Flyers catchable:** lazy repositioning (gain 1.5, chase 66) + `lingerMs` post-shot drift window
+  (~1s) — aggression closes the gap (SparkTune; all flyers inherit).
+- **Gamepad** (standard mapping in `InputManager.readPad`; `input.gamepad` in config) + CONTROLS
+  sheet on the title.
+- **Still open from Mark's notes:** walking anim polish (minor), more obvious torch purpose via
+  Lighting strength, BIO-02 decor set (mirrors biome gets no GroundDecor yet).
+
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
 tiles 16×16; player 48×44 feet-anchor; all feel constants in `src/data/Tunables.ts`;

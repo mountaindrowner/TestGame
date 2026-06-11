@@ -15,7 +15,7 @@ HERE = os.path.dirname(__file__)
 SRC = os.path.join(HERE, "..", "art_src", "player")
 OUT = os.path.join(HERE, "..", "public", "assets", "sprites", "player.png")
 
-ORDER = ["idle", "run", "jump", "runjump", "fall", "dash", "hurt", "attack1", "attack2", "attack3", "death", "rest", "weary"]
+ORDER = ["idle", "run", "jump", "runjump", "fall", "dash", "hurt", "attack1", "attack2", "attack3", "death", "rest", "weary", "climb"]
 
 
 def _frames(role: str) -> list[Image.Image]:

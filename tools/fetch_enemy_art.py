@@ -17,8 +17,12 @@ ENEMIES = {
     # Hollow Revenant HD (v3, 64px source) — the high-quality re-roll. Full emotive
     # v3 animation pass (east). Keywords match the action-slug dir names in the zip.
     "player": ("2a16dbc2-badc-412a-8da4-9640577bb4c0", {
-        "idle": "resolute", "run": "determination", "jump": "straight_up",
-        "runjump": "running_leap", "fall": "falling_downward", "dash": "dashing",
+        # Mark's playtest re-rolls: idle = angled heavy-breathing stance ("heaving"),
+        # jump = explosive coil+spring ("skyward"), fall = windswept drop; new
+        # "climb" = the ledge-grab mantle (wired to Player.beginClimb).
+        "idle": "three-quarter", "run": "determination", "jump": "explosive_vertical",
+        "runjump": "running_leap", "fall": "dropping_fast", "dash": "dashing",
+        "climb": "mantling",
         "hurt": "recoiling",
         # 3-hit combo (richer v3 swings):
         #   1 light  -> fast overhead broken-sword chop

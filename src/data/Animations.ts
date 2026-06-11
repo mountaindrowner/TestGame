@@ -27,16 +27,18 @@ export const PlayerAnims: AnimDef[] = [
   { key: 'player-run', sheet: 'player', start: 8, end: 17, frameRate: 16, repeat: -1 },
   { key: 'player-jump', sheet: 'player', start: 18, end: 27, frameRate: 18, repeat: 0 },
   { key: 'player-runjump', sheet: 'player', start: 28, end: 35, frameRate: 16, repeat: 0 },
-  { key: 'player-fall', sheet: 'player', start: 36, end: 41, frameRate: 12, repeat: -1 },
-  { key: 'player-dash', sheet: 'player', start: 42, end: 47, frameRate: 22, repeat: 0 },
-  { key: 'player-hurt', sheet: 'player', start: 48, end: 53, frameRate: 18, repeat: 0 },
-  { key: 'player-attack1', sheet: 'player', start: 54, end: 61, frameRate: 32, repeat: 0 },
-  { key: 'player-attack2', sheet: 'player', start: 62, end: 73, frameRate: 30, repeat: 0 },
-  { key: 'player-attack3', sheet: 'player', start: 74, end: 83, frameRate: 24, repeat: 0 },
-  { key: 'player-death', sheet: 'player', start: 84, end: 93, frameRate: 12, repeat: 0 },
+  { key: 'player-fall', sheet: 'player', start: 36, end: 43, frameRate: 14, repeat: -1 },
+  { key: 'player-dash', sheet: 'player', start: 44, end: 49, frameRate: 22, repeat: 0 },
+  { key: 'player-hurt', sheet: 'player', start: 50, end: 55, frameRate: 18, repeat: 0 },
+  { key: 'player-attack1', sheet: 'player', start: 56, end: 63, frameRate: 32, repeat: 0 },
+  { key: 'player-attack2', sheet: 'player', start: 64, end: 75, frameRate: 30, repeat: 0 },
+  { key: 'player-attack3', sheet: 'player', start: 76, end: 85, frameRate: 24, repeat: 0 },
+  { key: 'player-death', sheet: 'player', start: 86, end: 95, frameRate: 12, repeat: 0 },
   // Long-idle "waits" poses (blade on shoulder). Ranges/size confirmed by the packer.
-  { key: 'player-rest', sheet: 'player', start: 94, end: 101, frameRate: 7, repeat: -1 },
-  { key: 'player-weary', sheet: 'player', start: 102, end: 109, frameRate: 6, repeat: -1 },
+  { key: 'player-rest', sheet: 'player', start: 96, end: 103, frameRate: 7, repeat: -1 },
+  { key: 'player-weary', sheet: 'player', start: 104, end: 111, frameRate: 6, repeat: -1 },
+  // The ledge-grab mantle (hang -> haul up -> crouch), driven by Player.beginClimb.
+  { key: 'player-climb', sheet: 'player', start: 112, end: 121, frameRate: 26, repeat: 0 },
 ];
 
 // RUNNER strip (48x44), packed by tools/pack_enemy.py from PixelLab frames:

@@ -183,7 +183,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocity(0, 0);
     this.body.enable = false; // the tween drives position now
     this.mode = 'jump';
-    this.play('player-runjump', true);
+    this.play('player-climb', true); // the real mantle: hang → haul up → crouch
     this.anims.timeScale = 1;
     this.sfx.land(); // a grab scuff
     this.particles.dust(this.x + d * 6, ledgeTopY, 3);

@@ -21,7 +21,12 @@ The high-quality re-roll that replaced the rigid 48px standard-mode original (`d
 provenance, unused). **v3** character (highest quality), 64px source → packed **98×68**.
 | character_id | mode | packed | east animations (animated-frame counts, after dropping the v3 ref) |
 |---|---|---|---|
-| `2a16dbc2-badc-412a-8da4-9640577bb4c0` | v3, 64px | 98×68 (grid 40×3) | idle8 run10 jump10 runjump8 fall6 dash6 hurt6 attack1 8 attack2 12 attack3 10 death10 rest8 weary8 |
+| `2a16dbc2-badc-412a-8da4-9640577bb4c0` | v3, 64px | 98×79 (grid 40×4) | idle8 run10 jump10 runjump8 fall8 dash6 hurt6 attack1 8 attack2 12 attack3 10 death10 rest8 weary8 climb10 |
+
+Mark's playtest re-rolls (2026-06-11): **idle** = angled three-quarter heavy-breathing stance;
+**jump** = deep coil → explosive vertical spring; **fall** = windswept drop (cape blown up);
+new **climb** = the ledge-grab mantle (plays from `Player.beginClimb`). Old idle/jump/fall
+clips remain in PixelLab for provenance, unused.
 
 Animation source = **v3 custom** (`animate_character`, east only, ~1–3 gens each), action
 descriptions in `fetch_enemy_art.py`'s `player` map (combo = overhead chop / pull-back slash /
