@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import { RoomData, Spawn } from '../data/roomData';
 import { buildRoom, START_ROOM } from '../data/levelGraph';
 import { composeWorld, Placement } from '../data/worldComposer';
+import { allScoreEnvs, scoreFor } from '../data/levelScore';
+import { describeScore } from '../data/scoreValidate';
+import { scaffoldToStore } from '../data/scoreScaffold';
 import { Assets, Vis, VIS_SOLID_MAX, biomeOf, Sem } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import { World, Grace, Skill, Ember } from '../data/Tunables';
@@ -1337,6 +1340,31 @@ export class GameScene extends Phaser.Scene {
     (window as { __die?: () => void }).__die = () => this.player.takeDamage(99999, this.player.x);
     (window as { __zoom?: () => number }).__zoom = () => this.cameras.main.zoom;
     (window as { __ember?: () => void }).__ember = () => this.showEmberChoice(`dev:${Date.now()}`);
+    // Level Score / logic gate / scaffolder dev hooks.
+    const w = window as {
+      __score?: (env?: string) => void;
+      __scaffold?: (env?: string) => string | undefined;
+    };
+    w.__score = (env?: string) => {
+      const envs = env ? [env] : allScoreEnvs();
+      for (const e of envs) {
+        const s = scoreFor(e);
+        // eslint-disable-next-line no-console
+        console.log(s ? describeScore(s) : `no score for '${e}'`);
+      }
+    };
+    w.__scaffold = (env = 'first-fall') => {
+      const s = scoreFor(env);
+      if (!s) {
+        // eslint-disable-next-line no-console
+        console.log(`no score for '${env}'`);
+        return undefined;
+      }
+      const { startId, ids } = scaffoldToStore(s);
+      // eslint-disable-next-line no-console
+      console.log(`scaffolded ${ids.length} greybox rooms for '${env}':\n  ${ids.join('\n  ')}\n→ __gotoRoom('${startId}') to walk it, or ?edit to refine.`);
+      return startId;
+    };
   }
 
   private poseScene(pose: string, anim?: string, progress?: number): void {

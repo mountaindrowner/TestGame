@@ -289,6 +289,44 @@ ONE big map at build time** (the whole area is only ~5 rooms, so it's all reside
   which are deliberate set-pieces (the lift cinematic), not in-environment loads. Within an
   environment there are now **zero fades**.
 
+## Level Score system — intentful levels as a checkable timeline (DONE, this pass)
+The "engineer a level philosophy (Castlevania-style) with a logic gate for exploration + payoff"
+ask. Levels are now authored as a **declared timeline of beats** built toward an outcome, and a
+**logic gate** proves the timeline delivers before art. Pipeline: **declare → validate → visualize →
+scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the engineered layer over
+`LEVEL_DESIGN.md`; the gate's warnings cite that doc's §/#).
+- **Schema `src/data/levelScore.ts`** — a `LevelScore` per environment = an ordered `Beat[]` (the
+  timeline of MOMENTS). Each `Beat`: `{ room, role, intent, emotion, elevation, tension(0–1),
+  teaches[], tests[], lock?, grants?, payoff?, optional? }`. Roles = `arrival·teach·escalate·branch·
+  gauntlet·breather·gate·reward·finale`; emotions = `collapse→stalked→choice→struggle→grace→mastery→
+  ascent`. Facets are the teach→escalate atoms (jump/combo/molten/grace-burst/telegraph-heavy/…);
+  lock+grant model lock-and-key (an OPTIONAL beat locked behind a key granted LATER = the planted
+  come-back, §4.2). **Both shipped areas are authored as scores** (`firstFallScore`,
+  `houseOfMirrorsScore`) — the worked examples to copy.
+- **Logic gate `src/data/scoreValidate.ts` → `validateScore`** — the experiential counterpart to
+  `roomValidate` (structural). Composes the real world and checks: coverage (every sub-room has a
+  beat), **teach-before-test** (a facet's debut is a teach, never a test, #8), **lock-and-key
+  solvability** (walk the critical beats banking keys → no softlock #4; planted come-backs must pay
+  off; no unobtainable lock), **payoff** for every detour/reward (#5), **wave pacing** (arrival
+  gentlest, finale peak, the path climbs, long levels need a breather, no 4-in-a-row slog, §3.2/§3.6),
+  one-new-facet-per-room (§5.3), and emotional-arc coherence. `error`=🔴 broken, `note`=advisory.
+  Both areas pass ✓ (BIO-01 carries one honest note: it's a pure ramp, no downtime).
+- **Timeline readout `describeScore`** — renders the score as a strip: ordered beats + a tension
+  **sparkline** + the key/lock graph (`*`=planted come-back) + the verdict. The "timeline of moments"
+  made visible. `__score(env)` prints one; `__score()` prints all.
+- **Scaffolder `src/data/scoreScaffold.ts` → `scaffoldScore`/`scaffoldToStore`** — intent → GREYBOX.
+  Each beat becomes a blocky catacomb room seeded with role/facet markers (the taught enemy on solid
+  ground, the hazard over a pit, the Grace-Burst lake, the key on a pedestal, the elite+gate); critical
+  beats chain **east** into a spine, optional beats hang **below** as drop-branches (pit + climbShaft) —
+  the same shape as our hand-built areas, so it composes via `composeWorld`. `__scaffold(env)` writes
+  them to the override store under `gb:<env>:<room>` ids (never touches shipped rooms); then
+  `__gotoRoom('gb:<env>:<first-room>')` walks the skeleton and `?edit` refines it. Greybox-before-art
+  (§0.3) automated — a playable first pass to prove the *sequence* is fun, then shape by hand.
+- **Verified:** both scores pass the gate; the timeline readout renders; scaffolding BIO-01/BIO-02
+  produces composable, playable greybox worlds (144×32 / 166×18) with the right markers, no errors.
+  **Next increment (optional):** surface `describeScore` + a Scaffold button in the editor's Map view
+  (today it's console hooks + `?edit`); keep the prose `WORLD_PLAN.md` table in sync with each Score.
+
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)
   → GameScene. `TitleScene` drifts the depths parallax behind a glowing **REPENTANCE** title +
