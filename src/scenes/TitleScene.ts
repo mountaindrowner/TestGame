@@ -23,6 +23,14 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
+    // The scene instance is reused (Boot→Title, and now editor→Title), so reset
+    // per-create state — otherwise stale, destroyed Text objects from a prior run
+    // linger in `items` and refresh()'s setColor throws on their freed texture.
+    this.items = [];
+    this.options = [];
+    this.index = 0;
+    this.starting = false;
+    this.drift = 0;
     // Clear the DOM pre-boot splash (#boot) — the title is the first scene now, so
     // it owns that hand-off (GameScene/EditorScene do it on their own entry).
     const boot = document.getElementById('boot');
@@ -62,6 +70,7 @@ export class TitleScene extends Phaser.Scene {
     // Menu.
     this.options = [
       { label: () => 'BEGIN', act: () => this.begin() },
+      { label: () => 'MAP EDITOR', act: () => this.openEditor() },
       { label: () => (this.sfx.isMuted() ? 'SOUND: OFF' : 'SOUND: ON'), act: () => this.toggleSound() },
     ];
     this.options.forEach((_, i) => {
@@ -125,6 +134,14 @@ export class TitleScene extends Phaser.Scene {
   private toggleSound(): void {
     this.sfx.toggleMute();
     this.refresh();
+  }
+
+  /** Open the in-engine level editor (the same dev-kit as `?edit`), reachable from
+   *  the menu. The editor's own "← MENU" button returns here. */
+  private openEditor(): void {
+    if (this.starting) return;
+    this.registry.set('editRoom', START_ROOM);
+    this.scene.start('EditorScene');
   }
 
   private begin(): void {

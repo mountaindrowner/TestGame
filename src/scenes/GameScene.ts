@@ -60,6 +60,7 @@ export class GameScene extends Phaser.Scene {
   private arenaSeals: Phaser.Physics.Arcade.Image[] = []; // physical seals on the arena's open edges while a boss lives
   private pendingArena?: Placement; // an undefeated elite's region; arms when the figure enters it
   private currentSubRoom = ''; // which composed sub-region the figure is in (for per-region HUD name)
+  private mapPosAt = 0; // throttle for the minimap player-position feed
   private layer!: Phaser.Tilemaps.TilemapLayer;
   private decorations!: Decorations;
   private ambience!: Ambience;
@@ -238,6 +239,15 @@ export class GameScene extends Phaser.Scene {
     const syncHud = () => {
       this.events.emit('room-name', this.room.name);
       this.events.emit('key-state', this.run.hasBrokenMemory);
+      // Seed the minimap: reveal the room we spawned in, then push the model.
+      if (this.placements.length >= 2) {
+        const here = this.placementAt(this.player.x, this.player.y);
+        if (here) {
+          this.currentSubRoom = here.id;
+          this.run.discover(here.id);
+        }
+        this.emitMap();
+      }
     };
     syncHud();
     this.time.delayedCall(30, syncHud); // also reach UIScene on its very first create
@@ -920,6 +930,12 @@ export class GameScene extends Phaser.Scene {
     this.decorations.update(time);
     this.ambience.update(time, _delta);
     this.lighting.update(this.cameras.main, this.player.x, this.player.y);
+    // Minimap: feed the player's position to the HUD (throttled — the canvas redraw
+    // is cheap but no need every frame).
+    if (this.placements.length >= 2 && time > this.mapPosAt) {
+      this.mapPosAt = time + 160;
+      this.events.emit('map-pos', this.player.x / (this.room.w * World.tile), this.player.y / (this.room.h * World.tile));
+    }
     if (this.juice.frozen) return;
     if (this.transitioning) return; // riding the lift / mid-transition — freeze world checks
     this.checkHazards();
@@ -940,7 +956,21 @@ export class GameScene extends Phaser.Scene {
     if (here && here.id !== this.currentSubRoom) {
       this.currentSubRoom = here.id;
       this.events.emit('room-name', here.name);
+      this.run.discover(here.id); // fill in the explored map
+      this.emitMap();
     }
+  }
+
+  /** Push the explored-map model to the HUD minimap (composed worlds only). */
+  private emitMap(): void {
+    if (this.placements.length < 2) return;
+    this.events.emit('map', {
+      ww: this.room.w,
+      wh: this.room.h,
+      rooms: this.placements.map((p) => ({ id: p.id, ox: p.ox, oy: p.oy, w: p.w, h: p.h })),
+      discovered: [...this.run.discovered],
+      current: this.currentSubRoom,
+    });
   }
 
   /** Arm the arena (seal + Mega-Man intro) the moment the figure crosses into the

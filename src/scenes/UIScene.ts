@@ -1,5 +1,14 @@
 import Phaser from 'phaser';
 
+/** The explored-map model GameScene pushes to the minimap. */
+interface MinimapModel {
+  ww: number; // world size in tiles
+  wh: number;
+  rooms: { id: string; ox: number; oy: number; w: number; h: number }[];
+  discovered: string[];
+  current: string;
+}
+
 /** Parallel HUD scene. The HUD is a crisp DOM/CSS overlay (not drawn into the
  *  pixel canvas), so text is sharp and the styling is cohesive — health, souls,
  *  area + Broken Memory, transient hints, the boss bar, and the defiant death line.
@@ -17,6 +26,9 @@ export class UIScene extends Phaser.Scene {
   private bossFill!: HTMLDivElement;
   private skillWrap!: HTMLDivElement;
   private skillFill!: HTMLSpanElement;
+  private mapCanvas!: HTMLCanvasElement;
+  private mapModel?: MinimapModel;
+  private mapPos?: { x: number; y: number };
   private hintTimer = 0;
   private skillTimer = 0;
 
@@ -36,6 +48,7 @@ export class UIScene extends Phaser.Scene {
         <div class="hud-skill ready"><span class="sk-ico">✦</span><span class="sk-track"><span class="sk-fill"></span></span><span class="sk-name">NOVA</span></div>
       </div>
       <div class="hud-souls"><span class="gem"></span><span class="soul-num">0</span></div>
+      <canvas class="hud-map" width="208" height="128"></canvas>
       <div class="hud-boss"><div class="boss-name"></div><div class="boss-track"><div class="boss-fill"></div></div></div>
       <div class="hud-hint"></div>
       <div class="hud-defiant"></div>
@@ -54,6 +67,10 @@ export class UIScene extends Phaser.Scene {
     this.bossFill = q('.boss-fill');
     this.skillWrap = q('.hud-skill');
     this.skillFill = q('.sk-fill');
+    this.mapCanvas = q('.hud-map');
+
+    // Press M to fold/unfold the explored map.
+    this.input.keyboard?.on('keydown-M', () => this.mapCanvas.classList.toggle('off'));
 
     this.wire();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.root.remove());
@@ -70,6 +87,16 @@ export class UIScene extends Phaser.Scene {
       this.soulNum.classList.add('pop');
     });
     game.events.on('room-name', (name: string) => (this.areaEl.textContent = name));
+    // The explored-map minimap (fog-of-war): the world model + the live player dot.
+    game.events.on('map', (m: MinimapModel) => {
+      this.mapModel = m;
+      this.mapCanvas.classList.toggle('lit', m.rooms.length > 1);
+      this.drawMinimap();
+    });
+    game.events.on('map-pos', (x: number, y: number) => {
+      this.mapPos = { x, y };
+      this.drawMinimap();
+    });
     game.events.on('key-state', (has: boolean) => {
       this.memEl.textContent = has ? '◆ MEMORY' : '◇ MEMORY';
       this.memEl.classList.toggle('on', has);
@@ -85,6 +112,7 @@ export class UIScene extends Phaser.Scene {
     game.events.on('boss-intro', (name: string) => {
       this.bossNameEl.textContent = name;
       this.bossWrap.classList.add('show');
+      this.mapCanvas.classList.add('duck'); // tuck the minimap away during the fight
       this.bossFill.style.transition = 'none';
       this.bossFill.style.width = '0%';
       requestAnimationFrame(() => {
@@ -95,7 +123,10 @@ export class UIScene extends Phaser.Scene {
     game.events.on('boss-health', (hp: number, max: number) => {
       this.bossFill.style.width = `${Phaser.Math.Clamp((hp / max) * 100, 0, 100)}%`;
     });
-    game.events.on('boss-defeated', () => this.bossWrap.classList.remove('show'));
+    game.events.on('boss-defeated', () => {
+      this.bossWrap.classList.remove('show');
+      this.mapCanvas.classList.remove('duck');
+    });
     // Grace Nova cooldown — the track refills over the cooldown, then glows ready.
     game.events.on('skill-cd', (ms: number) => {
       this.skillWrap.classList.remove('ready');
@@ -108,6 +139,49 @@ export class UIScene extends Phaser.Scene {
       window.clearTimeout(this.skillTimer);
       this.skillTimer = window.setTimeout(() => this.skillWrap.classList.add('ready'), ms);
     });
+  }
+
+  /** Draw the explored map: discovered sub-rooms at their true world positions
+   *  (so the shape grows as you explore), the current room lit, the player a dot.
+   *  Undiscovered rooms stay fogged (not drawn). */
+  private drawMinimap(): void {
+    const c = this.mapCanvas;
+    const m = this.mapModel;
+    if (!c || !m) return;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+    const W = c.width;
+    const H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    const pad = 14;
+    const scale = Math.min((W - 2 * pad) / m.ww, (H - 2 * pad) / m.wh);
+    const offx = (W - m.ww * scale) / 2;
+    const offy = (H - m.wh * scale) / 2;
+    const disc = new Set(m.discovered);
+    for (const r of m.rooms) {
+      if (!disc.has(r.id)) continue; // fog — only what we've discovered
+      const cur = r.id === m.current;
+      const x = offx + r.ox * scale;
+      const y = offy + r.oy * scale;
+      const w = Math.max(2, r.w * scale - 1);
+      const h = Math.max(2, r.h * scale - 1);
+      ctx.fillStyle = cur ? 'rgba(126,240,255,0.40)' : 'rgba(126,240,255,0.14)';
+      ctx.fillRect(x + 0.5, y + 0.5, w, h);
+      ctx.lineWidth = cur ? 2 : 1;
+      ctx.strokeStyle = cur ? 'rgba(190,250,255,0.95)' : 'rgba(126,240,255,0.45)';
+      ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    }
+    if (this.mapPos && disc.has(m.current)) {
+      const px = offx + this.mapPos.x * m.ww * scale;
+      const py = offy + this.mapPos.y * m.wh * scale;
+      ctx.fillStyle = '#ffe8a0';
+      ctx.shadowColor = 'rgba(255,224,150,0.9)';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
   }
 
   private setHealth(h: number, max: number): void {
@@ -162,7 +236,12 @@ export class UIScene extends Phaser.Scene {
         border-radius:3px;overflow:hidden;display:inline-block;}
       #hud .hud-skill .sk-fill{display:block;height:100%;width:100%;background:linear-gradient(180deg,#7ef0ff,rgba(126,240,255,.6));}
       #hud .hud-skill .sk-name{font-size:8px;letter-spacing:.18em;color:var(--cyan);opacity:.7;}
-      #hud .hud-souls{position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:8px;}
+      #hud .hud-map{position:absolute;top:14px;right:14px;width:104px;height:64px;opacity:0;
+        background:rgba(8,12,20,.6);border:1px solid rgba(126,240,255,.28);border-radius:8px;
+        box-shadow:0 1px 4px rgba(0,0,0,.5);transition:opacity .35s;}
+      #hud .hud-map.lit{opacity:1;}
+      #hud .hud-map.duck,#hud .hud-map.off{opacity:0;}
+      #hud .hud-souls{position:absolute;top:88px;right:20px;display:flex;align-items:center;gap:8px;}
       #hud .gem{width:12px;height:12px;border-radius:2px;transform:rotate(45deg);
         background:linear-gradient(135deg,#cdf3ff,#2f78d2);box-shadow:0 0 7px rgba(126,240,255,.75);}
       #hud .soul-num{font-size:15px;letter-spacing:.06em;min-width:14px;text-align:right;

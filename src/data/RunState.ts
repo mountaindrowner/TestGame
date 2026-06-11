@@ -17,6 +17,7 @@ export interface RunStateData {
   pacts: string[]; // one-time Stranger pacts taken (lifetime-capped)
   embers: { blade: number; life: number; spirit: number }; // RUN-scoped Grace Ember boosts
   embersTaken: string[]; // which placed embers were collected this run (room:tx,ty)
+  discovered: string[]; // composed sub-rooms the player has entered (the explored map)
   currentRoomId: string;
   entryDoorId?: string; // which door we entered the current room from
 }
@@ -48,6 +49,7 @@ export class RunState {
       d.pacts = prev.pacts;
       d.graceBurst = prev.graceBurst;
       d.souls = prev.souls;
+      d.discovered = prev.discovered ?? []; // the explored map persists across runs (metroidvania feel)
     }
     this.registry.set(KEY, d);
     return d;
@@ -66,8 +68,21 @@ export class RunState {
       pacts: [],
       embers: { blade: 0, life: 0, spirit: 0 },
       embersTaken: [],
+      discovered: [],
       currentRoomId: roomId,
     };
+  }
+
+  /** Mark a composed sub-room as discovered. Returns true if it was newly revealed. */
+  discover(id: string): boolean {
+    const d = this.data;
+    if (!d.discovered) d.discovered = [];
+    if (d.discovered.includes(id)) return false;
+    d.discovered.push(id);
+    return true;
+  }
+  get discovered(): string[] {
+    return this.data.discovered ?? [];
   }
 
   // The stored object is held by reference, so in-place mutation persists across

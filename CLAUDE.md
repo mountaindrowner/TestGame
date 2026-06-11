@@ -131,7 +131,18 @@ Full design bible: `docs/Repentance_Overworld_Map.pdf` notes summarized in `docs
   players, persists across room reloads. It's the seam the level editor reuses. Conventions,
   the three-box combat-bias rule, the restart-teardown checklist, and our deliberate
   divergences from generic Phaser guides are recorded in `DECISIONS.md`.
-- **Level editor (`EditorScene`, open with `?edit`):** an in-engine dev-kit that renders any room
+- **Home-screen access + minimap (DONE):** the title menu now offers **BEGIN / MAP EDITOR / SOUND**
+  (`TitleScene.openEditor` → `EditorScene`; the editor's **← MENU** button returns). *(Gotcha fixed:
+  `TitleScene` reuses its scene instance, so `create()` now resets `items/options/index/...` — else
+  stale destroyed Text objects lingered and `refresh()`'s `setColor` threw `drawImage` on a freed
+  texture.)* A **fog-of-war minimap** lives top-right (`UIScene` `#hud .hud-map` canvas): GameScene
+  emits `map` (world model: per-sub-room rects + discovered set + current) on entering a new region
+  and a throttled `map-pos` (player dot); it draws only **discovered** sub-rooms at their true
+  composed-world positions (so the shape grows as you explore), current room lit, player a gold dot.
+  Discovery lives in `RunState.discovered` (persists across runs — metroidvania map memory; revealed
+  via `checkSubRoom`/`run.discover`). Ducks during boss fights; **M** folds it; souls counter moved
+  below it.
+- **Level editor (`EditorScene`, open with `?edit` or the title's MAP EDITOR):** an in-engine dev-kit that renders any room
   WYSIWYG via the same `autotile`/tileset, with a DOM tool palette. **Paint** terrain
   (solid/platform/molten/cracked/erase) and **place/move/delete** entities (drag in select mode;
   Del removes; door/gate get an id/to/toEntry inspector); right-drag pans, wheel zooms. **Save**

@@ -736,6 +736,7 @@ export class EditorScene extends Phaser.Scene {
     this.mapBtn = this.btn('🗺 Map view', () => this.toggleMapView(), 'big');
     act.appendChild(this.mapBtn);
     act.appendChild(this.btn('▶ Play-test', () => this.play(), 'big'));
+    act.appendChild(this.btn('← MENU', () => this.scene.start('TitleScene'), 'big'));
     root.appendChild(act);
 
     this.status = document.createElement('div');
