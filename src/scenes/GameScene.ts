@@ -1624,6 +1624,17 @@ export class GameScene extends Phaser.Scene {
     };
     window.__health = () => this.player.health;
     window.__ppos = () => ({ x: Math.round(this.player.x), y: Math.round(this.player.y) });
+    // Dev: how many environment-decor pieces this room scattered (by texture key).
+    (window as { __decor?: () => unknown }).__decor = () => {
+      let ground = 0;
+      let hanging = 0;
+      for (const o of this.children.list as Phaser.GameObjects.Image[]) {
+        const k = o.texture?.key;
+        if (k?.startsWith('env-')) ground++;
+        else if (k?.startsWith('decor-')) hanging++;
+      }
+      return { biome: this.room.biome ?? 'depths', ground, hanging };
+    };
     window.__sanctuary = (next?: string) => {
       this.scene.stop('UIScene');
       this.scene.start('SanctuaryScene', { next: next ?? this.room.id });

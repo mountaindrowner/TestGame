@@ -42,6 +42,12 @@ export const Assets = {
   stalactite: { key: 'decor-stalactite', path: 'assets/sprites/decor/stalactite.png' },
   // House of Mirrors — an ornate broken mirror pane (PixelLab), placed as wall decor.
   mirror: { key: 'decor-mirror', path: 'assets/sprites/decor/mirror.png' },
+  // House of Mirrors — hanging props (procedural, gen_environment_mirrors.py): a
+  // silver chain, a glass shard cluster, a tattered violet drape, a swinging mirror.
+  mChain: { key: 'decor-m-chain', path: 'assets/sprites/decor/m-chain.png' },
+  mShard: { key: 'decor-m-shard', path: 'assets/sprites/decor/m-shard.png' },
+  mDrape: { key: 'decor-m-drape', path: 'assets/sprites/decor/m-drape.png' },
+  mMirror: { key: 'decor-m-mirror', path: 'assets/sprites/decor/m-mirror.png' },
   // Gameplay props — dropped currency (soul), heal orb, breakable urn.
   soul: { key: 'prop-soul', path: 'assets/sprites/props/soul.png' },
   heal: { key: 'prop-heal', path: 'assets/sprites/props/heal.png' },
@@ -67,8 +73,28 @@ export const ENV_GROUND = [
   'ash-heap', 'mushrooms', 'crystals', 'moss-clump', 'roots-patch',
 ] as const;
 export const ENV_WALL = ['wall-relief', 'wall-plaque'] as const;
+
+/** The MIRRORS-biome scatter set (tools/gen_environment_mirrors.py): glass shards,
+ *  broken mirror frames, porcelain false-faces, violet candelabra, etc. Same
+ *  GroundDecor engine, mirror palette. Names are prefixed `m-` (so the file is
+ *  `sprites/env/m-<name>.png`, key `env-m-<name>`). */
+export const ENV_GROUND_MIRRORS = [
+  'm-glass-shards', 'm-shard-pile', 'm-fallen-frame', 'm-leaning-pane',
+  'm-blue-crystals', 'm-glass-dust', 'm-false-face', 'm-mask-shards',
+  'm-toppled-pedestal', 'm-shattered-bust', 'm-gilt-rubble',
+  'm-violet-candelabra', 'm-silver-chalice', 'm-hand-mirror',
+] as const;
+export const ENV_WALL_MIRRORS = ['m-wall-mirror', 'm-wall-sconce', 'm-wall-mask'] as const;
 export const envKey = (name: string) => `env-${name}`;
 export const envPath = (name: string) => `assets/sprites/env/${name}.png`;
+
+/** A room's biome → its floor/wall scatter sets (GroundDecor). Depths is the
+ *  bone-and-grave set; mirrors is the glass-and-false-face set; anything else
+ *  (Court today) reuses depths. */
+export function decorSetFor(biome?: string): { ground: readonly string[]; wall: readonly string[] } {
+  if (biome === 'mirrors') return { ground: ENV_GROUND_MIRRORS, wall: ENV_WALL_MIRRORS };
+  return { ground: ENV_GROUND, wall: ENV_WALL };
+}
 
 // Per-biome theme lookup: a room's `biome` resolves to its tileset + parallax
 // layers here. Same autotiler/Vis contract for every biome — only the art differs.

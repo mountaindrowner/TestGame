@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Assets, ENV_GROUND, ENV_WALL, envKey, envPath } from '../data/assetManifest';
+import { Assets, ENV_GROUND, ENV_WALL, ENV_GROUND_MIRRORS, ENV_WALL_MIRRORS, envKey, envPath } from '../data/assetManifest';
 import { Palette } from '../data/palette';
 import {
   PlayerAnims,
@@ -64,6 +64,10 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(Assets.fern.key, Assets.fern.path);
     this.load.image(Assets.stalactite.key, Assets.stalactite.path);
     this.load.image(Assets.mirror.key, Assets.mirror.path);
+    this.load.image(Assets.mChain.key, Assets.mChain.path);
+    this.load.image(Assets.mShard.key, Assets.mShard.path);
+    this.load.image(Assets.mDrape.key, Assets.mDrape.path);
+    this.load.image(Assets.mMirror.key, Assets.mMirror.path);
     this.load.image(Assets.soul.key, Assets.soul.path);
     this.load.image(Assets.heal.key, Assets.heal.path);
     this.load.image(Assets.urn.key, Assets.urn.path);
@@ -75,7 +79,8 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: Assets.torch.frameW,
       frameHeight: Assets.torch.frameH,
     });
-    for (const name of [...ENV_GROUND, ...ENV_WALL]) this.load.image(envKey(name), envPath(name));
+    for (const name of [...ENV_GROUND, ...ENV_WALL, ...ENV_GROUND_MIRRORS, ...ENV_WALL_MIRRORS])
+      this.load.image(envKey(name), envPath(name));
   }
 
   create(): void {

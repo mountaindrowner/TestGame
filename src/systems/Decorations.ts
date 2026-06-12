@@ -10,7 +10,14 @@ interface Deco {
   phase: number;
 }
 
-const KINDS = [
+interface DecoKind {
+  key: string;
+  weight: number;
+  amp: number;
+  depth: number;
+}
+
+const DEPTHS_KINDS: DecoKind[] = [
   { key: Assets.vine.key, weight: 26, amp: 0.08, depth: 13 },
   { key: Assets.moss.key, weight: 26, amp: 0.05, depth: 13 },
   { key: Assets.stalactite.key, weight: 20, amp: 0.0, depth: 12 }, // stone — no sway
@@ -20,16 +27,27 @@ const KINDS = [
   { key: Assets.banner.key, weight: 8, amp: 0.06, depth: 9 },
 ];
 
+// House of Mirrors: glass shards, swinging mirrors, silver chains, violet drapes —
+// the cold-glass voice of the hanging props (gen_environment_mirrors.py).
+const MIRROR_KINDS: DecoKind[] = [
+  { key: Assets.mShard.key, weight: 28, amp: 0.09, depth: 13 },
+  { key: Assets.mMirror.key, weight: 22, amp: 0.11, depth: 12 },
+  { key: Assets.mChain.key, weight: 20, amp: 0.10, depth: 12 },
+  { key: Assets.mDrape.key, weight: 14, amp: 0.05, depth: 9 },
+];
+
 /** Purely-aesthetic props that hang from ledge undersides and sway. Deterministic
  *  placement (seeded) so the room is stable. Behind the player, never blocking it. */
 export class Decorations {
   private items: Deco[] = [];
+  private kinds = DEPTHS_KINDS;
 
   constructor(scene: Phaser.Scene, room: RoomData, biome?: string) {
-    // The organic depths props (moss/vines/roots) would read wrong in a glass
-    // biome; House of Mirrors gets its own props (hanging mirrors/obelisks) later.
-    if (biome && biome !== 'depths') return;
-    const rng = new Phaser.Math.RandomDataGenerator(['repentance-first-fall']);
+    // Each biome hangs its own props: depths = moss/vines/chains, mirrors =
+    // shards/mirrors/drapes. Anything else (Court today) reuses the depths set.
+    this.kinds = biome === 'mirrors' ? MIRROR_KINDS : DEPTHS_KINDS;
+    const seed = biome === 'mirrors' ? 'repentance-mirrors' : 'repentance-first-fall';
+    const rng = new Phaser.Math.RandomDataGenerator([seed]);
     const { w, h, tiles } = room;
     const solidish = (c: number) => c === Sem.SOLID || c === Sem.CRACKED || c === Sem.PLATFORM;
 
@@ -64,12 +82,12 @@ export class Decorations {
   }
 
   private pick(rng: Phaser.Math.RandomDataGenerator) {
-    const total = KINDS.reduce((s, k) => s + k.weight, 0);
+    const total = this.kinds.reduce((s, k) => s + k.weight, 0);
     let r = rng.frac() * total;
-    for (const k of KINDS) {
+    for (const k of this.kinds) {
       if ((r -= k.weight) <= 0) return k;
     }
-    return KINDS[0];
+    return this.kinds[0];
   }
 
   update(time: number): void {
