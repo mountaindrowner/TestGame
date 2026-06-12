@@ -1,37 +1,49 @@
 import { RoomData } from '../roomData';
 import { Room } from './build';
 
-// Spine room 3 — THE CROSSROADS, carved catacomb rock. The true branch hub: a
-// through-passage (west ↔ descent, east ↔ gate), a taller central vault for the
-// airborne spark, a ↑ door down to the buried memory, and — in the upper nook — a
-// VISIBLE sealed door to THE HIDDEN VAULT, whose molten lake inside needs the
-// Grace Burst (earned from the Warden): the planted "come back here" gate.
-// Feet row at the edges = 16.
+// Spine room 3 — THE CROSSROADS, re-cut as a WINDING branch HUB. You climb in from
+// the low west, up a shaft into the central junction; from there three ways open —
+// **down** through THE PIT to the buried memory, **up** the nook shaft to the
+// Hidden Vault, and **east** (over the pit) toward the Warden's approach. The spark
+// owns the open air of the junction. Tunnels through rock; the through-path climbs
+// west→east (the spine keeps ascending). Seam mouths single-opening; verified by
+// the traversal gate (the down/up branches reachable + returnable).
 export function crossroads(): RoomData {
-  const r = new Room('THE CROSSROADS', 58, 20).fill();
+  const r = new Room('THE CROSSROADS', 56, 26).fill();
 
-  r.carve(0, 12, 58, 5); //  through-passage rows 12-16, reaches both side edges (floor row17)
-  r.carve(18, 6, 22, 6); //  central vault (rows 6-11) above it — airspace for the spark
-  r.carve(27, 17, 4, 3); //  THE PIT — a 4-wide floor gap: walk in to DROP to the buried memory,
-  //                         or jump it (5-tile leap with a clear run-up — inside App. A's comfort line)
-  r.carve(46, 7, 8, 4); //   the upper-right nook…
-  r.solid(46, 11, 5, 1); //  …its floor shelf…
-  r.climbShaft(51, 0, 15); // …and the VAULT SHAFT — now laddered all the way down to the
-  //                         passage (nubs 12/9/6/3; the old stub started 14 unjumpable rows up)
+  // ── low west arrival + the climb into the junction ───────────────────────────
+  r.carve(0, 18, 16, 4); //   west mouth rows 18-21, x0-15
+  r.climbShaft(13, 8, 21); // x11-15, rows 8-21 — climb up to the hub
 
-  r.at('runner', 16, 16);
-  r.at('archer', 38, 16); // ranged: looses bolts down the passage (kept west of the seam so the breather hall stays quiet)
-  r.at('spark', 28, 9); //   harasses from the central vault
-  r.at('torch', 6, 16);
-  r.at('torch', 52, 16);
-  r.at('torch', 30, 11);
-  r.at('jar', 10, 16);
-  r.at('jar', 47, 9); // in the nook
-  r.at('jar', 44, 16);
+  // ── THE JUNCTION — the central hub corridor (floor row 13), open to the east ─
+  r.carve(8, 8, 48, 5); //    rows 8-12, x8-55 (reaches the east edge = the mouth)
+  r.solid(18, 11, 6, 2); //   a raised plinth mid-junction — go up and over it…
+  r.solid(17, 12, 1, 1); //   …stepped both ends so it's a beat, not a wall
+  r.solid(24, 12, 1, 1);
+
+  // ── THE PIT — down through the junction floor to A BURIED MEMORY (or jump it) ─
+  r.carve(28, 13, 4, 13); //  x28-31, rows 13-25 → the bottom-edge opening (down link)
+
+  // ── THE NOOK SHAFT — up out of the junction to THE HIDDEN VAULT ──────────────
+  r.climbShaft(42, 0, 12); // x40-44, rows 0-12 → the top-edge opening (up link)
+
+  // ── enemies of the hub ───────────────────────────────────────────────────────
+  r.at('runner', 11, 21); //  meets you in the low west
+  r.at('spark', 22, 6); //    owns the junction's open air
+  r.at('archer', 47, 12); //  looses bolts down the east approach
+
+  // ── flavour ──────────────────────────────────────────────────────────────────
+  r.at('torch', 6, 21);
+  r.at('torch', 21, 12);
+  r.at('torch', 36, 12);
+  r.at('torch', 42, 4);
+  r.at('jar', 10, 21);
+  r.at('jar', 35, 12);
+  r.at('jar', 47, 12);
 
   r.link('west', 'descent');
   r.link('east', 'approach'); // the quiet torch-lit hall before the Warden (the breather)
-  r.link('down', 'memory'); // drop through the pit into A BURIED MEMORY
-  r.link('up', 'vault'); //    climb the nook shaft up into THE HIDDEN VAULT
+  r.link('down', 'memory'); //  drop through the pit into A BURIED MEMORY
+  r.link('up', 'vault'); //     climb the nook shaft up into THE HIDDEN VAULT
   return r.build('crossroads');
 }

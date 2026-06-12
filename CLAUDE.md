@@ -257,6 +257,24 @@ The "combat-feel + run-structure" pass. The dodge-roll (earlier) was its first b
   never stacks) fires on the **combo finisher** + big hits (core/kill/elite, `Player.isFinisher`) and on
   the Nova; heavy hits also take the longer hitstop.
 
+## BIO-01 re-cut WINDING (Dead-Cells metroidvania pass)
+Mark: "make this like a metroidvania — winding passages like a Dead Cells playthrough." The flat
+spine corridors are now SWITCHBACK ASCENTS through carved catacomb tunnels, verified by the
+traversal gate (reachable, no traps, real elevation), the spine net-CLIMBING toward the light:
+- **descent (THE LOWER VAULTS)** 54×30 — three offset tiers: arrive low west → fight east → climb
+  a laddered shaft → switch BACK west along the middle tier → climb again → run east along the top
+  to a higher exit, with a high GRACE-EMBER pocket above. Mandatory climb (48% vertical journey).
+- **crossroads (THE CROSSROADS)** 56×26 — a winding branch HUB: climb in from the low west into a
+  central junction where three ways open — **down** THE PIT to the buried memory, **up** the nook
+  shaft to the Hidden Vault, **east** over the pit to the approach. The through-path ascends.
+- **approach (THE LONG APPROACH)** 40×22 — the breather, now a gentle 3-up colonnade climb (no
+  combat) up toward the gate, east mouth higher than west.
+Composes 260×58, all 7 rooms, the spine profile climbing (descent oy28 low → gate oy4 high). KEY
+RULE learned: seam mouths must reach the room EDGE (a mouth at x8-51 in a 56-wide room never seams
+— approach/gate silently dropped from the compose until the hub carve reached x55). The east/west
+mouths can sit at DIFFERENT heights (the compositor aligns each seam independently) → that's how the
+spine ascends. NEXT: same winding pass on the Court (court.ts) + BIO-02 mirror rooms.
+
 ## The TRAVERSAL GATE (3rd validator — the one that walks the tiles)
 Mark's playtest exposed the gap: the logic gates validated the PLAN + the GRAPH, never the
 GEOMETRY — he softlocked in a sealed ember nook in THE LOWER VAULTS and called the spine "a
