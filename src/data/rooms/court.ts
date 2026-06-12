@@ -18,6 +18,9 @@ export function courtGate(): RoomData {
   const r = new Room('THE OUTER GATES', 28, 20).fill();
   r.carve(0, 10, 28, 7); //   the entry walk (rows 10-16), open east
   r.carve(8, 6, 12, 4); //    a vaulted porch over the first judgment
+  r.solid(19, 15, 5, 2); //   a raised PLINTH under the porch's far side…
+  r.solid(18, 16, 1, 1); //   …stepped on both ends (the walk rises with the verdicts)
+  r.solid(24, 16, 1, 1);
 
   r.at('player', 3, 16);
   r.at('door', 3, 16, { id: 'from-mirrors', to: 'untrue-image' }); // arrival from the BIO-02 lift
@@ -35,6 +38,9 @@ export function courtHall(): RoomData {
   const r = new Room('THE HALL OF ACCUSATION', 34, 20).fill();
   r.carve(0, 10, 34, 7); //   the long hall, open both sides
   r.carve(12, 4, 12, 6); //   the gaze descends from a high vault
+  r.solid(14, 15, 8, 2); //   the accused's DAIS under the gaze — the floor rises to be seen…
+  r.solid(13, 16, 1, 1); //   …stepped on both ends
+  r.solid(22, 16, 1, 1);
 
   r.at('gaze', 17, 10, { range: 6 }); // the roaming judgment light
   r.at('runner', 24, 16);
@@ -52,7 +58,9 @@ export function courtHall(): RoomData {
 export function courtDock(): RoomData {
   const r = new Room('THE DOCK', 26, 20).fill();
   r.carve(0, 10, 26, 7); //   the through-passage
-  r.climbShaft(13, 0, 9); //  the climb UP to the Witness Stand (seamless)
+  r.carve(17, 17, 5, 2); //   a sunken TRENCH under the east gavel — drop in, climb out
+  r.climbShaft(13, 0, 15); // the climb UP to the Witness Stand — nubs reach the floor
+  //                          (12/9/6/3: every hop ≤3; the old shaft started 11 rows up)
 
   r.at('gavel', 6, 10, { phase: 0 }); //   a gavel pair guards the way on —
   r.at('gavel', 20, 10, { phase: 0.5 }); // offset beats, walk the rhythm (test)
@@ -88,7 +96,8 @@ export function courtGauntlet(): RoomData {
   r.carve(0, 10, 40, 7); //   the run, open both sides
   r.carve(14, 17, 4, 3); //   a molten scar pit mid-run (gavels hammer over it)
   r.molten(14, 19, 4);
-  r.carve(26, 17, 5, 3); //   THE DROP — down into the Sealed Evidence (optional)
+  r.carve(26, 17, 4, 3); //   THE DROP — down into the Sealed Evidence (optional; 4-wide
+  //                          so jumping past it stays a comfortable 5-tile leap)
 
   r.at('gavel', 12, 10, { phase: 0 });
   r.at('gavel', 16, 10, { phase: 0.33 });
@@ -108,7 +117,8 @@ export function courtGauntlet(): RoomData {
 export function courtEvidence(): RoomData {
   const r = new Room('THE SEALED EVIDENCE', 30, 16).fill();
   r.carve(2, 4, 26, 9); //    the vault (closed chamber, floor rows 13+)
-  r.climbShaft(28 - 8, 0, 3); // the climb back out (aligned under the gauntlet drop)
+  r.climbShaft(28 - 8, 0, 12); // the climb back out — nubs at 9/6/3 reach the chamber
+  //                          floor (the old 3-row stub left a 10-row unjumpable wall = a TRAP)
 
   r.at('flameseal', 12, 12); // the condemning dark — only the Quiet Flame passes
   r.at('ember', 5, 12); //     the prize beyond it
@@ -125,6 +135,7 @@ export function courtAntechamber(): RoomData {
   const r = new Room('THE ANTECHAMBER', 24, 18).fill();
   r.carve(0, 11, 24, 6); //   a low, quiet passage — no threats (§3.6)
   r.carve(9, 6, 6, 5); //     one shaft of vaulted height, one light
+  r.carve(9, 17, 6, 2); //    the floor DIPS under the light — a sunken, quiet pool of calm
 
   r.at('torch', 12, 16); //   the one steady candle
   r.at('jar', 5, 16);

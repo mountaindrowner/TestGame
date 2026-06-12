@@ -17,8 +17,9 @@ export function mirrorRise(): RoomData {
   r.solid(6, 14, 7, 2); //   top 14 — left high ledge
   // ── GRACE BURST GAP ──  ~8 tiles across to the right ledge (jump+air-dash)
   r.solid(20, 12, 8, 2); //  top 12
-  r.platform(30, 9, 5); //   9
-  r.solid(28, 6, 9, 2); //   top 6 — the exit ledge
+  r.platform(24, 9, 4); //   a clear step (x24-27, nothing overhead) up from the burst ledge
+  r.solid(30, 6, 8, 2); //   top 6 — the exit ledge (shifted east: it used to OVERHANG the
+  //                         step with 1 row of headroom — unstandable for a 2-tile figure)
   // ── seamless exit UP into the Threshold (carves through the ceiling) ──
   r.climbShaft(32, 0, 5); //  ladders rows 0..5 above the exit ledge → open top edge
 

@@ -257,6 +257,28 @@ The "combat-feel + run-structure" pass. The dodge-roll (earlier) was its first b
   never stacks) fires on the **combo finisher** + big hits (core/kill/elite, `Player.isFinisher`) and on
   the Nova; heavy hits also take the longer hitstop.
 
+## The TRAVERSAL GATE (3rd validator — the one that walks the tiles)
+Mark's playtest exposed the gap: the logic gates validated the PLAN + the GRAPH, never the
+GEOMETRY — he softlocked in a sealed ember nook in THE LOWER VAULTS and called the spine "a
+flat walk to the boss." `src/data/traverseValidate.ts` → `validateTraversal(env, assumed)` now
+simulates real movement over the composed world (flood fill: walk/step, jump-up ≤6 = double-jump
+5.9 + auto-mantle, gaps ≤5 base / ≤8 grace-burst, rising diagonals, fall-landing; molten = passable
+support — burns never kills; one-way platforms passable from below). Checks: **unreachable**
+required spawns (keys/gates/doors/elites 🔴#4) + embers (burst kit, 🔴#5) · **TRAP POCKETS**
+(reachable, no way back — softlock) · **sealed pockets** (mantle-traps/dead space, notes) ·
+**JOURNEY metrics** (BFS the critical path: % elevation, longest flat stroll — the "boring
+corridor" detector). Wired into `describeScore` (a `terrain` line; passes the score's `assumed`).
+**It found ~12 real bugs on first run** (then fixed): the descent nook (sealed + mantle-trap),
+the crossroads→vault chain (nook 6-up unreachable, shaft started 14 rows up → `climbShaft(51,0,15)`
+to the floor), both 5-wide pits forcing 6-tile max-jumps (→ 4-wide), court-dock/evidence shafts
+starting 10-11 rows up (real softlock trap → laddered to the floor), mirror-rise's exit approach
+OVERHUNG with 1-row headroom (unstandable → ledge shifted east + clear step), mirror-hall's east
+platform out of reach, court spine 0% elevation over 185 tiles (→ plinth/dais/trench/dip carved in).
+All three envs now pass ✓ clean. Model gotchas: StaticBody-style wrap bug in the path BFS (negative
+x wraps a row — bounds-clamp), `pathMetrics` counts gap-jumps as non-flat. `debugJourney(env)`
+returns the measured path for visualization. NEXT: editor overlay of reach/journey; run on `gb:*`
+greyboxes at scaffold time.
+
 ## Seamless world (loadless environments — IN PROGRESS)
 Mark's direction: **no fading at all, a camera that just follows the player, each environment
 one massive map that requires no loading.** Approach = **compose each environment's rooms into

@@ -11,7 +11,7 @@ export function mirrorHall(): RoomData {
   r.solid(8, 14, 7, 2); //   first ledge up from the floor
   r.platform(19, 12, 5); //  one-way step across
   r.solid(28, 15, 7, 2); //  mid ledge (runner)
-  r.platform(39, 12, 4); //  high step toward the east mouth
+  r.platform(38, 13, 4); //  high step toward the east mouth (2-up-4-across from the mid ledge)
 
   r.at('door', 5, 18, { id: 'from-gate', to: 'gate' }); // arrival from the BIO-01 gate
 

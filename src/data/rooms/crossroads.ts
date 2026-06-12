@@ -12,10 +12,12 @@ export function crossroads(): RoomData {
 
   r.carve(0, 12, 58, 5); //  through-passage rows 12-16, reaches both side edges (floor row17)
   r.carve(18, 6, 22, 6); //  central vault (rows 6-11) above it — airspace for the spark
-  r.carve(27, 17, 5, 3); //  THE PIT — a 5-wide floor gap: walk in to DROP to the buried memory, or jump it to pass
+  r.carve(27, 17, 4, 3); //  THE PIT — a 4-wide floor gap: walk in to DROP to the buried memory,
+  //                         or jump it (5-tile leap with a clear run-up — inside App. A's comfort line)
   r.carve(46, 7, 8, 4); //   the upper-right nook…
-  r.solid(46, 11, 5, 1); //  …reached by a wall shelf
-  r.climbShaft(51, 0, 6); // …and a shaft climbing UP out of the nook into the Hidden Vault
+  r.solid(46, 11, 5, 1); //  …its floor shelf…
+  r.climbShaft(51, 0, 15); // …and the VAULT SHAFT — now laddered all the way down to the
+  //                         passage (nubs 12/9/6/3; the old stub started 14 unjumpable rows up)
 
   r.at('runner', 16, 16);
   r.at('archer', 38, 16); // ranged: looses bolts down the passage (kept west of the seam so the breather hall stays quiet)

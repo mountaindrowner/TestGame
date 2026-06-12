@@ -10,6 +10,7 @@
 import { Beat, Emotion, LevelScore } from './levelScore';
 import { composeWorld } from './worldComposer';
 import { allRoomIds } from './levelGraph';
+import { validateTraversal } from './traverseValidate';
 
 export type Severity = 'error' | 'note';
 export interface ScoreWarning {
@@ -172,5 +173,12 @@ export function describeScore(score: LevelScore): string {
   const notes = w.filter((x) => x.level === 'note');
   L.push(`  verdict ${errs.length ? '✗ ' + errs.length + ' error(s)' : '✓ logic gate passed'}  ·  ${notes.length} note(s)`);
   w.forEach((x) => L.push(`    ${x.level === 'error' ? '✗' : '·'} ${x.msg}`));
+  // The GEOMETRY gate — only meaningful once the env is built (it walks the tiles).
+  if (allRoomIds().includes(score.env)) {
+    const t = validateTraversal(score.env, score.assumed ?? []);
+    const te = t.filter((x) => x.level === 'error');
+    L.push(`  terrain ${te.length ? '✗ ' + te.length + ' error(s)' : '✓ traversal gate passed'}  ·  ${t.length - te.length} note(s)`);
+    t.forEach((x) => L.push(`    ${x.level === 'error' ? '✗' : '·'} ${x.msg}`));
+  }
   return L.join('\n');
 }

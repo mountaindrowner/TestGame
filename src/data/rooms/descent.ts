@@ -13,7 +13,8 @@ export function descent(): RoomData {
   r.carve(38, 13, 22, 4); // east passage  (open rows 13-16, reaches the east edge)
   // a small carved nook above the middle, reached by a wall shelf — catacomb texture + a jar
   r.carve(26, 6, 9, 4);
-  r.solid(26, 9, 5, 1); //   shelf up into the nook from the middle floor
+  r.solid(26, 9, 5, 1); //   the nook's interior landing shelf
+  r.carve(31, 10, 4, 1); //  the MOUTH — open underside (jump in from the rise, drop out)
 
   r.at('runner', 16, 16);
   r.at('crawler', 34, 14);
