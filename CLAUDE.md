@@ -332,6 +332,19 @@ All three envs now pass ✓ clean. Model gotchas: StaticBody-style wrap bug in t
 x wraps a row — bounds-clamp), `pathMetrics` counts gap-jumps as non-flat. `debugJourney(env)`
 returns the measured path for visualization. NEXT: editor overlay of reach/journey; run on `gb:*`
 greyboxes at scaffold time.
+- **Softlock found + the gate's blind spot closed (2026-06-12, Mark's playtest):** Mark got stuck in
+  a drop in BIO-01. The Crossroads dropped into A Buried Memory through a **smooth hole** (`carve`),
+  but the climb-out ladder lived only in `memory`; the two `climbShaft`s left a **>6-tile dead gap at
+  the room seam** (each shaft leaves a margin at its ends) — a one-way drop onto the REQUIRED key.
+  **Geometry fix:** crossroads pit → `climbShaft(29,13,25)` + a **bridging foothold each side of the
+  seam** (`crossroads r.solid(27,24,2,1)`, `memory r.solid(11,1,2,1)`) → continuous zigzag, every gap
+  ≤3. **Why the gate missed it:** the trap-pocket check anchored "can you get home?" on start **+ all
+  required spawns** — incl. the buried key, so the pit's own reward marked it "reachable." Fixed:
+  anchors = **start + real EXITS (door/gate) only**, never a buried key/elite. Proven three ways: the
+  fixed gate now FLAGS the old geometry (6 TRAP POCKET errors) + passes the fix clean; composed-column
+  shows continuous footholds; an **in-game climb bot** rose 29 tiles out of the pit on the base kit
+  (no Grace Burst). Reusable headless gate-runner: `tools/traversecheck.mjs`. **Lesson: two climbShafts
+  meeting at a composed seam need a bridging foothold each side** (the margin rule).
 
 ## Seamless world (loadless environments — IN PROGRESS)
 Mark's direction: **no fading at all, a camera that just follows the player, each environment
