@@ -22,7 +22,15 @@ export function crossroads(): RoomData {
   r.solid(24, 12, 1, 1);
 
   // ── THE PIT — down through the junction floor to A BURIED MEMORY (or jump it) ─
-  r.carve(28, 13, 4, 13); //  x28-31, rows 13-25 → the bottom-edge opening (down link)
+  // A LADDERED shaft (not a smooth hole): you can drop in for the Memory AND climb
+  // back out — its footholds continue memory's own climb shaft across the seam, so
+  // the column is climbable end-to-end. (Same width/centre as memory's shaft so the
+  // compositor stacks them perfectly.) The 4-wide mouth at the top still jumps clean.
+  r.climbShaft(29, 13, 25); //  x27-31, rows 13-25 → the bottom-edge opening (down link)
+  r.solid(27, 24, 2, 1); //     a bridging foothold near the bottom of the pit, so the
+  //                            ladder continues across the room seam into memory's shaft
+  //                            (climbShaft leaves a margin at each end; two shafts meeting
+  //                            would otherwise leave a >6-tile dead gap = a one-way drop)
 
   // ── THE NOOK SHAFT — up out of the junction to THE HIDDEN VAULT ──────────────
   r.climbShaft(42, 0, 12); // x40-44, rows 0-12 → the top-edge opening (up link)

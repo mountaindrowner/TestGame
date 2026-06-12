@@ -12,6 +12,9 @@ export function memory(): RoomData {
   // ── seamless: you DROP IN through the crossroads pit and climb back out the same
   //    laddered shaft (west side, clear of the striker's lane) ──
   r.climbShaft(10, 0, 15);
+  r.solid(11, 1, 2, 1); //   a bridging foothold near the TOP of the shaft — meets the
+  //                         crossroads pit's bottom foothold across the seam so the
+  //                         climb out of the buried memory is continuous (no dead gap)
 
   r.at('striker', 28, 15);
   r.at('key', 20, 10); // the Broken Memory, floating over the pedestal

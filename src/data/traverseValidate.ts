@@ -277,8 +277,11 @@ export function validateTraversal(envId: string, assumed: string[] = []): Traver
     if (samples.length < 400 && (x + y) % 3 === 0) samples.push({ x, y });
   });
   // run ONE reverse flood from the start over inverted moves — equivalently:
-  // forward-reach from every exit-ish anchor; we anchor on the start + all door/gate cells.
-  const anchors = [start, ...required.map((s) => ({ x: s.tx, y: s.ty }))];
+  // forward-reach from every exit-ish anchor. "Home" = the START + real EXITS
+  // (doors/gates that lead onward). NOT keys or elites: a buried key/reward sitting
+  // INSIDE a pit would otherwise mark its own trap as "reachable" and mask the
+  // softlock (the bug that hid the crossroads memory-pit drop). Exits only.
+  const anchors = [start, ...world.spawns.filter((s) => s.type === 'door' || s.type === 'gate').map((s) => ({ x: s.tx, y: s.ty }))];
   // a cell can "get home" if a forward flood from IT reaches an anchor; testing
   // every cell is O(n²) — instead flood from each anchor with INVERTED gravity
   // moves is complex, so use the pragmatic version: test each distinct floor
