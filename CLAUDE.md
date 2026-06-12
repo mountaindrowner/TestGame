@@ -345,6 +345,15 @@ scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the e
 - **Verified:** both scores pass the gate with 0 notes; the editor panel + Scaffold button work
   end-to-end (panel renders the timeline; scaffold → 7 `gb:` rooms → editor opens the first);
   the hall plays seamlessly in the composed world; no console errors.
+- **BIO-03 "The Court of Condemnation" — authored SCORE-FIRST (the pipeline's first level):**
+  `courtOfCondemnationScore` (Shame route 3rd: First Fall → House of Mirrors → Court → The Accuser).
+  Declared as an 8-beat timeline BEFORE any room exists; the logic gate passes it (✓ 0 errors,
+  tension ▂▃▄▅▅▆▂█), and `__scaffold('court-gate')` greyboxes all 8 rooms (composes 204×32, plays
+  clean). Signature gimmicks GAVEL (timed verdict-crusher) + VERDICT-GAZE (judging spotlight); key
+  = **Witness Mark** (opens the High Tribunal); boss **THE ACCUSER** grants **Quiet Flame** (back-
+  unlocks the planted Sealed Evidence vault). Full room table in `docs/WORLD_PLAN.md` (BIO-03).
+  `validateScore` now skips coverage for a not-yet-built env (declare→scaffold→build). NEXT: refine
+  the `gb:court-gate:*` greybox by hand → Court enemy roster + gimmick code → PixelLab art.
 
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)

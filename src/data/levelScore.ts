@@ -203,10 +203,113 @@ export const houseOfMirrorsScore: LevelScore = {
   ],
 };
 
+// ─── BIO-03 — "THE COURT OF CONDEMNATION" ────────────────────────────────────
+// The Shame route's third biome (DESIGN.md: First Fall → House of Mirrors → Court
+// of Condemnation → The Accuser). A towering tribunal of the damned that pronounces
+// you guilty; the metaphor's answer is the WITNESS MARK — "no longer defined by
+// your failure." Authored SCORE-FIRST, before any room exists: the timeline is
+// declared, the logic gate proves it, the scaffolder greyboxes it, THEN it's built
+// by hand and earns art (docs/LEVEL_GRAMMAR.md). Signature gimmicks: the GAVEL (a
+// timed verdict-crusher) and the VERDICT-GAZE (a judging spotlight). New key found
+// in-level = witness-mark (opens the High Tribunal, like the Broken Memory opened
+// the gate). The Accuser grants the QUIET-FLAME on defeat (hope when feeling is
+// gone) — which back-unlocks the planted SEALED EVIDENCE vault (§4.2 come-back).
+// Everything from BIO-01 + BIO-02 is carried in (assumed).
+export const courtOfCondemnationScore: LevelScore = {
+  env: 'court-gate',
+  title: 'THE COURT OF CONDEMNATION',
+  premise: 'Stand accused in the high tribunal — answer the verdict not by escape but by the Witness Mark, and fell the Accuser.',
+  assumed: [
+    'move', 'jump', 'dash', 'molten', 'pit', 'combo', 'telegraph-light', 'telegraph-heavy',
+    'pursuer', 'ranged-dodge', 'double-jump', 'grace-burst', 'nova', 'front-immune', 'shatter',
+  ],
+  beats: [
+    {
+      room: 'court-gate',
+      role: 'arrival',
+      intent: 'The outer gates grind open onto a vast court — judging statues line the walk. A single gavel falls (over solid ground): learn its rhythm.',
+      emotion: 'stalked',
+      elevation: 'ascend',
+      tension: 0.2,
+      teaches: ['gavel'],
+    },
+    {
+      room: 'court-hall',
+      role: 'teach',
+      intent: 'The hall of accusation — a sweeping verdict-gaze spotlight roams the floor; weave your blade through the wardens caught in its light.',
+      emotion: 'struggle',
+      elevation: 'ascend',
+      tension: 0.35,
+      teaches: ['verdict-gaze'],
+      tests: ['combo'],
+    },
+    {
+      room: 'court-dock',
+      role: 'branch',
+      intent: 'The dock, where the accused stands: the path forks — climb to the Witness Stand for your defence, or press on toward the tribunal under falling gavels.',
+      emotion: 'choice',
+      elevation: 'ascend',
+      tension: 0.42,
+      tests: ['gavel'],
+    },
+    {
+      room: 'court-witness',
+      role: 'reward',
+      intent: 'The witness stand — a heavy Bailiff guards the WITNESS MARK; take it and you are no longer defined by your failure (it opens the High Tribunal).',
+      emotion: 'struggle',
+      elevation: 'ascend',
+      tension: 0.55,
+      tests: ['telegraph-heavy'],
+      grants: 'witness-mark',
+      payoff: 'the Witness Mark (required to open the High Tribunal)',
+    },
+    {
+      room: 'court-evidence',
+      role: 'gate',
+      intent: 'A sealed evidence vault drowned in condemning darkness — only the Quiet Flame (earned from the Accuser) can light and cross it. The planted come-back.',
+      emotion: 'mastery',
+      elevation: 'ascend',
+      tension: 0.5,
+      lock: 'quiet-flame',
+      payoff: 'a buried relic + a Grace Ember',
+      optional: true,
+    },
+    {
+      room: 'court-gauntlet',
+      role: 'gauntlet',
+      intent: 'The gauntlet of verdicts — gavels hammer across pits while the gaze hunts you and a Bailiff bars the way; everything the court taught, at once.',
+      emotion: 'struggle',
+      elevation: 'ascend',
+      tension: 0.78,
+      tests: ['gavel', 'verdict-gaze', 'telegraph-heavy', 'grace-burst'],
+    },
+    {
+      room: 'court-antechamber',
+      role: 'breather',
+      intent: 'The antechamber behind the bench — quiet, lit by one steady candle. The verdict waits beyond the doors. Breathe.',
+      emotion: 'grace',
+      elevation: 'ascend',
+      tension: 0.15,
+    },
+    {
+      room: 'court-tribunal',
+      role: 'finale',
+      intent: 'The high tribunal — THE ACCUSER reads the charge from on high. Show the Witness Mark and answer it; break the gavel, not yourself.',
+      emotion: 'ascent',
+      elevation: 'ascend',
+      tension: 1.0,
+      tests: ['telegraph-heavy', 'grace-burst', 'combo'],
+      lock: 'witness-mark',
+      grants: 'quiet-flame',
+    },
+  ],
+};
+
 /** All authored scores, by environment id. */
 export const LEVEL_SCORES: Record<string, LevelScore> = {
   [firstFallScore.env]: firstFallScore,
   [houseOfMirrorsScore.env]: houseOfMirrorsScore,
+  [courtOfCondemnationScore.env]: courtOfCondemnationScore,
 };
 
 export const allScoreEnvs = (): string[] => Object.keys(LEVEL_SCORES);

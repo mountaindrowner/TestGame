@@ -80,6 +80,35 @@ indigo palette, silver mirror sheen, cold glass light (vs the depths' warm flame
   arches, distortion fog…), dedicated roster art (shared tinted placeholders today), and a true
   reflection sprite for the boss. Greybox new rooms in the editor before art (LEVEL_DESIGN workflow).
 
+## BIO-03 — "The Court of Condemnation" (Shame route, third) — SCORE-FIRST, greyboxed
+"Stand accused." A towering tribunal of the damned that pronounces you guilty; the metaphor's
+answer is the **Witness Mark** — *no longer defined by your failure*. Higher than the House of
+Mirrors (the ascent continues) → more intact, monumental masonry; cold verdict-light from above
+vs the depths' warm flame. **Authored entirely through the Score pipeline** (`courtOfCondemnationScore`
+in `src/data/levelScore.ts`): the timeline was declared, the logic gate passed it (✓ 0 errors,
+▂▃▄▅▅▆▂█), and the scaffolder greyboxed all 8 rooms (`__scaffold('court-gate')` → composes 204×32).
+The rooms below are the declared beats — to be refined by hand, then earn art.
+- **Signature gimmicks:** the **GAVEL** (a timed verdict-crusher — teach the rhythm over solid
+  ground, escalate over pits) and the **VERDICT-GAZE** (a roaming judging spotlight).
+- **Key:** the **Witness Mark** (found at the Witness Stand, guarded; opens the High Tribunal —
+  the lock-and-key beat, like the Broken Memory opened the gate). **Boss:** **THE ACCUSER**,
+  which grants the **Quiet Flame** on defeat — back-unlocking the planted Sealed Evidence vault.
+
+| Room (id) | Role · Elevation | Mood | Faces | Signature / why |
+|---|---|---|---|---|
+| **THE OUTER GATES** (`court-gate`) | Arrival · ascend | "Judged the moment you enter." | first gavel (safe) | Statue-lined approach; teaches the gavel rhythm over solid ground. |
+| **THE HALL OF ACCUSATION** (`court-hall`) | Teach · ascend | "A light that hunts you." | wardens under the gaze | Introduces the verdict-gaze spotlight; first court fight. |
+| **THE DOCK** (`court-dock`) | Branch · ascend | "Defend, or press on." | falling gavels | The fork: up to the Witness Stand, or onward to the tribunal. |
+| **THE WITNESS STAND** (`court-witness`) | Reward · ascend | "Speak for yourself." | a Bailiff (heavy) | Guards the **Witness Mark** key. |
+| **THE SEALED EVIDENCE** (`court-evidence`) | Gate · ascend (optional) | "What they buried." | condemning dark | Planted come-back: needs the **Quiet Flame** (earned from the Accuser). Pays a relic + ember. |
+| **THE GAUNTLET OF VERDICTS** (`court-gauntlet`) | Gauntlet · ascend | "Everything, at once." | gavels+gaze+Bailiff | The peak before the breather — gavels over pits, the gaze, a heavy foe. |
+| **THE ANTECHAMBER** (`court-antechamber`) | Breather · ascend | "One steady candle." | none | Downtime trough before the verdict (§3.6). |
+| **THE HIGH TRIBUNAL** (`court-tribunal`) | Finale · ascend toward light | "Answer the charge." | **THE ACCUSER** | Show the Witness Mark; break the gavel, not yourself. Grants the Quiet Flame. |
+
+**Onward:** the Accuser felled, the Shame route converges on the Altar of Surrender (DESIGN.md).
+**Next:** refine the `gb:court-gate:*` greybox rooms by hand (editor), pick the Court's enemy
+roster + the gavel/gaze gimmick implementations, then PixelLab art — greybox-before-art as always.
+
 ## How to use this
 1. Before authoring/re-skinning a room, write its template line (above).
 2. Place assets to satisfy **role + mood + gradients** (elevation/decay/light), then

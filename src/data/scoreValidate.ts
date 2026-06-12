@@ -9,6 +9,7 @@
 
 import { Beat, Emotion, LevelScore } from './levelScore';
 import { composeWorld } from './worldComposer';
+import { allRoomIds } from './levelGraph';
 
 export type Severity = 'error' | 'note';
 export interface ScoreWarning {
@@ -39,13 +40,18 @@ export function validateScore(score: LevelScore): ScoreWarning[] {
   const at = (b: Beat, i: number) => `beat ${i + 1} (${b.room}/${b.role})`;
 
   // --- coverage: every composed sub-room is a planned beat, and vice-versa ------
-  let placements: { id: string }[] = [];
-  try {
-    placements = composeWorld(score.env).placements;
-  } catch (e) {
-    note(`could not compose '${score.env}' to check coverage: ${(e as Error).message}`);
-  }
-  if (placements.length) {
+  // Only meaningful once the level's rooms actually exist. A brand-new SCORE-FIRST
+  // level (rooms not built/scaffolded yet) composes a fallback world — skip coverage
+  // until the rooms are real (the declare→scaffold→build flow checks it post-build).
+  if (!allRoomIds().includes(score.env)) {
+    note(`'${score.env}' isn't built yet — coverage unchecked (declare → scaffold → build, LEVEL_GRAMMAR §3)`);
+  } else {
+    let placements: { id: string }[] = [];
+    try {
+      placements = composeWorld(score.env).placements;
+    } catch (e) {
+      note(`could not compose '${score.env}' to check coverage: ${(e as Error).message}`);
+    }
     const planned = new Set(beats.map((b) => b.room));
     const built = new Set(placements.map((p) => p.id));
     for (const p of placements) if (!planned.has(p.id)) note(`sub-room '${p.id}' is built but has no beat (nothing "random" — give it intent)`);
