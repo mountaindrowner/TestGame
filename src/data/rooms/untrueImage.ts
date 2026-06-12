@@ -15,6 +15,9 @@ export function untrueImage(): RoomData {
 
   r.at('door', 6, 14, { id: 'from-threshold', to: 'mirror-threshold', toEntry: 'thresh-up' });
   r.at('mirrorboss', 32, 14);
+  // Felling the Untrue Image opens the way on — the lift climbs into the COURT
+  // OF CONDEMNATION (via the Sanctuary, like BIO-01's gate).
+  r.at('gate', 43, 14, { id: 'mirror-final', to: 'court-gate', toEntry: 'from-mirrors' });
 
   // a full ring of mirrors — every wall shows the reflection
   r.at('mirror', 10, 9, { scale: 0.3 });

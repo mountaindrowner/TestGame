@@ -12,6 +12,7 @@ export type EnemyKind =
   | 'striker'
   | 'guardian'
   | 'mirrorboss'
+  | 'accuser'
   // BIO-02 House of Mirrors roster
   | 'mirrorDouble'
   | 'reflectionHound'
@@ -85,7 +86,7 @@ export interface EnemyConfig {
 }
 
 export const ENEMY_KINDS: EnemyKind[] = [
-  'runner', 'crawler', 'spark', 'striker', 'guardian', 'mirrorboss',
+  'runner', 'crawler', 'spark', 'striker', 'guardian', 'mirrorboss', 'accuser',
   'mirrorDouble', 'reflectionHound', 'glassWitch', 'falseFace', 'fractureWisp', 'fractureShard', 'lookingGlass',
   'archer', 'bomber',
 ];
@@ -198,6 +199,36 @@ export const ENEMY_REGISTRY: Record<EnemyKind, EnemyConfig> = {
     scale: 1.2,
     depth: 46,
     tint: 0x9fc0ff, // cold mirror-glass cast
+  },
+
+  // BIO-03 boss — THE ACCUSER, the voice of the Court of Condemnation. Reuses the
+  // Warden's armored telegraph kit in a verdict-gold cast and reads slower, harder
+  // windups (the gavel made flesh); its own RunState flag (accuserDefeated) +
+  // it grants the QUIET FLAME on defeat. Placeholder art until the Court's pass.
+  accuser: {
+    kind: 'accuser',
+    displayName: 'THE ACCUSER',
+    behavior: 'heavy_telegraph',
+    spriteKey: Assets.warden.key,
+    anims: {
+      run: 'warden-run',
+      windup: 'warden-windup',
+      hurt: 'warden-hurt',
+      strike: 'warden-strike',
+      recovery: 'warden-recovery',
+      idle: 'warden-idle',
+      taunt: 'warden-taunt',
+      slam: 'warden-slam',
+      death: 'warden-death',
+    },
+    tune: { ...GuardianTune, maxHealth: 380, windupMs: 760, slamWindupMs: 620, chaseSpeed: 196 },
+    body: { w: 28, h: 52, offX: 21, offY: 19 },
+    hasCore: false,
+    coreBonusMult: 2.0,
+    elite: true,
+    scale: 1.28,
+    depth: 46,
+    tint: 0xffd98e, // verdict gold — the court's judgment light
   },
 
   // ── BIO-02 House of Mirrors roster ──────────────────────────────────────

@@ -97,6 +97,35 @@ def torch():
     _save(im, "torch.png")
 
 
+def gavel():
+    """The Court's VERDICT-CRUSHER (26x22): a massive square stone gavel-head on a
+    short iron shaft — hangs from the ceiling, telegraphs, slams. Carved scales of
+    judgment on its face so it reads as a JUDGMENT, not a generic crusher."""
+    w, h = 26, 22
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    stone = (74, 72, 88)
+    stone_hi = (112, 110, 130)
+    stone_lo = (44, 42, 56)
+    iron = (58, 60, 70)
+    # the shaft into the ceiling
+    d.rectangle([11, 0, 14, 5], fill=iron)
+    d.line([(11, 0), (11, 5)], fill=(96, 100, 112))
+    # the head — a heavy block with a beveled face
+    d.rounded_rectangle([1, 5, w - 2, h - 1], radius=2, fill=stone)
+    d.line([(2, 6), (w - 3, 6)], fill=stone_hi)        # top bevel
+    d.line([(2, 7), (2, h - 3)], fill=stone_hi)        # lit left
+    d.line([(w - 3, 8), (w - 3, h - 2)], fill=stone_lo)  # shaded right
+    d.rectangle([1, h - 3, w - 2, h - 1], fill=stone_lo)  # striking face
+    # carved scales of judgment
+    cx = w // 2
+    d.line([(cx, 9), (cx, 13)], fill=stone_lo)
+    d.line([(cx - 5, 10), (cx + 5, 10)], fill=stone_lo)
+    d.arc([cx - 7, 11, cx - 3, 14], 0, 180, fill=stone_lo)
+    d.arc([cx + 3, 11, cx + 7, 14], 0, 180, fill=stone_lo)
+    _save(im, "gavel.png")
+
+
 def critter():
     """A tiny scuttling beetle (faces +x; engine flips for the other way)."""
     w, h = 8, 5
@@ -139,6 +168,7 @@ def build() -> None:
     gem((150, 255, 170), (40, 170, 90), "heal.png")   # green life orb
     urn()
     torch()
+    gavel()
     critter()
     cobweb()
 

@@ -60,6 +60,16 @@ export class GameScene extends Phaser.Scene {
   private requestedRoomId = START_ROOM;
   private arenaSeals: Phaser.Physics.Arcade.Image[] = []; // physical seals on the arena's open edges while a boss lives
   private pendingArena?: Placement; // an undefeated elite's region; arms when the figure enters it
+  // BIO-03 Court gimmicks (data-driven hazards; see makeGavel/makeGaze)
+  private gavels: {
+    spr: Phaser.GameObjects.Image; restY: number; floorY: number; period: number;
+    t0: number; state: 'hold' | 'slam' | 'impact' | 'rise'; stateAt: number; hitThisSlam: boolean;
+  }[] = [];
+  private gazes: {
+    g: Phaser.GameObjects.Graphics; x0: number; y: number; floorY: number; range: number;
+    state: 'sweep' | 'lock' | 'strike' | 'cool'; stateAt: number; lockX: number; phase: number;
+  }[] = [];
+  private keyGrant: 'memory' | 'witness' = 'memory';
   private currentSubRoom = ''; // which composed sub-region the figure is in (for per-region HUD name)
   private mapPosAt = 0; // throttle for the minimap player-position feed
   private layer!: Phaser.Tilemaps.TilemapLayer;
@@ -84,7 +94,7 @@ export class GameScene extends Phaser.Scene {
   private entrySide?: 'east' | 'west';
   private interactArmed = false; // must leave an edge zone before it can fire
   private doors: DoorRef[] = [];
-  private gate?: { x: number; y: number; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle; to?: string; toEntry?: string; prompt?: Phaser.GameObjects.Text };
+  private gate?: { x: number; y: number; id?: string; visual: Phaser.GameObjects.Graphics; glow: Phaser.GameObjects.Rectangle; to?: string; toEntry?: string; prompt?: Phaser.GameObjects.Text };
   private transitioning = false;
   private interactReadyAt = 0;
   private won = false;
@@ -120,6 +130,18 @@ export class GameScene extends Phaser.Scene {
     this.won = false;
     this.respawning = false;
     this.interactArmed = false;
+    // Restart-teardown (DECISIONS.md checklist): the scene INSTANCE is reused by
+    // scene.restart, so per-room arena/hazard state must be reset by hand — a stale
+    // bossActive from a prior visit would stop the next arena from ever arming.
+    this.bossActive = false;
+    this.bossIntroPlayed = false;
+    this.bossBarrier = undefined;
+    this.arenaSeals = [];
+    this.pendingArena = undefined;
+    this.guardianRef = undefined;
+    this.gavels = [];
+    this.gazes = [];
+    this.currentSubRoom = '';
 
     // Compose the whole ENVIRONMENT (same-biome, edge-linked rooms) into ONE big
     // map so it plays as a single loadless world — a following camera, no fades on
@@ -382,8 +404,20 @@ export class GameScene extends Phaser.Scene {
       case 'jar':
         this.makeUrn(x, y);
         break;
-      case 'key':
-        if (!this.run.hasBrokenMemory) this.makeKey(x, y - 12);
+      case 'key': {
+        const grant = s.grant ?? 'memory';
+        const owned = grant === 'witness' ? this.run.witnessMark : this.run.hasBrokenMemory;
+        if (!owned) this.makeKey(x, y - 12, grant);
+        break;
+      }
+      case 'gavel':
+        this.makeGavel(x, y, s);
+        break;
+      case 'gaze':
+        this.makeGaze(x, y, s);
+        break;
+      case 'flameseal':
+        this.makeFlameSeal(x, y);
         break;
       case 'ember':
         this.makeEmber(x, y - 12, s);
@@ -400,13 +434,14 @@ export class GameScene extends Phaser.Scene {
   private eliteDefeated(kind: EnemyKind): boolean {
     if (kind === 'guardian') return this.run.guardianDefeated;
     if (kind === 'mirrorboss') return this.run.untrueImageDefeated;
+    if (kind === 'accuser') return this.run.accuserDefeated;
     return false;
   }
 
   /** The room's arena elite (Warden or Untrue Image) if it hasn't been beaten. */
   private undefeatedEliteSpawn(): Spawn | undefined {
     return this.room.spawns.find(
-      (s) => (s.type === 'guardian' || s.type === 'mirrorboss') && !this.eliteDefeated(s.type as EnemyKind),
+      (s) => (s.type === 'guardian' || s.type === 'mirrorboss' || s.type === 'accuser') && !this.eliteDefeated(s.type as EnemyKind),
     );
   }
 
@@ -665,7 +700,8 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private makeKey(x: number, y: number): void {
+  private makeKey(x: number, y: number, grant: 'memory' | 'witness' = 'memory'): void {
+    this.keyGrant = grant;
     // The Broken Memory: a shard of cyan light. Auto-collected on contact.
     const halo = this.add
       .image(0, 0, Assets.dot.key)
@@ -681,9 +717,14 @@ export class GameScene extends Phaser.Scene {
     this.keyPos.set(x, y);
   }
 
+  private keyOwned(): boolean {
+    return this.keyGrant === 'witness' ? this.run.witnessMark : this.run.hasBrokenMemory;
+  }
+
   private collectKey(): void {
-    if (!this.keyObj || this.run.hasBrokenMemory) return;
-    this.run.hasBrokenMemory = true;
+    if (!this.keyObj || this.keyOwned()) return;
+    if (this.keyGrant === 'witness') this.run.witnessMark = true;
+    else this.run.hasBrokenMemory = true;
     this.sfx.grace();
     this.particles.graceMotes(this.keyPos.x, this.keyPos.y, 28);
     this.juice.flash(Palette.grace, 120);
@@ -816,8 +857,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /** A gate's open state by its id (mirrors gateNeeds; usable pre-construction). */
+  private gateOpenFor(id?: string): boolean {
+    if (id === 'mirror-final') return this.run.untrueImageDefeated;
+    if (id === 'court-final') return this.run.witnessMark && this.run.accuserDefeated;
+    return this.run.hasBrokenMemory && this.run.guardianDefeated;
+  }
+
   private makeGate(x: number, y: number, s?: Spawn): void {
-    const open = this.run.hasBrokenMemory && this.run.guardianDefeated;
+    const open = this.gateOpenFor(s?.id);
     const visual = this.add.graphics().setDepth(9);
     const glow = this.add
       .rectangle(x, y - 17, 16, 32, open ? Palette.grace : Palette.stoneHi, open ? 0.5 : 0.25)
@@ -830,7 +878,7 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(48)
       .setAlpha(0);
-    this.gate = { x, y, visual, glow, to: s?.to, toEntry: s?.toEntry, prompt };
+    this.gate = { x, y, id: s?.id, visual, glow, to: s?.to, toEntry: s?.toEntry, prompt };
     this.drawGate();
     this.tweens.add({ targets: glow, alpha: open ? 0.85 : 0.4, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     if (open) this.tweens.add({ targets: prompt, alpha: 0.95, y: y - 48, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -842,7 +890,7 @@ export class GameScene extends Phaser.Scene {
   private drawGate(): void {
     if (!this.gate) return;
     const { x, y, visual, prompt } = this.gate;
-    const unlocked = this.run.hasBrokenMemory && this.run.guardianDefeated;
+    const unlocked = this.gateOpenFor(this.gate.id);
     visual.clear();
     // frame: lintel + side posts
     visual.fillStyle(Palette.shadow, 1).fillRect(x - 13, y - 38, 26, 5);
@@ -949,6 +997,7 @@ export class GameScene extends Phaser.Scene {
     this.checkHazards();
     this.checkPickups();
     this.updateBombs(time);
+    this.updateCourtHazards(time);
     this.checkArena();
     this.checkSubRoom();
     this.checkInteractions(time);
@@ -994,8 +1043,164 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /** A solid tile lookup down a column: the world Y of the first solid tile top
+   *  at/below (tx, fromTy). Used by the Court hazards to find their floor. */
+  private floorYAt(tx: number, fromTy: number): number {
+    for (let y = fromTy; y < this.room.h; y++) {
+      const c = this.room.tiles[y]?.[tx];
+      if (c === Sem.SOLID || c === Sem.CRACKED || c === Sem.PLATFORM) return y * World.tile;
+    }
+    return (this.room.h - 2) * World.tile;
+  }
+
+  /** THE GAVEL — the Court's timed verdict-crusher. Hangs from the ceiling and
+   *  cycles hold → tremble → SLAM to the floor → rest → rise. Damages only while
+   *  slamming (attack-only rule); the tremble is the fair telegraph (#3/#8). */
+  private makeGavel(x: number, y: number, s: Spawn): void {
+    const spr = this.add.image(x, y - World.tile / 2, Assets.gavel.key).setOrigin(0.5, 0).setDepth(44);
+    const restY = y - World.tile / 2;
+    const floorY = this.floorYAt(Math.floor(x / World.tile), Math.floor(y / World.tile));
+    const period = s.period ?? 2600;
+    this.gavels.push({ spr, restY, floorY, period, t0: (s.phase ?? 0) * period, state: 'hold', stateAt: 0, hitThisSlam: false });
+  }
+
+  /** THE VERDICT-GAZE — a roaming judging spotlight. Sweeps the floor; if it
+   *  catches the figure it LOCKS (the beam flares gold — the telegraph), then a
+   *  verdict bolt slams the locked spot. Step out during the lock to dodge. */
+  private makeGaze(x: number, y: number, s: Spawn): void {
+    const g = this.add.graphics().setDepth(43).setBlendMode(Phaser.BlendModes.ADD);
+    const floorY = this.floorYAt(Math.floor(x / World.tile), Math.floor(y / World.tile));
+    this.gazes.push({ g, x0: x, y, floorY, range: (s.range ?? 4) * World.tile, state: 'sweep', stateAt: 0, lockX: x, phase: Math.random() * Math.PI * 2 });
+  }
+
+  /** The Quiet-Flame seal — a condemning-dark barrier the Accuser's reward opens
+   *  (BIO-03's planted come-back). With the flame: it parts in a grace flash. */
+  private makeFlameSeal(x: number, y: number): void {
+    if (this.run.quietFlame) {
+      this.particles.graceMotes(x, y - 16, 10); // already earned — the way is open
+      return;
+    }
+    // Span the FULL passage: scan up for the ceiling and down for the floor at
+    // this column so there is no gap to jump or dash through.
+    const tx = Math.floor(x / World.tile);
+    let ceilTy = Math.floor(y / World.tile) - 1;
+    const solid = (c: number | undefined) => c === Sem.SOLID || c === Sem.CRACKED;
+    while (ceilTy > 0 && !solid(this.room.tiles[ceilTy]?.[tx])) ceilTy--;
+    const floorY = this.floorYAt(tx, Math.floor(y / World.tile));
+    const top = (ceilTy + 1) * World.tile;
+    const wall = this.physics.add.staticImage(x, (top + floorY) / 2, Assets.dot.key).setVisible(false);
+    // setSize LAST — updateFromGameObject would reset the body to the 2x2 dot
+    (wall.body as Phaser.Physics.Arcade.StaticBody).setSize(10, floorY - top);
+    this.physics.add.collider(this.player, wall, () => {
+      if (this.time.now > this.interactReadyAt) {
+        this.events.emit('hint', 'SEALED IN CONDEMNING DARK — ONLY A QUIET FLAME PASSES.');
+        this.interactReadyAt = this.time.now + 1800;
+      }
+    });
+    const veil = this.add
+      .rectangle(x, (top + floorY) / 2, 8, floorY - top, 0x2a1040, 0.55)
+      .setDepth(58)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.tweens.add({ targets: veil, fillAlpha: 0.75, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
+  /** Drive the Court hazards (called from update; skipped during hitstop). */
+  private updateCourtHazards(time: number): void {
+    const T = World.tile;
+    const pb = this.player.body;
+    for (const v of this.gavels) {
+      const headH = 17; // striking head height in px (sprite is 22 with the shaft)
+      switch (v.state) {
+        case 'hold': {
+          const cycle = (time + v.t0) % v.period;
+          const tremble = cycle > v.period * 0.32;
+          v.spr.x = v.spr.x + (tremble ? Math.sin(time * 0.09) * 0.8 : 0);
+          if (tremble && cycle > v.period * 0.42) {
+            v.state = 'slam';
+            v.stateAt = time;
+            v.hitThisSlam = false;
+          }
+          break;
+        }
+        case 'slam': {
+          v.spr.y = Math.min(v.floorY - headH - 5, v.spr.y + 9); // ~540 px/s drop
+          // attack-only damage: only the falling head hurts
+          if (!v.hitThisSlam && !this.player.isInvulnerable()) {
+            const hw = 12;
+            if (Math.abs(this.player.x - v.spr.x) < hw + pb.width / 2 && pb.y < v.spr.y + headH + 8 && pb.y + pb.height > v.spr.y) {
+              v.hitThisSlam = true;
+              this.player.takeDamage(20, v.spr.x);
+            }
+          }
+          if (v.spr.y >= v.floorY - headH - 5) {
+            v.state = 'impact';
+            v.stateAt = time;
+            this.juice.shake(120, 0.006);
+            this.particles.dust(v.spr.x - 10, v.floorY, 3);
+            this.particles.dust(v.spr.x + 10, v.floorY, 3);
+            this.sfx.stomp?.();
+          }
+          break;
+        }
+        case 'impact':
+          if (time - v.stateAt > 520) {
+            v.state = 'rise';
+            v.stateAt = time;
+          }
+          break;
+        case 'rise':
+          v.spr.y = Math.max(v.restY, v.spr.y - 1.6);
+          if (v.spr.y <= v.restY) {
+            v.state = 'hold';
+            v.t0 = -time + (v.period * 0.0); // restart the cycle from now
+          }
+          break;
+      }
+    }
+    for (const z of this.gazes) {
+      const g = z.g;
+      g.clear();
+      const sweepX = z.state === 'sweep' || z.state === 'cool' ? z.x0 + Math.sin(time * 0.0011 + z.phase) * z.range : z.lockX;
+      const beamHw = 13; // half-width at the floor
+      const caught =
+        Math.abs(this.player.x - sweepX) < beamHw && this.player.y > z.y && this.player.y < z.floorY + 8;
+      if (z.state === 'sweep' && caught) {
+        z.state = 'lock';
+        z.stateAt = time;
+        z.lockX = this.player.x;
+        this.sfx.telegraph?.();
+      } else if (z.state === 'lock' && time - z.stateAt > 620) {
+        z.state = 'strike';
+        z.stateAt = time;
+        // the verdict falls — dodge by leaving the locked column during the flare
+        if (Math.abs(this.player.x - z.lockX) < beamHw + 2 && !this.player.isInvulnerable()) {
+          this.player.takeDamage(18, z.lockX);
+        }
+        this.juice.shake(90, 0.004);
+      } else if (z.state === 'strike' && time - z.stateAt > 230) {
+        z.state = 'cool';
+        z.stateAt = time;
+      } else if (z.state === 'cool' && time - z.stateAt > 1300) {
+        z.state = 'sweep';
+      }
+      // draw — a faint judging cone, flaring gold in lock, a hot column on strike
+      const x = z.state === 'lock' || z.state === 'strike' ? z.lockX : sweepX;
+      if (z.state === 'strike') {
+        g.fillStyle(0xffe9a8, 0.85).fillRect(x - beamHw, z.y, beamHw * 2, z.floorY - z.y);
+        g.fillStyle(0xffffff, 0.9).fillRect(x - 3, z.y, 6, z.floorY - z.y);
+      } else {
+        const locked = z.state === 'lock';
+        const pulse = locked ? 0.3 + 0.18 * Math.sin(time * 0.03) : z.state === 'cool' ? 0.05 : 0.13;
+        g.fillStyle(locked ? 0xffd060 : 0xcfe8ff, pulse);
+        g.fillTriangle(x - 3, z.y, x + 3, z.y, x + beamHw, z.floorY);
+        g.fillTriangle(x - 3, z.y, x - beamHw, z.floorY, x + beamHw, z.floorY);
+        g.fillStyle(locked ? 0xffd060 : 0xcfe8ff, pulse * 0.7).fillEllipse(x, z.floorY, beamHw * 2.4, 5);
+      }
+    }
+  }
+
   private checkPickups(): void {
-    if (this.keyObj && !this.run.hasBrokenMemory) {
+    if (this.keyObj && !this.keyOwned()) {
       if (Phaser.Math.Distance.Between(this.player.x, this.player.y - 8, this.keyPos.x, this.keyPos.y) < 18) {
         this.collectKey();
       }
@@ -1074,19 +1279,49 @@ export class GameScene extends Phaser.Scene {
     if (L.east) chevron(roomW - 16, '»');
   }
 
+  /** Each gate states its own requirement (key + the area's elite). */
+  private gateNeeds(): { open: boolean; hint: string } {
+    const id = this.gate?.id ?? 'final';
+    if (id === 'mirror-final') {
+      return {
+        open: this.run.untrueImageDefeated,
+        hint: 'SEALED — THE UNTRUE IMAGE STILL STANDS.',
+      };
+    }
+    if (id === 'court-final') {
+      const k = this.run.witnessMark;
+      const b = this.run.accuserDefeated;
+      return {
+        open: k && b,
+        hint: !k && !b
+          ? 'SEALED — FELL THE ACCUSER AND BEAR THE WITNESS MARK.'
+          : !k
+            ? 'SEALED — THE WITNESS MARK IS MISSING (THE WITNESS STAND, ABOVE THE DOCK).'
+            : 'SEALED — THE ACCUSER STILL PRESIDES.',
+      };
+    }
+    // BIO-01 default: the Broken Memory + the Warden.
+    const k = this.run.hasBrokenMemory;
+    const b = this.run.guardianDefeated;
+    return {
+      open: k && b,
+      hint: !k && !b
+        ? 'SEALED — DEFEAT THE WARDEN AND BRING A BROKEN MEMORY.'
+        : !k
+          ? 'SEALED — A BROKEN MEMORY IS MISSING (DROP INTO THE PIT AT THE CROSSROADS, TO THE WEST).'
+          : 'SEALED — THE WARDEN STILL STANDS.',
+    };
+  }
+
   private tryGate(): void {
-    if (this.run.hasBrokenMemory && this.run.guardianDefeated) {
-      // An opened gate that leads somewhere (BIO-01 → House of Mirrors) lifts + rides
-      // a lift up to it; otherwise it's the end of the line (level complete).
+    const need = this.gateNeeds();
+    if (need.open) {
+      // An opened gate that leads somewhere rides the lift up; otherwise it's the
+      // end of built content (level complete).
       if (this.gate?.to) this.rideLift();
       else this.onLevelComplete();
     } else {
-      const need = !this.run.hasBrokenMemory && !this.run.guardianDefeated
-        ? 'SEALED — DEFEAT THE WARDEN AND BRING A BROKEN MEMORY.'
-        : !this.run.hasBrokenMemory
-          ? 'SEALED — A BROKEN MEMORY IS MISSING (DROP INTO THE PIT AT THE CROSSROADS, TO THE WEST).'
-          : 'SEALED — THE WARDEN STILL STANDS.';
-      this.events.emit('hint', need);
+      this.events.emit('hint', need.hint);
     }
   }
 
@@ -1129,8 +1364,8 @@ export class GameScene extends Phaser.Scene {
     const addSeal = (cx: number, cy: number, w: number, h: number) => {
       const seal = this.physics.add.staticImage(cx, cy, Assets.dot.key).setVisible(false);
       const body = seal.body as Phaser.Physics.Arcade.StaticBody;
+      // setSize LAST — updateFromGameObject would reset the body to the 2x2 dot
       body.setSize(w, h);
-      body.updateFromGameObject();
       this.physics.add.collider(this.player, seal);
       this.arenaSeals.push(seal);
     };
@@ -1199,17 +1434,26 @@ export class GameScene extends Phaser.Scene {
   private onGuardianDefeated(kind?: EnemyKind): void {
     this.bossActive = false;
     const mirror = kind === 'mirrorboss';
+    const accuser = kind === 'accuser';
     if (mirror) this.run.untrueImageDefeated = true;
+    else if (accuser) this.run.accuserDefeated = true;
     else this.run.guardianDefeated = true;
 
     // The Warden's fall grants Grace Burst — grace gives movement (DESIGN.md).
-    if (!mirror && !this.run.graceBurst) {
+    if (!mirror && !accuser && !this.run.graceBurst) {
       this.run.graceBurst = true;
       this.player.graceBurst = true;
       this.time.delayedCall(900, () => this.events.emit('hint', 'GRACE BURST — dash through the air (in the air)'));
     }
-    // The Untrue Image is the end of the House of Mirrors — its fall completes the area.
-    if (mirror) this.time.delayedCall(1200, () => this.onLevelComplete());
+    // The Accuser's fall grants the QUIET FLAME (permanent) — hope when feeling is
+    // gone; it back-unlocks the Sealed Evidence (the §4.2 come-back).
+    if (accuser && !this.run.quietFlame) {
+      this.run.quietFlame = true;
+      this.time.delayedCall(900, () => this.events.emit('hint', 'THE QUIET FLAME — the condemning dark parts before it.'));
+    }
+    // The Untrue Image's fall opens the way UP into the Court (the gate ascends);
+    // the Accuser is the end of built content — its gate completes the area.
+    if (mirror) this.time.delayedCall(1600, () => this.events.emit('hint', 'THE WAY OPENS ABOVE — REACH THE GATE AND PRESS ↑'));
     if (this.bossBarrier) {
       this.tweens.killTweensOf(this.bossBarrier);
       this.tweens.add({
@@ -1265,7 +1509,7 @@ export class GameScene extends Phaser.Scene {
         #${id} button:hover{background:rgba(126,240,255,0.25);}
       </style>
       <div>
-        <div class="ttl">${this.room.biome === 'mirrors' ? 'THE HOUSE OF MIRRORS — COMPLETE' : 'THE FIRST FALL — COMPLETE'}</div>
+        <div class="ttl">${this.room.id?.startsWith('court') ? 'THE COURT OF CONDEMNATION — COMPLETE' : this.room.biome === 'mirrors' ? 'THE HOUSE OF MIRRORS — COMPLETE' : 'THE FIRST FALL — COMPLETE'}</div>
         <div class="sub">${this.room.biome === 'mirrors' ? 'YOU FACED THE UNTRUE IMAGE.' : 'YOU GOT BACK UP.'} &nbsp;·&nbsp; TO BE CONTINUED</div>
         <button id="${id}-again">RETURN IN GRACE</button>
       </div>`;
@@ -1357,6 +1601,15 @@ export class GameScene extends Phaser.Scene {
       this.debug.setEnabled(on ?? !this.debug.enabled);
       this.registry.set('debug', this.debug.enabled);
     };
+    (window as { __run?: () => unknown }).__run = () => JSON.parse(JSON.stringify(this.run.data));
+    (window as { __tp?: (x: number, y: number) => void }).__tp = (x, y) => {
+      this.player.body.reset(x, y);
+    };
+    (window as { __arena?: () => unknown }).__arena = () => ({
+      seals: this.arenaSeals.map((w) => ({ x: w.x, y: w.y, bw: (w.body as Phaser.Physics.Arcade.StaticBody).width, bh: (w.body as Phaser.Physics.Arcade.StaticBody).height })),
+      pending: this.pendingArena,
+      bossActive: this.bossActive,
+    });
     window.__setRun = (partial) => {
       Object.assign(this.run.data, partial);
       this.scene.restart({ roomId: this.room.id });

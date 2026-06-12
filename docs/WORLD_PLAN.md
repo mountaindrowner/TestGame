@@ -80,7 +80,7 @@ indigo palette, silver mirror sheen, cold glass light (vs the depths' warm flame
   arches, distortion fog…), dedicated roster art (shared tinted placeholders today), and a true
   reflection sprite for the boss. Greybox new rooms in the editor before art (LEVEL_DESIGN workflow).
 
-## BIO-03 — "The Court of Condemnation" (Shame route, third) — SCORE-FIRST, greyboxed
+## BIO-03 — "The Court of Condemnation" (Shame route, third) — BUILT (playable, beatable)
 "Stand accused." A towering tribunal of the damned that pronounces you guilty; the metaphor's
 answer is the **Witness Mark** — *no longer defined by your failure*. Higher than the House of
 Mirrors (the ascent continues) → more intact, monumental masonry; cold verdict-light from above
@@ -106,8 +106,14 @@ The rooms below are the declared beats — to be refined by hand, then earn art.
 | **THE HIGH TRIBUNAL** (`court-tribunal`) | Finale · ascend toward light | "Answer the charge." | **THE ACCUSER** | Show the Witness Mark; break the gavel, not yourself. Grants the Quiet Flame. |
 
 **Onward:** the Accuser felled, the Shame route converges on the Altar of Surrender (DESIGN.md).
-**Next:** refine the `gb:court-gate:*` greybox rooms by hand (editor), pick the Court's enemy
-roster + the gavel/gaze gimmick implementations, then PixelLab art — greybox-before-art as always.
+**Status: BUILT + WIRED.** The 8 rooms are real (`src/data/rooms/court.ts`, seamless composed
+192×52 world); the **GAVEL** + **VERDICT-GAZE** are implemented data-driven hazards (GameScene
+`makeGavel`/`makeGaze`, spawn extras `period/phase/range`); the **Witness Mark** is a real key
+(`key` spawn `grant:'witness'`); **THE ACCUSER** is a live elite (warden kit, verdict-gold) whose
+fall grants the permanent **Quiet Flame** that opens the `flameseal` in the Sealed Evidence; the
+Untrue Image's hall now has the onward gate (lift → Sanctuary → court). Logic gate ✓ 0E/0N with
+full coverage. **Next:** the Court's own enemy roster + tileset/parallax (PixelLab; Bailiff is a
+tinted Striker today), and gavel/gaze art polish.
 
 ## How to use this
 1. Before authoring/re-skinning a room, write its template line (above).

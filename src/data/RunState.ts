@@ -11,6 +11,9 @@ export interface RunStateData {
   hasBrokenMemory: boolean; // the key found in a branch
   guardianDefeated: boolean; // the gate guardian beaten
   untrueImageDefeated: boolean; // BIO-02 mini-boss (THE UNTRUE IMAGE) beaten
+  accuserDefeated: boolean; // BIO-03 boss (THE ACCUSER) beaten
+  witnessMark: boolean; // the Court's key — "no longer defined by your failure"
+  quietFlame: boolean; // PERMANENT, granted by the Accuser — opens the Sealed Evidence
   graceBurst: boolean; // Grace Burst air-dash unlocked (earned from the Warden)
   souls: number; // currency dropped by foes / urns
   graces: { vigor: number; edge: number; grace: number; gather: number }; // Sanctuary altar levels
@@ -48,6 +51,7 @@ export class RunState {
       d.graces = prev.graces;
       d.pacts = prev.pacts;
       d.graceBurst = prev.graceBurst;
+      d.quietFlame = prev.quietFlame; // permanent, like Grace Burst
       d.souls = prev.souls;
       d.discovered = prev.discovered ?? []; // the explored map persists across runs (metroidvania feel)
     }
@@ -62,6 +66,9 @@ export class RunState {
       hasBrokenMemory: false,
       guardianDefeated: false,
       untrueImageDefeated: false,
+      accuserDefeated: false,
+      witnessMark: false,
+      quietFlame: false,
       graceBurst: false,
       souls: 0,
       graces: { vigor: 0, edge: 0, grace: 0, gather: 0 },
@@ -113,6 +120,24 @@ export class RunState {
   }
   set untrueImageDefeated(v: boolean) {
     this.data.untrueImageDefeated = v;
+  }
+  get accuserDefeated(): boolean {
+    return this.data.accuserDefeated;
+  }
+  set accuserDefeated(v: boolean) {
+    this.data.accuserDefeated = v;
+  }
+  get witnessMark(): boolean {
+    return this.data.witnessMark;
+  }
+  set witnessMark(v: boolean) {
+    this.data.witnessMark = v;
+  }
+  get quietFlame(): boolean {
+    return this.data.quietFlame;
+  }
+  set quietFlame(v: boolean) {
+    this.data.quietFlame = v;
   }
   get graceBurst(): boolean {
     return this.data.graceBurst;

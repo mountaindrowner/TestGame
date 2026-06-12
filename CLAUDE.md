@@ -352,8 +352,27 @@ scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the e
   clean). Signature gimmicks GAVEL (timed verdict-crusher) + VERDICT-GAZE (judging spotlight); key
   = **Witness Mark** (opens the High Tribunal); boss **THE ACCUSER** grants **Quiet Flame** (back-
   unlocks the planted Sealed Evidence vault). Full room table in `docs/WORLD_PLAN.md` (BIO-03).
-  `validateScore` now skips coverage for a not-yet-built env (declare→scaffold→build). NEXT: refine
-  the `gb:court-gate:*` greybox by hand → Court enemy roster + gimmick code → PixelLab art.
+  `validateScore` now skips coverage for a not-yet-built env (declare→scaffold→build).
+- **BIO-03 is now BUILT + WIRED (this pass):** the 8 rooms are real code (`rooms/court.ts`,
+  seamless 192×52; witness stand above the dock, sealed evidence below the gauntlet) and the gate
+  passes with FULL coverage (0E/0N). **Signature gimmicks implemented** as data-driven spawns:
+  `gavel` (hold→tremble telegraph→slam→rest→rise; `period`/`phase` extras; damages only while
+  falling) and `gaze` (roaming spotlight; catch→620ms gold lock→verdict bolt at the locked column;
+  `range` extra) — both in GameScene (`makeGavel/makeGaze/updateCourtHazards`). `flameseal` spawn =
+  the Quiet-Flame barrier (full-passage static wall + hint; opens silently when `run.quietFlame`).
+  `key` spawns take `grant:'memory'|'witness'` → `RunState.witnessMark`. **THE ACCUSER** =
+  `accuser` elite kind (warden kit, verdict-gold tint, slower/harder windups, own
+  `accuserDefeated`); its fall grants the PERMANENT `quietFlame` (kept by `RunState.reset`).
+  Gates declare their needs by id (`gateNeeds`): `final`=memory+warden, `mirror-final` (NEW, in
+  untrue-image — opens on the Untrue Image's fall → lift → Sanctuary → court) and `court-final`
+  (witness-mark+accuser → THE COURT OF CONDEMNATION — COMPLETE overlay).
+  **GOTCHAS fixed en route:** (1) `StaticBody.updateFromGameObject()` AFTER `setSize` resets the
+  body to the GO's 2×2 dot — the arena seals + flameseal were silently tiny; setSize LAST. (2) the
+  restart-teardown checklist strikes again: `bossActive/arenaSeals/gavels/gazes/pendingArena/...`
+  must reset in create() (stale `bossActive` from a prior arena stopped the next one arming).
+  (3) UIScene clears the boss bar on `room-name` (dev-jumps out of an armed arena left it stuck).
+  Dev hooks: `__run()` (read run state), `__tp(x,y)` (teleport), `__arena()` (seal probe).
+  NEXT for the Court: its own roster + tileset/parallax art (Bailiff = tinted Striker today).
 
 ## Presentation & economy (Dead-Cells-inspired pass, from Mark's playtest notes)
 - **Boot flow:** Boot → Preload (a real **LOADING** screen: bar + %) → **TitleScene** (the menu)

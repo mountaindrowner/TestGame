@@ -86,7 +86,13 @@ export class UIScene extends Phaser.Scene {
       void this.soulNum.offsetWidth; // restart the animation
       this.soulNum.classList.add('pop');
     });
-    game.events.on('room-name', (name: string) => (this.areaEl.textContent = name));
+    game.events.on('room-name', (name: string) => {
+      this.areaEl.textContent = name;
+      // A new region means we're not inside a sealed arena (you can't leave one
+      // mid-fight) — clear any boss bar a dev-jump or reload left behind.
+      this.bossWrap.classList.remove('show');
+      this.mapCanvas.classList.remove('duck');
+    });
     // The explored-map minimap (fog-of-war): the world model + the live player dot.
     game.events.on('map', (m: MinimapModel) => {
       this.mapModel = m;

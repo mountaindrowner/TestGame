@@ -1,0 +1,16 @@
+import { chromium } from 'playwright';
+const EXE='/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const b=await chromium.launch({executablePath:EXE,args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
+const p=await b.newPage({viewport:{width:960,height:540}});
+const errs=[]; p.on('pageerror',e=>errs.push(e.message));
+await p.goto('http://localhost:5173/?play',{waitUntil:'load'});
+await p.waitForFunction(()=>window.__GAME_READY===true,{timeout:20000});
+await p.evaluate(()=>window.__gotoRoom('court-tribunal'));
+await p.waitForFunction(()=>window.__GAME_READY===true,{timeout:8000}); await p.waitForTimeout(2700);
+const a=await p.evaluate(()=>document.querySelector('.hud-boss')?.classList.contains('show'));
+await p.evaluate(()=>window.__gotoRoom('court-gauntlet'));
+await p.waitForFunction(()=>window.__GAME_READY===true,{timeout:8000}); await p.waitForTimeout(900);
+const c=await p.evaluate(()=>document.querySelector('.hud-boss')?.classList.contains('show'));
+await p.screenshot({path:'/tmp/court-gauntlet.png'});
+console.log('boss bar in tribunal:', a, '| cleared after leaving:', !c, '| errors:', errs.slice(0,4).join('|')||'none');
+await b.close();

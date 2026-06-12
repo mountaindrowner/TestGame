@@ -24,7 +24,12 @@ export type SpawnType =
   | 'fractureWisp'
   | 'lookingGlass'
   | 'archer'
-  | 'bomber';
+  | 'bomber'
+  // BIO-03 Court of Condemnation — signature gimmicks (data-driven hazards)
+  | 'gavel' //     a timed verdict-crusher: telegraph → slam to the floor → rest → rise
+  | 'gaze' //      the verdict-gaze: a roaming spotlight; caught in it → a dodgeable strike
+  | 'flameseal' // a barrier over a passage that only the Quiet Flame opens (BIO-03 come-back)
+  | 'accuser'; //  THE ACCUSER — the Court's elite
 
 export interface Spawn {
   type: SpawnType;
@@ -34,6 +39,10 @@ export interface Spawn {
   to?: string; // door/gate: destination room id
   toEntry?: string; // door/gate: id of the door to arrive at in the destination room
   scale?: number; // decor (mirror): render scale
+  grant?: 'memory' | 'witness'; // key: which mark it grants (default 'memory')
+  period?: number; // gavel: full cycle ms (default 2600)
+  phase?: number; //  gavel: 0..1 cycle offset so rows of gavels alternate
+  range?: number; //  gaze: sweep half-range in tiles (default 4)
 }
 
 export interface RoomData {

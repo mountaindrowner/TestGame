@@ -50,6 +50,8 @@ export const Assets = {
   cobweb: { key: 'prop-cobweb', path: 'assets/sprites/props/cobweb.png' },
   // A real wall torch (4-frame flame strip) — the lights are objects now.
   torch: { key: 'prop-torch', path: 'assets/sprites/props/torch.png', frameW: 12, frameH: 26 },
+  // BIO-03: the Court's verdict-crusher head (hangs, telegraphs, slams).
+  gavel: { key: 'prop-gavel', path: 'assets/sprites/props/gavel.png' },
 } as const;
 
 /** The environment-decor scatter set (tools/gen_environment.py): 24 ground pieces

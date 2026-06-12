@@ -13,6 +13,7 @@ import { mirrorGallery } from './rooms/mirrorGallery';
 import { mirrorRise } from './rooms/mirrorRise';
 import { mirrorThreshold } from './rooms/mirrorThreshold';
 import { untrueImage } from './rooms/untrueImage';
+import { courtGate, courtHall, courtDock, courtWitness, courtGauntlet, courtEvidence, courtAntechamber, courtTribunal } from './rooms/court';
 import { loadRoomOverride, listOverrideRooms } from './roomStore';
 
 /** BIO-01 "The First Fall" as a small connected level. Rooms are linked by their
@@ -35,6 +36,15 @@ const BUILDERS: Record<string, () => RoomData> = {
   'mirror-rise': mirrorRise,
   'mirror-threshold': mirrorThreshold,
   'untrue-image': untrueImage,
+  // BIO-03 — the Court of Condemnation (built from courtOfCondemnationScore).
+  'court-gate': courtGate,
+  'court-hall': courtHall,
+  'court-dock': courtDock,
+  'court-witness': courtWitness,
+  'court-gauntlet': courtGauntlet,
+  'court-evidence': courtEvidence,
+  'court-antechamber': courtAntechamber,
+  'court-tribunal': courtTribunal,
 };
 
 /** Built-in (code-authored) room ids. */
