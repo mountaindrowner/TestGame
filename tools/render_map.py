@@ -76,6 +76,20 @@ def render(env: str) -> str:
     # passage shading: a faint inner glow so corridors read as space, not noise
     # (skip — flat reads clean at this scale)
 
+    # ── reachability overlay: DEAD standable cells (unreachable = inaccessible
+    #    space / a flaw) get a red wash; reachable floor a faint green tint ──────
+    reach = set(d.get('reach') or [])
+    dead = set(d.get('dead') or [])
+    if reach:
+        for kk in reach:
+            tx, ty = kk % w, kk // w
+            x, y = px(tx, ty)
+            dr.rectangle([x, y, x + S - 1, y + S - 1], fill=(110, 240, 160, 26))  # playable
+    for kk in dead:
+        tx, ty = kk % w, kk // w
+        x, y = px(tx, ty)
+        dr.rectangle([x, y, x + S - 1, y + S - 1], fill=(255, 70, 80, 150))         # inaccessible
+
     # ── the critical-path journey (the winding route) ─────────────────────────
     if d.get('journey'):
         pts = [(ox0 + (q['x'] + 0.5) * S, oy0 + (q['y'] + 0.5) * S) for q in d['journey']]
@@ -142,7 +156,8 @@ def render(env: str) -> str:
     items = [('player', (126, 240, 255)), ('key', (255, 210, 70)), ('boss', (255, 80, 90)),
              ('gate/door', (120, 240, 120)), ('ember', (255, 160, 60)), ('enemy', (235, 90, 95)),
              ('hazard', (176, 106, 255)), ('passage', PASSAGE), ('molten', MOLTEN_C),
-             ('one-way', PLATFORM_C), ('route', (255, 216, 120))]
+             ('one-way', PLATFORM_C), ('route', (255, 216, 120)),
+             ('reachable', (110, 240, 160)), ('dead/blocked', (255, 70, 80))]
     for name, col in items:
         dr.ellipse([lx, ly + 1, lx + 9, ly + 10], fill=col + (255,))
         dr.text((lx + 13, ly), name, fill=(180, 200, 215), font=f_leg)

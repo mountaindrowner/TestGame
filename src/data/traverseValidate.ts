@@ -367,6 +367,23 @@ export function debugJourney(envId: string, assumed: string[] = []): { path: Arr
   return m;
 }
 
+/** A reachability MAP for the map visualizer: which standable cells the player can
+ *  actually reach (the playable space) and which standable cells are DEAD (open
+ *  floor no movement reaches — inaccessible/empty space). */
+export function reachMap(envId: string, assumed: string[] = []): { w: number; h: number; reach: number[]; dead: number[] } {
+  const world = composeWorld(envId);
+  const g = gridOf(world.tiles, world.w, world.h);
+  const ps = world.spawns.find((s) => s.type === 'player') ?? world.spawns.find((s) => s.type === 'door');
+  const start = ps ? { x: ps.tx, y: ps.ty } : { x: 3, y: world.h - 4 };
+  const kit = reachable(g, [start], assumed.includes('grace-burst') ? GAP_MAX_BURST : GAP_MAX);
+  const dead: number[] = [];
+  for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
+    if (world.tiles[y][x] === Sem.MOLTEN) continue; // a hazard pit isn't "explorable" dead space
+    if (g.standable(x, y) && !kit.has(y * g.w + x)) dead.push(y * g.w + x);
+  }
+  return { w: g.w, h: g.h, reach: [...kit], dead };
+}
+
 /** One-line verdict for readouts. */
 export function traversalVerdict(envId: string): string {
   const w = validateTraversal(envId);

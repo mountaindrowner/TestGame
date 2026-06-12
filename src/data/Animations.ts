@@ -129,6 +129,8 @@ export const StrangerAnims: AnimDef[] = [
 // Props — the wall torch's living flame (12x26, 4-frame strip).
 export const PropAnims: AnimDef[] = [
   { key: 'torch-burn', sheet: 'prop-torch', start: 0, end: 3, frameRate: 7, repeat: -1 },
+  // the grasping-depths arm: rise → claw → sink (the GraspPit desyncs each one)
+  { key: 'hand-reach', sheet: 'prop-hand', start: 0, end: 5, frameRate: 7, repeat: -1 },
 ];
 
 export function registerAnims(scene: Phaser.Scene, defs: AnimDef[]): void {

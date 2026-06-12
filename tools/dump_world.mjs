@@ -19,13 +19,15 @@ for (const [env, assumed] of Object.entries(ENVS)) {
     const wc = await import('/src/data/worldComposer.ts');
     const tv = await import('/src/data/traverseValidate.ts');
     const w = wc.composeWorld(env);
-    let journey = null;
+    let journey = null; let reach = null;
     try { journey = tv.debugJourney(env, assumed); } catch (e) { /* no gate spawn */ }
+    try { reach = tv.reachMap(env, assumed); } catch (e) {}
     return {
       env, w: w.w, h: w.h, tiles: w.tiles,
       placements: w.placements.map((q) => ({ id: q.id, name: q.name, ox: q.ox, oy: q.oy, w: q.w, h: q.h })),
       spawns: w.spawns.map((s) => ({ type: s.type, tx: s.tx, ty: s.ty })),
       journey: journey ? journey.path : null,
+      reach: reach ? reach.reach : null, dead: reach ? reach.dead : null,
     };
   }, [env, assumed]);
   writeFileSync(`/tmp/world-${env}.json`, JSON.stringify(data));

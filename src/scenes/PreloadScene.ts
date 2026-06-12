@@ -70,6 +70,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(Assets.critter.key, Assets.critter.path);
     this.load.image(Assets.cobweb.key, Assets.cobweb.path);
     this.load.image(Assets.gavel.key, Assets.gavel.path);
+    this.load.spritesheet(Assets.hand.key, Assets.hand.path, { frameWidth: Assets.hand.frameW, frameHeight: Assets.hand.frameH });
     this.load.spritesheet(Assets.torch.key, Assets.torch.path, {
       frameWidth: Assets.torch.frameW,
       frameHeight: Assets.torch.frameH,

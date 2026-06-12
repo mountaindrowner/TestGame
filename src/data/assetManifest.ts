@@ -52,6 +52,8 @@ export const Assets = {
   torch: { key: 'prop-torch', path: 'assets/sprites/props/torch.png', frameW: 12, frameH: 26 },
   // BIO-03: the Court's verdict-crusher head (hangs, telegraphs, slams).
   gavel: { key: 'prop-gavel', path: 'assets/sprites/props/gavel.png' },
+  // The grasping depths: a skeletal arm reaching up from a hazard pit (6-frame).
+  hand: { key: 'prop-hand', path: 'assets/sprites/props/hand.png', frameW: 12, frameH: 22 },
 } as const;
 
 /** The environment-decor scatter set (tools/gen_environment.py): 24 ground pieces

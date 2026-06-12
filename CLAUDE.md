@@ -275,6 +275,27 @@ RULE learned: seam mouths must reach the room EDGE (a mouth at x8-51 in a 56-wid
 mouths can sit at DIFFERENT heights (the compositor aligns each seam independently) → that's how the
 spine ascends. NEXT: same winding pass on the Court (court.ts) + BIO-02 mirror rooms.
 
+## The grasping depths (lava → a pit of skeletal hands) + map = playability inspector
+Mark's playtest of the whole-map view: "I don't like that the lava sits on top, and I don't like
+that it's lava — it should be a pit of skeletal hands trying to drag the player down." Plus: use the
+map to find flaws (inaccessible spots, too-high jumps) + fill empty space.
+- **THE GRASPING DEPTHS** — the molten HAZARD is re-themed (still `Sem.MOLTEN`, so every level/
+  traversal rule is unchanged): the depths `molten()` tile (`gen_tileset.py`) is now a dark grave-pit
+  (near-black void, pale bone shards, finger-bones clawing at the surface, cold necrotic seam). A new
+  **`GraspPit` system** (`src/systems/GraspPit.ts`) scans a room's molten band and swarms animated
+  **skeletal arms** (`gen_props.py` `hand`, 6-frame reach/claw/sink, `hand-reach` anim) along it,
+  desynced; when the figure passes over a pit the nearest arms LUNGE up + claw faster (the world
+  reaching to drag the penitent down — cosmetic; the pit's contact damage is unchanged). Wired in
+  GameScene like GroundDecor (depths/court biome). **first-fall** no longer has surface scars — the
+  two hazards are now recessed PITS (`carve` down 3, molten at the bottom) you leap or fall into.
+- **Map = playability inspector** — `tools/render_map.py` now overlays REACHABILITY from the
+  traversal gate (`reachMap(env,assumed)` in `traverseValidate.ts`): every reachable standable cell
+  gets a faint green wash (the playable area), and any **DEAD standable cell** (open floor no movement
+  reaches = inaccessible/empty flaw) a red wash — so the map shows at a glance that the playable space
+  covers all the content with no dead zones. Hazard (molten) cells are excluded from `dead`. `npm run
+  map` regenerates `/tmp/map-<env>.png`. STILL OPEN from Mark's notes: fill sparse/empty rooms with
+  more content (a density pass) — the map shows where.
+
 ## The TRAVERSAL GATE (3rd validator — the one that walks the tiles)
 Mark's playtest exposed the gap: the logic gates validated the PLAN + the GRAPH, never the
 GEOMETRY — he softlocked in a sealed ember nook in THE LOWER VAULTS and called the spine "a

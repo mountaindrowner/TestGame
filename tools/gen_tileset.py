@@ -226,33 +226,44 @@ def platform():
 
 
 def molten():
-    """REAL LAVA: a bright molten body under a skin of dark floating crust plates,
-    glow leaking through every seam, the hottest white line at the surface. (The
-    old version was stone with a thin orange squiggle — never read as lava.)"""
+    """THE GRASPING DEPTHS (was lava). A dark grave-pit — the fallen reach up from
+    below to drag you down. Near-black void deepening with depth, pale bone shards,
+    finger-bones clawing at the surface, a cold necrotic under-glow. It is still the
+    floor HAZARD (Sem.MOLTEN) — the pit the world uses to pull the penitent down —
+    only re-themed; the animated reaching hands are sprites the GraspPit system
+    layers on top (tools/gen_props.py `hand`)."""
     img = new(T, T)
     px = img.load()
-    crust = lerp(STONE_LO, (20, 12, 14), 0.65)
-    crust_hi = lerp(STONE_LO, MOLTEN, 0.35)
-    # 1) the molten body — hot everywhere, hottest near the surface
+    void_top = (18, 15, 24)
+    void_bot = (5, 5, 9)
+    bone = (200, 194, 178)
+    bone_lo = (112, 106, 98)
+    cold = (96, 150, 150)  # necrotic cold light leaking up
+    # 1) the void — darkens with depth
     for y in range(T):
-        heat = 1.0 - y / (T * 1.15)  # cools slightly with depth
+        t = y / (T - 1)
         for x in range(T):
-            v = hsh(x, y, 7)
-            c = lerp(lerp(MOLTEN, (120, 28, 18), 0.35), MOLTEN_HI, max(0.0, heat - v * 0.3))
-            px[x, y] = rgba(c)
+            v = hsh(x, y, 7) * 0.10
+            px[x, y] = rgba(lerp(void_top, void_bot, min(1.0, t + v)))
     d = ImageDraw.Draw(img)
-    # 2) dark crust plates floating on it (staggered so the bright seams wander)
-    for (cx, cy, w_, h_) in [(1, 4, 5, 3), (8, 5, 6, 3), (3, 9, 6, 3), (11, 10, 5, 3), (0, 13, 4, 2), (7, 13, 5, 2)]:
-        d.rounded_rectangle([cx, cy, cx + w_, cy + h_], radius=1, fill=rgba(crust))
-        d.line([(cx + 1, cy), (cx + w_ - 1, cy)], fill=rgba(crust_hi))  # heat-lit plate edge
-    # 3) the surface line — white-hot, rippling, spitting
+    # 2) a cold seam at the surface (the dead-light)
     for x in range(T):
-        glow = 0.5 + 0.5 * math.sin(x * 0.9 + 1.3)
-        d.point((x, 0), fill=rgba(lerp(MOLTEN_HI, BLOOM, glow)))
-        d.point((x, 1), fill=rgba(lerp(MOLTEN, MOLTEN_HI, glow)))
-        if hsh(x, 2, 11) > 0.8:
-            d.point((x, 2), fill=rgba(BLOOM))
-    return apply_bloom(img, threshold=110, radius=2.0, gain=1.25)
+        glow = 0.5 + 0.5 * math.sin(x * 0.8 + 0.7)
+        d.point((x, 0), fill=rgba(lerp(cold, BLOOM, glow * 0.4), 210))
+        d.point((x, 1), fill=rgba(lerp(void_top, cold, glow * 0.5)))
+    # 3) finger-bones clawing at the surface (three small hands reaching up)
+    for hx in (2, 7, 12):
+        ph = int(hsh(hx, 3, 5) * 2)  # slight height variation
+        for fx, fl in [(hx, 2), (hx + 1, 3), (hx + 2, 2)]:  # three fingers
+            for yy in range(fl):
+                d.point((fx, 4 + ph - yy), fill=rgba(bone if yy == fl - 1 else bone_lo))
+        d.point((hx + 1, 4 + ph), fill=rgba(bone_lo))  # the knuckle
+        d.point((hx + 1, 1 + ph), fill=rgba(BLOOM, 170))  # a fingertip catches the cold light
+    # 4) scattered bone shards deeper in the void
+    for (bx, by) in [(4, 10), (11, 12), (6, 13), (13, 9)]:
+        d.line([(bx, by), (bx + 2, by + 1)], fill=rgba(bone_lo))
+        d.point((bx, by), fill=rgba(bone))
+    return apply_bloom(img, threshold=180, radius=1.4, gain=0.6)
 
 
 def build():

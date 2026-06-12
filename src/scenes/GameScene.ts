@@ -23,6 +23,7 @@ import { ParallaxBackground } from '../systems/ParallaxBackground';
 import { CombatSystem } from '../systems/CombatSystem';
 import { autotile } from '../systems/Autotiler';
 import { GroundDecor } from '../systems/GroundDecor';
+import { GraspPit } from '../systems/GraspPit';
 import { Decorations } from '../systems/Decorations';
 import { Ambience } from '../systems/Ambience';
 import { Lighting } from '../systems/Lighting';
@@ -75,6 +76,7 @@ export class GameScene extends Phaser.Scene {
   private layer!: Phaser.Tilemaps.TilemapLayer;
   private decorations!: Decorations;
   private ambience!: Ambience;
+  private graspPit?: GraspPit;
   private lighting!: Lighting;
   private player!: Player;
   private enemies!: Phaser.GameObjects.Group;
@@ -180,6 +182,7 @@ export class GameScene extends Phaser.Scene {
     this.decorations = new Decorations(this, this.room, this.room.biome);
     new GroundDecor(this, this.room, this.room.biome); // fire-and-forget scatter (pure cosmetics)
     this.ambience = new Ambience(this, this.room);
+    this.graspPit = new GraspPit(this, this.room, this.room.biome, () => ({ x: this.player.x, y: this.player.y }));
     this.lighting = new Lighting(this, this.room, this.room.biome);
     this.physics.world.setBounds(0, 0, roomW, roomH);
 
@@ -985,6 +988,7 @@ export class GameScene extends Phaser.Scene {
     this.parallax.update(this.cameras.main, time);
     this.decorations.update(time);
     this.ambience.update(time, _delta);
+    this.graspPit?.update(time, _delta);
     this.lighting.update(this.cameras.main, this.player.x, this.player.y);
     // Minimap: feed the player's position to the HUD (throttled — the canvas redraw
     // is cheap but no need every frame).

@@ -29,11 +29,15 @@ export function firstFall(): RoomData {
   r.solid(29, 37, 2, 4); // the hanging rock mass (wall-attached, no floating island)
   r.solid(29, 41, 4, 1); // its shelf (top at y41; stand at feet row 40)
 
-  // Teach → escalate: the molten scar. First appearance small + lit (2 tiles,
-  // hop it even from a walk); the second is the real jump (4 tiles — inside the
-  // ≤4-tile comfortable bound, with a clean run-up).
-  r.molten(24, 44, 2);
-  r.molten(36, 44, 4);
+  // Teach → escalate: THE GRASPING DEPTHS (a recessed pit, not a surface scar).
+  // The fallen claw up out of the dark to drag you down; leap the pit or be grabbed.
+  // First a narrow pit (2 wide — hop it even from a walk), then the real jump
+  // (4 wide — inside the ≤5-tile comfortable bound, with a clean run-up). Carved
+  // DOWN through the floor so the hazard sits in a pit, hands reaching out of it.
+  r.carve(24, 45, 2, 3); //  the teaching pit (x24-25, 2 deep)
+  r.molten(24, 47, 2); //    the grasping depths at the bottom
+  r.carve(35, 45, 4, 3); //  the escalation pit (x35-38, the real leap)
+  r.molten(35, 47, 4);
 
   r.at('player', 8, 4); // the FALL — you enter the game falling
 

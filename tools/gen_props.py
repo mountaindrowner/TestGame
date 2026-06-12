@@ -126,6 +126,50 @@ def gavel():
     _save(im, "gavel.png")
 
 
+def hand():
+    """A SKELETAL ARM reaching up out of the grasping depths (12x22, 6-frame strip):
+    rises from below the surface, fingers spreading, claws/grasps at the top, then
+    sinks back. Bottom rows are below the pit surface (origin bottom-centre); the
+    GraspPit system places + desyncs a swarm of these along any hazard band."""
+    fw, fh, frames = 12, 22, 6
+    im = Image.new("RGBA", (fw * frames, fh), (0, 0, 0, 0))
+    bone = (198, 192, 176)
+    bone_hi = (228, 224, 210)
+    bone_lo = (120, 114, 104)
+    cold = (150, 200, 200)
+    # per-frame: how far the arm has risen (px from the bottom) + finger spread
+    rise = [3, 9, 15, 18, 12, 5]
+    spread = [0, 1, 2, 3, 2, 1]
+    grasp = [0, 0, 0, 1, 1, 0]  # fingers curl in on the grasp frames
+    for f in range(frames):
+        fr = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+        d = ImageDraw.Draw(fr)
+        cx = fw // 2
+        r = rise[f]
+        wristY = fh - 1 - r            # the wrist height this frame
+        # forearm (two bones) rising from the bottom
+        d.line([(cx - 1, fh - 1), (cx - 1, wristY)], fill=(bone_lo))
+        d.line([(cx + 1, fh - 1), (cx + 1, wristY)], fill=(bone))
+        d.point((cx, wristY + 1), fill=bone_lo)
+        # palm / knuckles
+        d.point((cx, wristY), fill=bone)
+        # three+ fingers spreading up from the wrist
+        sp = spread[f]
+        cl = grasp[f]
+        fingers = [(-sp - 1, 4), (0, 5), (sp + 1, 4), (sp, 3)]
+        for dx, fl in fingers:
+            for yy in range(fl):
+                fxp = cx + dx + (1 if (cl and yy >= fl - 2) else 0) * (1 if dx < 0 else -1)
+                fyp = wristY - 1 - yy
+                if 0 <= fxp < fw and 0 <= fyp < fh:
+                    tip = yy == fl - 1
+                    d.point((fxp, fyp), fill=(bone_hi if tip else bone))
+                    if tip:
+                        d.point((fxp, fyp - 0 if fyp > 0 else fyp), fill=(cold))  # cold-lit claw tip
+        im.alpha_composite(fr, (f * fw, 0))
+    _save(im, "hand.png")
+
+
 def critter():
     """A tiny scuttling beetle (faces +x; engine flips for the other way)."""
     w, h = 8, 5
@@ -169,6 +213,7 @@ def build() -> None:
     urn()
     torch()
     gavel()
+    hand()
     critter()
     cobweb()
 
