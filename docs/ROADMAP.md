@@ -43,8 +43,12 @@
 
 ## 7. Stage assets & environmental detail ("lived-in" rooms)
 - ✅ 26-piece environment decor set scattered deterministically + urns/torches.
-- ⬜ **Density pass** — crates/tools/statues/machinery-class props, more per-room
-  clutter so no space feels empty (the playability map shows where it's sparse).
+- ✅ **Mirrors decor set** — the House of Mirrors now has its own clutter (glass
+  shards, broken frames, porcelain false-faces, violet candelabra, hanging
+  shards/mirrors/drapes); both decor systems used to skip non-depths biomes.
+- 🔶 **Density pass** — floor/wall coverage bumped + one-way shelves dressed
+  (the playability maps showed where). ⬜ Larger set-piece props
+  (crates/statues/machinery) and a Court-specific set still to come.
 
 ## 8. Foreground effects & atmosphere (per-map identity)
 - 🔶 Drifting dust + fog layers exist (depths), mirror sparkle backdrop (BIO-02).

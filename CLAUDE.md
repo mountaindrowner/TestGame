@@ -560,7 +560,31 @@ scaffold → refine → build.** Full philosophy: `docs/LEVEL_GRAMMAR.md` (the e
 - **Gamepad** (standard mapping in `InputManager.readPad`; `input.gamepad` in config) + CONTROLS
   sheet on the title.
 - **Still open from Mark's notes:** walking anim polish (minor), more obvious torch purpose via
-  Lighting strength, BIO-02 decor set (mirrors biome gets no GroundDecor yet).
+  Lighting strength.
+
+## "Lived-in" decor pass (fill the empty rooms, 2026-06-12)
+Mark's map-playtest ask ("don't leave a lot of empty space, fill up the map"). Both decor systems
+(`GroundDecor`, `Decorations`) used to **bail out on any non-depths biome**, so BIO-02 was bare
+brick + empty air. Fixed:
+- **Mirrors decor set** (`tools/gen_environment_mirrors.py`, procedural — no PixelLab spend): a
+  glass/false-face voice in the lavender/electric-blue palette — glass shards, broken gilt mirror
+  frames, porcelain false-face masks, violet candelabra, blue crystals, toppled pedestals, hand
+  mirrors, + WALL mirrors/sconces/masks, + HANGING shards/mirrors/chains/drapes (fill the tower's
+  vertical air). Saved `sprites/env/m-*` (ground/wall) + `sprites/decor/m-*` (hanging); registered
+  in `gen_all.py`.
+- **Wiring:** `assetManifest` adds `ENV_GROUND_MIRRORS`/`ENV_WALL_MIRRORS` + `decorSetFor(biome)`
+  (depths set vs mirrors set; Court reuses depths) + the 4 hanging-prop keys; `PreloadScene` loads
+  them. `GroundDecor` now themes by biome (no early return), dresses one-way **shelves** too (not
+  just rock floors), density bumped (floor 0.16→0.27, wall 0.035→0.085). `Decorations` has
+  per-biome hanging sets (`DEPTHS_KINDS`/`MIRROR_KINDS`).
+- **Result (proven via `__decor()` dev hook):** House of Mirrors 0 → **12 floor + 26 hanging**
+  pieces; first-fall 23→31; court 19. Build green, no console errors. The Lighting shadow keeps it
+  moody (decor reads near the player's light pool + torches — intentional).
+- **Dev tool:** `tools/tour.mjs <roomId…>` jumps to rooms via `__gotoRoom` and screenshots them
+  (`shots/tour-<id>.png`) — the reusable "how does this room look" harness. `window.__decor()`
+  returns `{biome, ground, hanging}` counts.
+- **Still open (roadmap §7):** larger set-piece props (crates/statues/machinery) + a Court-specific
+  decor set (Court reuses depths bones today).
 
 ## Stack & conventions
 See `DECISIONS.md`. Headlines: Phaser 3 + Vite + TS; 480×270 internal, pixelArt, FIT;
