@@ -1042,6 +1042,14 @@ export class GameScene extends Phaser.Scene {
     const tx = this.player.x / World.tile;
     const ty = this.player.y / World.tile;
     if (tx >= p.ox && tx < p.ox + p.w && ty >= p.oy && ty < p.oy + p.h) {
+      // For a WALKED-IN (open west edge) arena, arm only once the figure is safely
+      // EAST of where the seal drops (ox+0.5), so the barrier spawns BEHIND it — never
+      // on top of it, which the physics would resolve by shoving the figure back OUT,
+      // stranding it behind the barrier unable to enter (the bug Mark hit at the gate).
+      // Climbed-up arenas (open bottom, e.g. untrue-image) seal a floor over the hole
+      // BELOW the standing figure, so they arm on entry as before.
+      const westEntry = this.openSpanCol(p.ox, p.oy, p.oy + p.h);
+      if (westEntry && tx < p.ox + 2) return; // still at/on the west seal — let it commit in
       this.pendingArena = undefined;
       this.armBoss(true);
     }
