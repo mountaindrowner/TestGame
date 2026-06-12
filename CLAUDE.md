@@ -7,7 +7,10 @@
 > **Working agreement with the user (always):** whenever new art/animations are generated,
 > **surface the actual render images** to the user (`SendUserFile` — contact strips and/or
 > in-game shots, don't just describe them), and **always include the live link**
-> (`https://mountaindrowner.github.io/TestGame/`) after pushing.
+> (`https://mountaindrowner.github.io/TestGame/`) after pushing. **Talk to Mark in plain,
+> simple language — no coding jargon unless a technical decision needs it, and then teach
+> it clearly** (his explicit preference, 2026-06-12). `docs/ROADMAP.md` is HIS to-do list
+> (from his Dead Cells playthrough notes) — keep statuses current as work lands.
 
 ## What this is
 A Dead Cells–inspired **roguevania** that is a **playable metaphor for repentance** (art
@@ -274,6 +277,18 @@ RULE learned: seam mouths must reach the room EDGE (a mouth at x8-51 in a 56-wid
 — approach/gate silently dropped from the compose until the hub carve reached x55). The east/west
 mouths can sit at DIFFERENT heights (the compositor aligns each seam independently) → that's how the
 spine ascends. NEXT: same winding pass on the Court (court.ts) + BIO-02 mirror rooms.
+
+## Mark's roadmap + the Court winding pass (2026-06-12)
+- **`docs/ROADMAP.md` = Mark's cleaned Dead Cells playthrough notes**, kept in his structure with
+  ✅/🔶/⬜ statuses — THE to-do list; keep statuses current. His §20: plain-language communication
+  (now in the working agreement above).
+- **The Court re-cut WINDING** (the BIO-01-style metroidvania pass, now applied to ALL built
+  stages): the outer walk climbs 3 tiers; the HALL and the GAUNTLET each have a true TWO-ROUTE
+  choice (roadmap §6) — a low road the gaze hunts vs high shelves the gavels hammer; the DOCK
+  sinks into a pit (a gavel slams into it); the antechamber rises to the tribunal. Court journey
+  now climbs/drops 21 tiles (was 0). All three stages pass BOTH gates 0E/0N (score + traversal).
+  Iteration note: the gate caught all 3 of the re-cut's own bugs (pit under the shaft, a 7-up seam
+  hop ×2) — fix pattern: keep climb columns floored, add a foothold when a room grows taller.
 
 ## The grasping depths (lava → a pit of skeletal hands) + map = playability inspector
 Mark's playtest of the whole-map view: "I don't like that the lava sits on top, and I don't like
