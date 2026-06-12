@@ -177,7 +177,8 @@ function pathMetrics(g: Grid, from: { x: number; y: number }, reach: Set<number>
         const ddx = Math.abs(nx - x);
         const ddy = ny - y; // + = down
         if (ddx <= 1 && ddy >= -1) out.push(nk); // walk/step/fall-adjacent
-        else if (ddx <= 1 && ddy >= -UP_MAX) out.push(nk); // jump up
+        else if (ddx <= 1 && ddy >= -UP_MAX) out.push(nk); // jump straight up
+        else if (ddx <= 3 && ddy >= -4) out.push(nk); // rising DIAGONAL hop (the switchback ledge)
         else if (ddx <= GAP_MAX && ddy >= 0) out.push(nk); // gap jump (level/lower)
         else if (ddx <= GAP_MAX && ddy >= -2) out.push(nk); // slight rising gap
       }
@@ -347,14 +348,16 @@ export function validateTraversal(envId: string, assumed: string[] = []): Traver
 export function debugJourney(envId: string, assumed: string[] = []): { path: Array<{ x: number; y: number }>; rise: number } | undefined {
   const world = composeWorld(envId);
   const g = gridOf(world.tiles, world.w, world.h);
-  const ps = world.spawns.find((s) => s.type === 'player');
+  const ps = world.spawns.find((s) => s.type === 'player') ?? world.spawns.find((s) => s.type === 'door');
   const start = ps ? { x: ps.tx, y: ps.ty } : { x: 3, y: world.h - 4 };
   const kit = reachable(g, [start], assumed.includes('grace-burst') ? GAP_MAX_BURST : GAP_MAX);
   const k = (x: number, y: number) => y * g.w + x;
   const finale = world.spawns.find((s) => s.type === 'gate');
   if (!finale) return undefined;
   const near = (s: { x: number; y: number }) => {
-    for (let dy = 0; dy <= 8; dy++) for (let dx = 0; dx <= 3; dx++) for (const sx of [s.x + dx, s.x - dx]) if (kit.has(k(sx, s.y + dy))) return { x: sx, y: s.y + dy };
+    // search the whole column downward (a mid-air start, e.g. the opening fall,
+    // lands far below) and a few tiles to each side
+    for (let dy = 0; dy < g.h; dy++) for (let dx = 0; dx <= 4; dx++) for (const sx of [s.x + dx, s.x - dx]) if (kit.has(k(sx, s.y + dy))) return { x: sx, y: s.y + dy };
     return undefined;
   };
   const a = near(start);

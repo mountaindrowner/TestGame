@@ -3,13 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "REPENTANCE — a Dead Cells-inspired roguevania that is a playable metaphor for repentance.",
+  "description": "REPENTANCE \u2014 a Dead Cells-inspired roguevania that is a playable metaphor for repentance.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "assets": "python3 tools/gen_all.py",
-    "shot": "node tools/screenshot.mjs"
+    "shot": "node tools/screenshot.mjs",
+    "map": "node tools/dump_world.mjs && python3 tools/render_map.py"
   },
   "dependencies": {
     "phaser": "^3.90.0"
